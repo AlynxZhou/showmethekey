@@ -1,0 +1,6 @@
+#ifndef __CONFIG_H__
+
+#define INSTALL_PREFIX "@install_prefix@"
+#define PROJECT_VERSION "@project_version@"
+
+#endif
