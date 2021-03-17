@@ -66,6 +66,37 @@ static int print_key_event(struct libinput_event *event)
 		      state_name, state_code);
 }
 
+static int print_button_event(struct libinput_event *event)
+{
+	struct libinput_device *device = libinput_event_get_device(event);
+	struct libinput_event_pointer *pointer =
+		libinput_event_get_pointer_event(event);
+
+	enum libinput_event_type event_type = libinput_event_get_type(event);
+	const char *device_name = libinput_device_get_name(device);
+	uint32_t time_stamp = libinput_event_pointer_get_time(pointer);
+	uint32_t button_code = libinput_event_pointer_get_button(pointer);
+	const char *button_name =
+		libevdev_event_code_get_name(EV_KEY, button_code);
+	enum libinput_button_state state_code =
+		libinput_event_pointer_get_button_state(pointer);
+	const char *state_name = state_code == LIBINPUT_BUTTON_STATE_PRESSED ?
+					 "PRESSED" :
+					 "RELEASED";
+	return printf("{"
+		      "\"event_name\": \"POINTER_BUTTON\", "
+		      "\"event_type\": %d, "
+		      "\"device_name\": \"%s\", "
+		      "\"time_stamp\": %d, "
+		      "\"key_name\": \"%s\", "
+		      "\"key_code\": %d, "
+		      "\"state_name\": \"%s\", "
+		      "\"state_code\": %d"
+		      "}\n",
+		      event_type, device_name, time_stamp, button_name,
+		      button_code, state_name, state_code);
+}
+
 static int handle_events(struct libinput *libinput)
 {
 	int result = -1;
@@ -77,6 +108,10 @@ static int handle_events(struct libinput *libinput)
 		// This program only handle key event.
 		case LIBINPUT_EVENT_KEYBOARD_KEY:
 			print_key_event(event);
+			break;
+		// Sorry, mouse button is also a key.
+		case LIBINPUT_EVENT_POINTER_BUTTON:
+			print_button_event(event);
 			break;
 		default:
 			break;
