@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Show Me The Key
+Comment=Show keys you typed on screen.
+Icon=showmethekey
+Exec=showmethekey
+TryExec=/usr/bin/showmethekey
+StartupNotify=false
+Terminal=false
+Categories=Utility

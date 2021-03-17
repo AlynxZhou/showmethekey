@@ -45,6 +45,28 @@ executable(
   install_dir: get_option('prefix') / 'bin'
 )
 
+gtk_sources = files(
+  'showmethekey-gtk/main.c',
+  'showmethekey-gtk/smtk-app.c',
+  'showmethekey-gtk/smtk-app-win.c'
+)
+
+gtk_dependencies = []
+gtk_include_directories = []
+gtk = dependency('gtk+-3.0', required: true)
+gtk_dependencies += [gtk]
+
+executable(
+  'showmethekey-gtk',
+  sources: gtk_sources,
+  c_args: c_args,
+  dependencies: gtk_dependencies,
+  include_directories: gtk_include_directories,
+  install: true,
+  install_dir: get_option('prefix') / 'bin'
+)
+
+
 install_data(
   'LICENSE',
   install_dir: get_option('datadir') / 'license' / meson.project_name()
@@ -53,7 +75,7 @@ install_data(
 #   'dists' / 'showmethekey.png',
 #   install_dir: get_option('datadir') / 'pixmaps'
 # )
-# install_data(
-#   'dists' / 'showmethekey.desktop',
-#   install_dir: get_option('datadir') / 'applications'
-# )
+install_data(
+  'dists' / 'showmethekey.desktop',
+  install_dir: get_option('datadir') / 'applications'
+)
