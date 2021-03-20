@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/one/alynx/showmethekey">
+    <file preprocess="xml-stripblanks">smtk-app-win.ui</file>
+    <file preprocess="xml-stripblanks">smtk-keys-win.ui</file>
+  </gresource>
+</gresources>

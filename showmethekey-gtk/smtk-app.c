@@ -6,7 +6,6 @@
 struct _SmtkApp {
 	GtkApplication parent_instance;
 };
-
 G_DEFINE_TYPE(SmtkApp, smtk_app, GTK_TYPE_APPLICATION)
 
 static void smtk_app_init(SmtkApp *app)
@@ -15,7 +14,7 @@ static void smtk_app_init(SmtkApp *app)
 
 static void smtk_app_activate(GApplication *app)
 {
-	SmtkAppWin *win = smtk_app_win_new(SMTK_APP(app));
+	GtkWidget *win = smtk_app_win_new(SMTK_APP(app));
 	gtk_window_present(GTK_WINDOW(win));
 }
 

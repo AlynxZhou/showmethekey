@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="SmtkAppWin" parent="GtkApplicationWindow">
+    <property name="title">Show Me The Key</property>
+    <property name="default-width">800</property>
+    <property name="default-height">600</property>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="margin-top">10</property>
+        <property name="margin-start">10</property>
+        <property name="margin-bottom">10</property>
+        <property name="margin-end">10</property>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">horizontal</property>
+            <!-- <property name="vexpand">true</property> -->
+            <child>
+              <object class="GtkLabel">
+                <property name="label" translatable="yes">Switch</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="keys_win_switch">
+                <property name="hexpand">false</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+                <signal name="notify::active" handler="smtk_app_win_on_switch_active" object="SmtkAppWin" swapped="yes" />
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">horizontal</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
