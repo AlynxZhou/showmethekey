@@ -56,7 +56,7 @@ gtk_sources = files(
 
 gtk_dependencies = []
 gtk_include_directories = []
-gtk = dependency('gtk4', required: true)
+gtk = dependency('gtk+-3.0', required: true)
 # x11 = dependency('x11', required: true)
 # xext = dependency('xext', required: true)
 gtk_dependencies += [gtk]

@@ -1,39 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="SmtkKeysWin" parent="GtkWindow">
+    <property name="visible">true</property>
     <property name="title" translatable="yes">Show Me The Key</property>
     <property name="default-width">800</property>
     <property name="default-height">200</property>
     <!-- <property name="decorated">false</property> -->
     <!-- <property name="resizable">false</property> -->
-    <property name="opacity">0.3</property>
+    <!-- <property name="opacity">0.3</property> -->
     <property name="can-focus">false</property>
-    <property name="focusable">false</property>
+    <!-- <property name="focusable">false</property> -->
     <property name="focus-on-click">false</property>
-    <signal name="realize" handler="smtk_keys_win_on_realize" />
-    <child>
+    <property name="focus-on-map">false</property>
+    <property name="accept-focus">false</property>
+    <property name="app-paintable">false</property>
+    <signal name="configure-event" handler="smtk_keys_win_on_configure" />
+    <signal name="draw" handler="smtk_keys_win_on_draw" />
+    <!-- <child>
       <object class="GtkBox">
+        <property name="visible">true</property>
         <property name="orientation">vertical</property>
         <property name="margin-top">10</property>
         <property name="margin-start">10</property>
         <property name="margin-bottom">10</property>
         <property name="margin-end">10</property>
-        <property name="can-focus">false</property>
-        <property name="focusable">false</property>
+        <!-a- <property name="can-focus">false</property> -a->
+        <!-a- <property name="focusable">false</property> -a->
         <property name="focus-on-click">false</property>
         <child>
           <object class="GtkLabel" id="keys_label">
+            <property name="visible">true</property>
             <property name="label">Test</property>
             <property name="hexpand">true</property>
             <property name="halign">center</property>
             <property name="ellipsize">start</property>
             <property name="justify">center</property>
-            <property name="can-focus">false</property>
-            <property name="focusable">false</property>
-            <property name="focus-on-click">false</property>
+            <!-a- <property name="can-focus">false</property> -a->
+            <!-a- <property name="focusable">false</property> -a->
+            <!-a- <property name="focus-on-click">false</property> -a->
           </object>
         </child>
       </object>
-    </child>
+    </child> -->
   </template>
 </interface>

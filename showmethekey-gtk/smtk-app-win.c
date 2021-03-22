@@ -25,7 +25,7 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop, Gtk
 		}
 	} else {
 		if (win->keys_win != NULL) {
-			gtk_window_destroy(GTK_WINDOW(win->keys_win));
+			gtk_widget_destroy(GTK_WIDGET(win->keys_win));
 			win->keys_win = NULL;
 		}
 	}

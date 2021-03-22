@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
+    <property name="visible">true</property>
     <property name="title">Show Me The Key</property>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
     <child>
       <object class="GtkBox">
+        <property name="visible">true</property>
         <property name="orientation">vertical</property>
         <property name="margin-top">10</property>
         <property name="margin-start">10</property>
@@ -13,10 +15,12 @@
         <property name="margin-end">10</property>
         <child>
           <object class="GtkBox">
+            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <!-- <property name="vexpand">true</property> -->
             <child>
               <object class="GtkLabel">
+                <property name="visible">true</property>
                 <property name="label" translatable="yes">Switch</property>
                 <property name="hexpand">true</property>
                 <property name="halign">center</property>
@@ -24,6 +28,7 @@
             </child>
             <child>
               <object class="GtkSwitch" id="keys_win_switch">
+                <property name="visible">true</property>
                 <property name="hexpand">false</property>
                 <property name="hexpand">true</property>
                 <property name="halign">center</property>
@@ -34,6 +39,7 @@
         </child>
         <child>
           <object class="GtkBox">
+            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
           </object>
         </child>
