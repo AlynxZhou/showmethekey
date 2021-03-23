@@ -14,7 +14,8 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 // See <https://mail.gnome.org/archives/networkmanager-list/2010-October/msg00129.html>.
 // notify of property have one more argument for property
 // in the middle of instance and object.
-static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop, GtkSwitch *keys_win_switch)
+static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
+					  GtkSwitch *keys_win_switch)
 {
 	// g_print("%s\n", g_type_name(G_TYPE_FROM_INSTANCE(keys_win_switch)));
 
@@ -65,8 +66,10 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_set_template_from_resource(
 		GTK_WIDGET_CLASS(win_class),
 		"/one/alynx/showmethekey/smtk-app-win.ui");
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class), SmtkAppWin, keys_win_switch);
-	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class), smtk_app_win_on_switch_active);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, keys_win_switch);
+	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
+						smtk_app_win_on_switch_active);
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)

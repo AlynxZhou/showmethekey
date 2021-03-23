@@ -1,0 +1,5 @@
+/* Disable window shadow. */
+window.smtk-keys-win decoration {
+	margin: 0;
+	box-shadow: none;
+}

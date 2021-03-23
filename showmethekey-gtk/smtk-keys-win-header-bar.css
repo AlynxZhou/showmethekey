@@ -1,0 +1,7 @@
+/* Create a transparent header bar. */
+window.smtk-keys-win headerbar.titlebar {
+  background-color: rgba(0, 0, 0, 0);
+  /* Use this to get a compact header bar when subtitle is disabled. */
+  min-height: 0px;
+  box-shadow: none;
+}
