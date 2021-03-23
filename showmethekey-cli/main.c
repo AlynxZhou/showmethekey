@@ -116,6 +116,11 @@ static int handle_events(struct libinput *libinput)
 		default:
 			break;
 		}
+		// Do a `fflush(stdout)` here, so when we write to pipes,
+		// the other one can always get a latest result.
+		// If we don't have `fflush(stdout)` here, pipe will save
+		// some lines in buffer and pass them together.
+		fflush(stdout);
 		libinput_event_destroy(event);
 		result = 0;
 	}
