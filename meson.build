@@ -35,7 +35,8 @@ cli_include_directories = []
 libevdev = dependency('libevdev', required: true)
 libudev = dependency('libudev', required: true)
 libinput = dependency('libinput', required: true)
-cli_dependencies += [libevdev, libudev, libinput]
+threads = dependency('threads', required: true)
+cli_dependencies += [libevdev, libudev, libinput, threads]
 
 executable(
   'showmethekey-cli',
@@ -57,9 +58,14 @@ gtk_sources = files(
 gtk_dependencies = []
 gtk_include_directories = []
 gtk = dependency('gtk+-3.0', required: true)
+glib = dependency('glib-2.0', required: true)
+json_glib = dependency('json-glib-1.0', required: true)
+gio = dependency('gio-2.0', required: true)
+cairo = dependency('cairo', required: true)
+pango = dependency('pango', required: true)
 # x11 = dependency('x11', required: true)
 # xext = dependency('xext', required: true)
-gtk_dependencies += [gtk]
+gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango]
 
 gresource = gnome.compile_resources(
   'showmethekey-gresource',

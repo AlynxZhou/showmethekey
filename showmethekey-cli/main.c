@@ -8,12 +8,36 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <libudev.h>
 #include <libinput.h>
 #include <libevdev/libevdev.h>
 
+#define MAX_BUFFER_LENGTH 512
+
 enum error_code { NO_ERROR, UDEV_FAILED, LIBINPUT_FAILED, SEAT_FAILED };
+
+struct input_handler_data {
+	struct udev *udev;
+	struct libinput *libinput;
+};
+
+static void *handle_input(void *user_data)
+{
+	struct input_handler_data *input_handler_data = user_data;
+
+	char line[MAX_BUFFER_LENGTH];
+	while (fgets(line, MAX_BUFFER_LENGTH, stdin) != NULL) {
+		if (strcmp(line, "stop\n") == 0) {
+			libinput_unref(input_handler_data->libinput);
+			udev_unref(input_handler_data->udev);
+			exit(EXIT_SUCCESS);
+		}
+	}
+
+	return NULL;
+}
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
@@ -163,6 +187,14 @@ int main(int argc, char *argv[])
 		udev_unref(udev);
 		return SEAT_FAILED;
 	}
+
+	// Typically this will be run with pkexec as a subprocess,
+	// and the parent cannot kill it because it is privileged,
+	// so we use another thread to see if it gets "stop\n" from stdin,
+	// it will exit by itself.
+	pthread_t input_handler;
+	struct input_handler_data input_handler_data = { udev, libinput };
+	pthread_create(&input_handler, NULL, handle_input, &input_handler_data);
 
 	run_mainloop(libinput);
 
