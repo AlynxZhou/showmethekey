@@ -52,31 +52,48 @@ gtk_sources = files(
   'showmethekey-gtk/main.c',
   'showmethekey-gtk/smtk-app.c',
   'showmethekey-gtk/smtk-app-win.c',
-  'showmethekey-gtk/smtk-keys-win.c'
+  'showmethekey-gtk/smtk-keys-win.c',
+  'showmethekey-gtk/smtk-keys-emitter.c',
+  'showmethekey-gtk/smtk-keys-mapper.c',
+  'showmethekey-gtk/smtk-event.c'
+)
+
+gtk_headers = files(
+  'showmethekey-gtk/smtk.h',
+  'showmethekey-gtk/smtk-app.h',
+  'showmethekey-gtk/smtk-app-win.h',
+  'showmethekey-gtk/smtk-keys-emitter.h',
+  'showmethekey-gtk/smtk-keys-win.h',
+  'showmethekey-gtk/smtk-keys-mapper.h',
+  'showmethekey-gtk/smtk-event.h'
 )
 
 gtk_dependencies = []
-gtk_include_directories = []
+# Generated enum types sources need this.
+gtk_include_directories = ['showmethekey-gtk/']
 gtk = dependency('gtk+-3.0', required: true)
 glib = dependency('glib-2.0', required: true)
 json_glib = dependency('json-glib-1.0', required: true)
 gio = dependency('gio-2.0', required: true)
 cairo = dependency('cairo', required: true)
 pango = dependency('pango', required: true)
+xkbcommon = dependency('xkbcommon', required: true)
 # x11 = dependency('x11', required: true)
 # xext = dependency('xext', required: true)
-gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango]
+gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango, xkbcommon]
 
-gresource = gnome.compile_resources(
-  'showmethekey-gresource',
-  'showmethekey-gtk/showmethekey.gresource.xml',
+resources = gnome.compile_resources(
+  'smtk-resources',
+  'showmethekey-gtk/smtk.gresource.xml',
   source_dir: 'showmethekey-gtk/',
   c_name: 'smtk'
 )
 
+enum_types = gnome.mkenums_simple('smtk-enum-types', sources: gtk_headers)
+
 executable(
   'showmethekey-gtk',
-  sources: gtk_sources + gresource,
+  sources: gtk_sources + resources + enum_types,
   c_args: c_args,
   dependencies: gtk_dependencies,
   include_directories: gtk_include_directories,
@@ -86,7 +103,7 @@ executable(
 
 install_data(
   'LICENSE',
-  install_dir: get_option('datadir') / 'license' / meson.project_name()
+  install_dir: get_option('datadir') / 'licenses' / meson.project_name()
 )
 # install_data(
 #   'dists' / 'showmethekey.png',

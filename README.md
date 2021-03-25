@@ -6,6 +6,12 @@ A screenkey alternative that works under Wayland via libinput.
 
 A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that works under Wayland via libinput](https://hackweek.suse.com/20/projects/a-screenkey-alternative-that-works-under-wayland-via-reading-evdev-directly).
 
+# Usage
+
+Clone this repo and run `mkdir build && cd build && meson setup . .. && meson compile && meson install` to install, then run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
+
+Still in development and might have some bugs.
+
 # Feature
 
 [screenkey](https://gitlab.com/screenkey/screenkey) is a popular project for streamers or tutorial recorders because it can make your typing visual on screen, but it only works under X11, not Wayland because it uses X11 functions to get keyboard event.

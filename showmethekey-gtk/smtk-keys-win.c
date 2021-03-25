@@ -1,76 +1,77 @@
 #include <gtk/gtk.h>
-#include <gio/gio.h>
 
+#include "smtk.h"
 #include "smtk-keys-win.h"
+#include "smtk-keys-emitter.h"
 
 struct _SmtkKeysWin {
 	GtkWindow parent_instance;
 	GtkWidget *header_bar;
-	int header_bar_height;
+	GtkWidget *handle;
 	GtkWidget *keys_label;
-	GSubprocess *cli;
-	GDataInputStream *cli_out;
-	GThread *poller;
+	SmtkKeysEmitter *emitter;
+	SmtkKeyMode mode;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
-struct update_data {
-	SmtkKeysWin *win;
-	char *line;
-};
+// TODO: Turn off switch if error or this window closed.
+// Singals might be better than passing reference!
 
-static void smtk_keys_win_on_update_label(gpointer user_data)
-{
-	// TODO: Now we have events in JSON, need to make a list of keys.
-	struct update_data *update_data = user_data;
-	gtk_label_set_text(GTK_LABEL(update_data->win->keys_label),
-			   update_data->line);
-	g_free(update_data->line);
-	g_free(update_data);
-}
+enum { PROP_0, PROP_MODE, N_PROPERTIES };
 
-static gpointer poller_function(gpointer user_data)
+static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+
+static void smtk_keys_win_set_property(GObject *object, guint property_id,
+				       const GValue *value, GParamSpec *pspec)
 {
-	SmtkKeysWin *win = SMTK_KEYS_WIN(user_data);
-	while (TRUE) {
-		GError *read_line_error = NULL;
-		char *line = g_data_input_stream_read_line(
-			win->cli_out, NULL, NULL, &read_line_error);
-		// See <https://developer.gnome.org/gio/2.56/GDataInputStream.html#g-data-input-stream-read-line>.
-		if (line == NULL && read_line_error != NULL) {
-			g_error("Read line error: %s.\n",
-				read_line_error->message);
-			g_error_free(read_line_error);
-			continue;
-		}
-		// g_print("Backend JSON output: %s.\n", line);
-		// UI can only be modified in UI thread, and we are not in UI
-		// thread here. So we need to use `g_idle_add()` to kick an
-		// async callback into glib's main loop (the same as GTK UI
-		// thread).
-		// Signals are not async! So we cannot use signal callback here,
-		// because they will run in poller thread, too.
-		// TODO: Better user_data handling?
-		struct update_data *update_data =
-			g_malloc(sizeof(*update_data));
-		update_data->win = win;
-		update_data->line = g_strdup(line);
-		g_idle_add(G_SOURCE_FUNC(smtk_keys_win_on_update_label),
-			   update_data);
-		g_free(line);
+	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	switch (property_id) {
+	case PROP_MODE:
+		win->mode = g_value_get_enum(value);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
 	}
-	return NULL;
 }
 
-static void smtk_keys_win_header_bar_on_size_allocate(SmtkKeysWin *win,
-						      GdkRectangle *allocation,
-						      GtkWidget *header_bar)
+static void smtk_keys_win_get_property(GObject *object, guint property_id,
+				       GValue *value, GParamSpec *pspec)
+{
+	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	switch (property_id) {
+	case PROP_MODE:
+		g_value_set_enum(value, win->mode);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
+
+static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
+						  char *label_text,
+						  SmtkKeysEmitter *emitter)
+{
+	gtk_label_set_text(GTK_LABEL(win->keys_label), label_text);
+	// It seems that we cannot free argument in callback.
+	// Looks like GValue will automatically free this for us.
+	// And this is not the same as the outside one.
+	// g_free(label_text);
+}
+
+static void smtk_keys_win_handle_on_size_allocate(SmtkKeysWin *win,
+						  GdkRectangle *allocation,
+						  GtkWidget *header_bar)
 {
 	// Widget's allocation is only usable after realize.
 	// However, the first allocation we get in realize might be not correct.
 	// So we have to connect to header_bar's size-allocation signal and
 	// update input shape with it.
-	win->header_bar_height = allocation->height;
 	cairo_region_t *clickable_region =
 		cairo_region_create_rectangle(allocation);
 	// GtkNative *native = gtk_widget_get_native(GTK_WIDGET(win));
@@ -94,8 +95,7 @@ static void smtk_keys_win_on_size_allocate(SmtkKeysWin *win,
 	// I am not sure why the avaliable height * PANGO_SCALE is too big,
 	// just make it smaller, also too big will have less chars.
 	pango_font_description_set_absolute_size(
-		font, (allocation->height - win->header_bar_height) * 0.5 *
-			      PANGO_SCALE);
+		font, allocation->height * 0.5 * PANGO_SCALE);
 
 	pango_layout_set_font_description(layout, font);
 	pango_font_description_free(font);
@@ -113,13 +113,17 @@ static gboolean smtk_keys_win_on_draw(SmtkKeysWin *win, cairo_t *cr,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
+	// It seems a widget from `.ui` file is unable to set to transparent.
+	// So we have to make UI from code.
 	// gtk_widget_init_template(GTK_WIDGET(win));
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
-	win->header_bar_height = 0;
 	// Disable subtitle to get a compact header bar.
 	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), FALSE);
+	win->handle = gtk_label_new("Clickable Area");
+	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(win->header_bar), win->handle);
+	gtk_widget_show(win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
 	// We need to mark widget as visible manually in GTK3.
 	gtk_widget_show(win->header_bar);
@@ -142,8 +146,8 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 
 	g_signal_connect(win, "draw", G_CALLBACK(smtk_keys_win_on_draw), NULL);
 	g_signal_connect_object(
-		win->header_bar, "size-allocate",
-		G_CALLBACK(smtk_keys_win_header_bar_on_size_allocate), win,
+		win->handle, "size-allocate",
+		G_CALLBACK(smtk_keys_win_handle_on_size_allocate), win,
 		G_CONNECT_SWAPPED);
 	g_signal_connect(win, "size-allocate",
 			 G_CALLBACK(smtk_keys_win_on_size_allocate), NULL);
@@ -186,42 +190,37 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 		headerbar_style_context,
 		GTK_STYLE_PROVIDER(header_bar_css_provider),
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+}
 
-	GError *subprocess_error = NULL;
-	win->cli = g_subprocess_new(
-		G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		&subprocess_error, "pkexec",
-		"/home/alynx/Projects/showmethekey/build/showmethekey-cli",
-		NULL);
-	if (win->cli == NULL) {
-		g_error("Spawn subprocess error: %s.\n",
-			subprocess_error->message);
-		// TODO: Turn off switch if error.
-		g_error_free(subprocess_error);
-	}
-	// Actually I don't wait the subprocess to return, they work like
-	// clients and daemons, why clients want to wait for daemons' exiting?
-	// This is just spawn subprocess.
-	g_subprocess_wait_async(win->cli, NULL, NULL, NULL);
-	win->cli_out =
-		g_data_input_stream_new(g_subprocess_get_stdout_pipe(win->cli));
+static void smtk_keys_win_constructed(GObject *object)
+{
+	// Seems we can only get constructor properties here.
+	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	GError *thread_error = NULL;
-	win->poller =
-		g_thread_try_new("poller", poller_function, win, &thread_error);
-	if (win->poller == NULL) {
-		g_error("Run thread error: %s.\n", thread_error->message);
-		// TODO: Turn off switch if error.
-		g_error_free(thread_error);
+	win->emitter = smtk_keys_emitter_new(win->mode);
+	g_signal_connect_object(
+		win->emitter, "update-label",
+		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
+		G_CONNECT_SWAPPED);
+
+	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
+}
+
+static void smtk_keys_win_dispose(GObject *object)
+{
+	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	// TODO: Release widgets here.
+	if (win->emitter != NULL) {
+		g_object_unref(win->emitter);
+		win->emitter = NULL;
 	}
+
+	G_OBJECT_CLASS(smtk_keys_win_parent_class)->dispose(object);
 }
 
 static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 {
-	// It seems a widget from `.ui` file is unable to set to transparent.
-	// So we have to make UI from code.
-	// G_OBJECT_CLASS(win_class)->dispose = smtk_keys_win_dispose;
-
 	// gtk_widget_class_set_template_from_resource(
 	// GTK_WIDGET_CLASS(win_class),
 	// "/one/alynx/showmethekey/smtk-keys-win.ui");
@@ -229,24 +228,39 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class), smtk_keys_win_on_configure);
 	// gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class), smtk_keys_win_on_draw);
 
-	// TODO: Release things in dispose?
+	GObjectClass *object_class = G_OBJECT_CLASS(win_class);
+
+	object_class->set_property = smtk_keys_win_set_property;
+	object_class->get_property = smtk_keys_win_get_property;
+
+	object_class->constructed = smtk_keys_win_constructed;
+
+	object_class->dispose = smtk_keys_win_dispose;
+
+	obj_properties[PROP_MODE] =
+		g_param_spec_enum("mode", "Mode", "Key Mode",
+				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
+				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(object_class, N_PROPERTIES,
+					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(void)
+GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height)
 {
 	return g_object_new(
 		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title", "Show Me The Key",
-		"width-request", 1400, "height-request", 200, "can-focus",
-		FALSE, "focus-on-click", FALSE, "focus-on-map", FALSE,
-		"accept-focus", FALSE, "app-paintable", TRUE, "vexpand", FALSE,
-		"vexpand-set", TRUE, "hexpand", FALSE, "hexpand-set", TRUE,
+		"width-request", width, "height-request", height, "can-focus",
+		FALSE, "focus-on-click", FALSE,
+		// This window is able to be focused, so this prevent that when
+		// you start it and press Enter, and focus is on the app window,
+		// and it closes.
+		"focus-on-map", TRUE, "accept-focus", TRUE,
+		// Must be paintable for a transparent window.
+		"app-paintable", TRUE, "vexpand", FALSE, "vexpand-set", TRUE,
+		"hexpand", FALSE, "hexpand-set", TRUE,
 		// We cannot focus on this window, and it has no border,
 		// so user resize is meaningless for it.
 		"resizable", FALSE, "skip-pager-hint", TRUE,
-		"skip-taskbar-hint", TRUE, NULL);
-}
-
-GtkWidget *smtk_keys_win_get_keys_label(SmtkKeysWin *win)
-{
-	return win->keys_label;
+		"skip-taskbar-hint", TRUE, "mode", mode, NULL);
 }

@@ -14,6 +14,8 @@
 #include <libinput.h>
 #include <libevdev/libevdev.h>
 
+#include "config.h"
+
 #define MAX_BUFFER_LENGTH 512
 
 enum error_code { NO_ERROR, UDEV_FAILED, LIBINPUT_FAILED, SEAT_FAILED };

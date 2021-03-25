@@ -1,0 +1,279 @@
+#include <gio/gio.h>
+#include <json-glib/json-glib.h>
+
+#include "smtk.h"
+#include "smtk-keys-emitter.h"
+#include "smtk-keys-mapper.h"
+#include "smtk-event.h"
+
+#define MAX_KEYS 30
+
+struct _SmtkKeysEmitter {
+	GObject parent_instance;
+	SmtkKeysMapper *mapper;
+	GSubprocess *cli;
+	GDataInputStream *cli_out;
+	GThread *poller;
+	gboolean polling;
+	GPtrArray *keys_array;
+	SmtkKeyMode mode;
+};
+G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
+
+enum { PROP_0, PROP_MODE, N_PROPERTIES };
+
+static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+
+static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
+					   const GValue *value,
+					   GParamSpec *pspec)
+{
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+
+	switch (property_id) {
+	case PROP_MODE:
+		emitter->mode = g_value_get_enum(value);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
+
+static void smtk_keys_emitter_get_property(GObject *object, guint property_id,
+					   GValue *value, GParamSpec *pspec)
+{
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+
+	switch (property_id) {
+	case PROP_MODE:
+		g_value_set_enum(value, emitter->mode);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
+
+enum { SMTK_KEYS_EMITTER_UPDATE_LABEL, N_SIGNALS };
+
+static guint obj_signals[N_SIGNALS] = { 0 };
+
+static void idle_destroy_function(gpointer user_data)
+{
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	g_object_unref(emitter);
+}
+
+static gboolean idle_function(gpointer user_data)
+{
+	// Here we back to UI thread.
+	// Looks like we may have many idle_function() run at the same time.
+	// So we cannot use a common label_text in emitter.
+	// Instead we only join them here.
+	// TODO: Read docs about g_idle_add.
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	gchar *label_text =
+		g_strjoinv(" ", (gchar **)emitter->keys_array->pdata);
+	g_signal_emit_by_name(emitter, "update-label", label_text);
+	g_free(label_text);
+	return FALSE;
+}
+
+static gpointer poller_function(gpointer user_data)
+{
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	while (emitter->polling) {
+		GError *read_line_error = NULL;
+		char *line = g_data_input_stream_read_line(
+			emitter->cli_out, NULL, NULL, &read_line_error);
+		// See <https://developer.gnome.org/gio/2.56/GDataInputStream.html#g-data-input-stream-read-line>.
+		if (line == NULL) {
+			if (read_line_error != NULL) {
+				g_critical("Read line error: %s.\n",
+					   read_line_error->message);
+				g_error_free(read_line_error);
+			}
+			continue;
+		}
+
+		SmtkEvent *event = smtk_event_new();
+		if (smtk_event_parse_json(event, line) != 0) {
+			g_object_unref(event);
+			g_free(line);
+			continue;
+		}
+
+		gchar *key;
+		// Always get key with SmtkKeysMapper, it will update XKB state.
+		switch (emitter->mode) {
+		case SMTK_KEY_MODE_COMPOSED:
+			key = smtk_keys_mapper_get_composed(emitter->mapper,
+							    event);
+			break;
+		case SMTK_KEY_MODE_RAW:
+			key = smtk_keys_mapper_get_raw(emitter->mapper, event);
+			break;
+		default:
+			// Should never be here.
+			break;
+		}
+		// We don't free key here, GPtrArray will free them.
+		if (key != NULL) {
+			if (smtk_event_get_event_state(event) ==
+			    SMTK_EVENT_STATE_PRESSED) {
+				g_ptr_array_insert(emitter->keys_array,
+						   emitter->keys_array->len - 1,
+						   key);
+				if (emitter->keys_array->len - 1 > MAX_KEYS)
+					// We set free function for GPtrArray,
+					// So it will free automatically.
+					g_ptr_array_remove_range(
+						emitter->keys_array, 0,
+						emitter->keys_array->len - 1 -
+							MAX_KEYS);
+				// UI can only be modified in UI thread, and we are not
+				// in UI thread here. So we need to use `g_idle_add()`
+				// to kick an async callback into glib's main loop
+				// (the same as GTK UI thread).
+				// Signals are not async! So we cannot use signal
+				// callback directly here, because they will run in
+				// poller thread instead of UI thread.
+				g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
+						   idle_function,
+						   g_object_ref(emitter),
+						   idle_destroy_function);
+			}
+		}
+		g_object_unref(event);
+		g_free(line);
+	}
+	return NULL;
+}
+
+static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
+{
+	emitter->mapper = smtk_keys_mapper_new();
+	// g_strjoinv() accepts a NULL terminated char pointer array,
+	// so we use a GPtrArray to store char pointer.
+	emitter->keys_array = g_ptr_array_new_full(MAX_KEYS + 1, g_free);
+	// Append a NULL first and always insert elements before it.
+	// So we can directly use the GPtrArray for g_strjoinv().
+	g_ptr_array_add(emitter->keys_array, NULL);
+
+	GError *subprocess_error = NULL;
+	emitter->cli = g_subprocess_new(
+		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+			G_SUBPROCESS_FLAGS_STDERR_PIPE,
+		&subprocess_error, "pkexec",
+		INSTALL_PREFIX "/bin/showmethekey-cli",
+		NULL);
+	if (emitter->cli == NULL) {
+		g_critical("Spawn subprocess error: %s.\n",
+			   subprocess_error->message);
+		// TODO: Turn off switch if error.
+		g_error_free(subprocess_error);
+	}
+	// Actually I don't wait the subprocess to return, they work like
+	// clients and daemons, why clients want to wait for daemons' exiting?
+	// This is just spawn subprocess.
+	g_subprocess_wait_async(emitter->cli, NULL, NULL, NULL);
+	emitter->cli_out = g_data_input_stream_new(
+		g_subprocess_get_stdout_pipe(emitter->cli));
+
+	emitter->polling = TRUE;
+	GError *thread_error = NULL;
+	emitter->poller = g_thread_try_new("poller", poller_function, emitter,
+					   &thread_error);
+	if (emitter->poller == NULL) {
+		g_critical("Run thread error: %s.\n", thread_error->message);
+		// TODO: Turn off switch if error.
+		g_error_free(thread_error);
+	}
+}
+
+static void smtk_keys_emitter_dispose(GObject *object)
+{
+	// We only drop reference here.
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+
+	// Don't know why but I need to stop cli before poller.
+	if (emitter->cli != NULL) {
+		// Because we run subprocess with pkexec,
+		// so we cannot force kill it,
+		// we use stdin pipe to write a "stop\n",
+		// and let it exit by itself.
+		const char *stop = "stop\n";
+		GBytes *input = g_bytes_new(stop, sizeof(stop));
+		g_subprocess_communicate(emitter->cli, input, NULL, NULL, NULL,
+					 NULL);
+		g_bytes_unref(input);
+		// g_subprocess_force_exit(emitter->cli);
+		g_object_unref(emitter->cli);
+		emitter->cli = NULL;
+	}
+
+	if (emitter->poller != NULL) {
+		emitter->polling = FALSE;
+		// This will wait until thread exited.
+		// It will call g_thread_unref() internal
+		// so we don't need to do it.
+		g_thread_join(emitter->poller);
+		// g_thread_unref(emitter->poller);
+		emitter->poller = NULL;
+	}
+
+	if (emitter->mapper != NULL) {
+		g_object_unref(emitter->mapper);
+		emitter->mapper = NULL;
+	}
+
+	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->dispose(object);
+}
+
+static void smtk_keys_emitter_finalize(GObject *object)
+{
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+
+	if (emitter->keys_array != NULL) {
+		g_ptr_array_free(emitter->keys_array, TRUE);
+		emitter->keys_array = NULL;
+	}
+
+	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->finalize(object);
+}
+
+static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS(emitter_class);
+
+	object_class->set_property = smtk_keys_emitter_set_property;
+	object_class->get_property = smtk_keys_emitter_get_property;
+
+	object_class->dispose = smtk_keys_emitter_dispose;
+	object_class->finalize = smtk_keys_emitter_finalize;
+
+	obj_signals[SMTK_KEYS_EMITTER_UPDATE_LABEL] = g_signal_new(
+		"update-label", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
+		NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
+		G_TYPE_STRING);
+
+	obj_properties[PROP_MODE] =
+		g_param_spec_enum("mode", "Mode", "Key Mode",
+				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
+				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(object_class, N_PROPERTIES,
+					  obj_properties);
+}
+
+SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode)
+{
+	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, NULL);
+
+	emitter->mode = mode;
+
+	return emitter;
+}

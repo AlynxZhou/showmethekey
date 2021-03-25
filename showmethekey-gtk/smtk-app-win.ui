@@ -3,8 +3,8 @@
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
     <property name="visible">true</property>
     <property name="title">Show Me The Key</property>
-    <property name="default-width">800</property>
-    <property name="default-height">600</property>
+    <!-- <property name="default-width">800</property> -->
+    <!-- <property name="default-height">600</property> -->
     <child>
       <object class="GtkBox">
         <property name="visible">true</property>
@@ -13,11 +13,12 @@
         <property name="margin-start">10</property>
         <property name="margin-bottom">10</property>
         <property name="margin-end">10</property>
+        <property name="spacing">10</property>
         <child>
           <object class="GtkBox">
             <property name="visible">true</property>
             <property name="orientation">horizontal</property>
-            <!-- <property name="vexpand">true</property> -->
+            <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">true</property>
@@ -30,7 +31,6 @@
               <object class="GtkSwitch" id="keys_win_switch">
                 <property name="visible">true</property>
                 <property name="hexpand">false</property>
-                <property name="hexpand">true</property>
                 <property name="halign">center</property>
                 <signal name="notify::active" handler="smtk_app_win_on_switch_active" object="SmtkAppWin" swapped="yes" />
               </object>
@@ -41,6 +41,75 @@
           <object class="GtkBox">
             <property name="visible">true</property>
             <property name="orientation">horizontal</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">true</property>
+                <property name="label" translatable="yes">Mode</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="mode_selector">
+                <property name="visible">true</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+                <!-- <signal name="notify::active" handler="smtk_app_win_on_switch_active" object="SmtkAppWin" swapped="yes" /> -->
+                <property name="active-id">composed</property>
+                <items>
+                  <item translatable="yes" id="composed">Composed</item>
+                  <item translatable="yes" id="raw">Raw</item>
+                </items>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">true</property>
+            <property name="orientation">horizontal</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">true</property>
+                <property name="label" translatable="yes">Width</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="width_entry">
+                <property name="visible">true</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+                <property name="input-purpose">number</property>
+                <property name="text">1500</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">true</property>
+            <property name="orientation">horizontal</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">true</property>
+                <property name="label" translatable="yes">Height</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkEntry" id="height_entry">
+                <property name="visible">true</property>
+                <property name="hexpand">true</property>
+                <property name="halign">center</property>
+                <property name="input-purpose">number</property>
+                <property name="text">200</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
