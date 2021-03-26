@@ -11,6 +11,7 @@ struct _SmtkKeysWin {
 	GtkWidget *keys_label;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
+	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
@@ -110,6 +111,7 @@ static gboolean smtk_keys_win_on_draw(SmtkKeysWin *win, cairo_t *cr,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
+	win->error = NULL;
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	// gtk_widget_init_template(GTK_WIDGET(win));
@@ -194,8 +196,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	// TODO: Add error handling like SmtkKeysEmitter.
-	win->emitter = smtk_keys_emitter_new(win->mode, NULL);
+	win->emitter = smtk_keys_emitter_new(win->mode, &win->error);
 	g_signal_connect_object(
 		win->emitter, "update-label",
 		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
@@ -247,9 +248,10 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height)
+GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
+			     GError **error)
 {
-	return g_object_new(
+	SmtkKeysWin *win = g_object_new(
 		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title", "Show Me The Key",
 		"width-request", width, "height-request", height, "can-focus",
 		FALSE, "focus-on-click", FALSE,
@@ -264,4 +266,13 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height)
 		// so user resize is meaningless for it.
 		"resizable", FALSE, "skip-pager-hint", TRUE,
 		"skip-taskbar-hint", TRUE, "mode", mode, NULL);
+
+	if (win->error != NULL && error != NULL) {
+		*error = win->error;
+		g_object_unref(win);
+		win = NULL;
+	}
+
+	// GTK always return GtkWidget, so do I.
+	return GTK_WIDGET(win);
 }
