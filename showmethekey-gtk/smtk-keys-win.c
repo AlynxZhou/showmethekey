@@ -14,9 +14,6 @@ struct _SmtkKeysWin {
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
-// TODO: Turn off switch if error or this window closed.
-// Singals might be better than passing reference!
-
 enum { PROP_0, PROP_MODE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
@@ -197,7 +194,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	win->emitter = smtk_keys_emitter_new(win->mode);
+	// TODO: Add error handling like SmtkKeysEmitter.
+	win->emitter = smtk_keys_emitter_new(win->mode, NULL);
 	g_signal_connect_object(
 		win->emitter, "update-label",
 		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
@@ -210,7 +208,10 @@ static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	// TODO: Release widgets here.
+	// It seems that GTK3's gtk_widget_destroy() will automatically drop
+	// reference to children, while GTK4's gtk_window_destroy() not,
+	// so we will add children unparent code here in future.
+
 	if (win->emitter != NULL) {
 		g_object_unref(win->emitter);
 		win->emitter = NULL;

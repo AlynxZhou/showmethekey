@@ -17,6 +17,7 @@ struct _SmtkKeysEmitter {
 	gboolean polling;
 	GPtrArray *keys_array;
 	SmtkKeyMode mode;
+	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
@@ -73,7 +74,6 @@ static gboolean idle_function(gpointer user_data)
 	// Looks like we may have many idle_function() run at the same time.
 	// So we cannot use a common label_text in emitter.
 	// Instead we only join them here.
-	// TODO: Read docs about g_idle_add.
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
 	gchar *label_text =
 		g_strjoinv(" ", (gchar **)emitter->keys_array->pdata);
@@ -134,13 +134,17 @@ static gpointer poller_function(gpointer user_data)
 						emitter->keys_array, 0,
 						emitter->keys_array->len - 1 -
 							MAX_KEYS);
-				// UI can only be modified in UI thread, and we are not
-				// in UI thread here. So we need to use `g_idle_add()`
-				// to kick an async callback into glib's main loop
+				// UI can only be modified in UI thread,
+				// and we are not in UI thread here.
+				// So we need to use `g_timeout_add()` to kick
+				// an async callback into glib's main loop
 				// (the same as GTK UI thread).
-				// Signals are not async! So we cannot use signal
-				// callback directly here, because they will run in
+				// Signals are not async!
+				// So we cannot use signal callback directly
+				// here, because they will run in
 				// poller thread instead of UI thread.
+				// `g_idle_add()` is not suitable because we
+				// have a high priority.
 				g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
 						   idle_function,
 						   g_object_ref(emitter),
@@ -155,6 +159,7 @@ static gpointer poller_function(gpointer user_data)
 
 static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 {
+	emitter->error = NULL;
 	emitter->mapper = smtk_keys_mapper_new();
 	// g_strjoinv() accepts a NULL terminated char pointer array,
 	// so we use a GPtrArray to store char pointer.
@@ -163,18 +168,14 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	// So we can directly use the GPtrArray for g_strjoinv().
 	g_ptr_array_add(emitter->keys_array, NULL);
 
-	GError *subprocess_error = NULL;
 	emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 			G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		&subprocess_error, "pkexec",
+		&emitter->error, "pkexec",
 		INSTALL_PREFIX "/bin/showmethekey-cli",
 		NULL);
 	if (emitter->cli == NULL) {
-		g_critical("Spawn subprocess error: %s.\n",
-			   subprocess_error->message);
-		// TODO: Turn off switch if error.
-		g_error_free(subprocess_error);
+		return;
 	}
 	// Actually I don't wait the subprocess to return, they work like
 	// clients and daemons, why clients want to wait for daemons' exiting?
@@ -184,13 +185,10 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 		g_subprocess_get_stdout_pipe(emitter->cli));
 
 	emitter->polling = TRUE;
-	GError *thread_error = NULL;
 	emitter->poller = g_thread_try_new("poller", poller_function, emitter,
-					   &thread_error);
+					   &emitter->error);
 	if (emitter->poller == NULL) {
-		g_critical("Run thread error: %s.\n", thread_error->message);
-		// TODO: Turn off switch if error.
-		g_error_free(thread_error);
+		return;
 	}
 }
 
@@ -269,11 +267,15 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode)
+SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
 {
-	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, NULL);
+	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode", mode, NULL);
 
-	emitter->mode = mode;
+	if (emitter->error != NULL && error != NULL) {
+		*error = emitter->error;
+		g_object_unref(emitter);
+		emitter = NULL;
+	}
 
 	return emitter;
 }

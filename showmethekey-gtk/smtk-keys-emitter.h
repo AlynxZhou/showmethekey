@@ -13,7 +13,7 @@ typedef enum {
 	SMTK_KEY_MODE_RAW
 } SmtkKeyMode;
 
-SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode);
+SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error);
 
 G_END_DECLS
 

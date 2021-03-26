@@ -16,6 +16,19 @@ struct _SmtkAppWin {
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 
+static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
+					     gpointer user_data,
+					     SmtkKeysWin *keys_win)
+{
+	if (win->keys_win != NULL) {
+		win->keys_win = NULL;
+		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
+		gtk_widget_set_sensitive(win->mode_selector, TRUE);
+		gtk_widget_set_sensitive(win->width_entry, TRUE);
+		gtk_widget_set_sensitive(win->height_entry, TRUE);
+	}
+}
+
 // See <https://mail.gnome.org/archives/networkmanager-list/2010-October/msg00129.html>.
 // notify of property have one more argument for property
 // in the middle of instance and object.
@@ -31,16 +44,23 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 				mode = SMTK_KEY_MODE_RAW;
 			else
 				mode = SMTK_KEY_MODE_COMPOSED;
-			guint64 width = g_ascii_strtoull(gtk_entry_get_text(
-				GTK_ENTRY(win->width_entry)), NULL, 10);
+			guint64 width = g_ascii_strtoull(
+				gtk_entry_get_text(GTK_ENTRY(win->width_entry)),
+				NULL, 10);
 			width = width == 0 ? 1500 : width;
-			guint64 height = g_ascii_strtoull(gtk_entry_get_text(
-				GTK_ENTRY(win->height_entry)), NULL, 10);
+			guint64 height =
+				g_ascii_strtoull(gtk_entry_get_text(GTK_ENTRY(
+							 win->height_entry)),
+						 NULL, 10);
 			height = height == 0 ? 200 : height;
 			gtk_widget_set_sensitive(win->mode_selector, FALSE);
 			gtk_widget_set_sensitive(win->width_entry, FALSE);
 			gtk_widget_set_sensitive(win->height_entry, FALSE);
 			win->keys_win = smtk_keys_win_new(mode, width, height);
+			g_signal_connect_object(
+				win->keys_win, "destroy",
+				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
+				win, G_CONNECT_SWAPPED);
 			gtk_window_present(GTK_WINDOW(win->keys_win));
 		}
 	} else {

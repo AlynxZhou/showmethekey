@@ -14,26 +14,30 @@ struct _SmtkKeysMapper {
 	struct xkb_state *xkb_state;
 	GHashTable *xkb_mod_names;
 	GHashTable *xkb_replace_names;
+	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
 static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 {
+	mapper->error = NULL;
 	mapper->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	if (mapper->xkb_context == NULL) {
 		g_critical("Create XKB context error.\n");
-		// TODO: Turn off switch if error.
+		// TODO: Add some kind of custom error domains,
+		// and report error like SmtkKeysEmitter.
+		return;
 	}
 	mapper->xkb_keymap = xkb_keymap_new_from_names(
 		mapper->xkb_context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
 	if (mapper->xkb_keymap == NULL) {
 		g_critical("Create XKB keymap error.\n");
-		// TODO: Turn off switch if error.
+		return;
 	}
 	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
 	if (mapper->xkb_state == NULL) {
 		g_critical("Create XKB state error.\n");
-		// TODO: Turn off switch if error.
+		return;
 	}
 
 	// GHashTable only keeps reference, so we manully copy string and set
@@ -194,7 +198,9 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 
 SmtkKeysMapper *smtk_keys_mapper_new(void)
 {
-	return g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
+	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
+
+	return mapper;
 }
 
 char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
