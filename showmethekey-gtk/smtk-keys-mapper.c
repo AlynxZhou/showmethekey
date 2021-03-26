@@ -62,12 +62,20 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	// Shift modified key raw. For example ISO_Left_Tab here.
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ISO_Left_Tab"),
 			    g_strdup("Shift+Tab"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("XF86AudioMute"),
-			      g_strdup("MuteToggle"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("XF86AudioLowerVolumn"),
+	g_hash_table_insert(mapper->xkb_replace_names,
+			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
+	g_hash_table_insert(mapper->xkb_replace_names,
+			    g_strdup("XF86AudioLowerVolumn"),
 			    g_strdup("VolumnDown"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("XF86AudioRaiseVolumn"),
+	g_hash_table_insert(mapper->xkb_replace_names,
+			    g_strdup("XF86AudioRaiseVolumn"),
 			    g_strdup("VolumnUp"));
+	g_hash_table_insert(mapper->xkb_replace_names,
+			    g_strdup("XF86MonBrightnessDown"),
+			    g_strdup("BrightnessDown"));
+	g_hash_table_insert(mapper->xkb_replace_names,
+			    g_strdup("XF86MonBrightnessUp"),
+			    g_strdup("BrightnessUp"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Num_Lock"),
 			    g_strdup("NumLock"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ascitilde"),
