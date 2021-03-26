@@ -160,7 +160,10 @@ static gpointer poller_function(gpointer user_data)
 static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 {
 	emitter->error = NULL;
-	emitter->mapper = smtk_keys_mapper_new();
+	emitter->mapper = smtk_keys_mapper_new(&emitter->error);
+	// emitter->error is already set, just return.
+	if (emitter->mapper == NULL)
+		return;
 	// g_strjoinv() accepts a NULL terminated char pointer array,
 	// so we use a GPtrArray to store char pointer.
 	emitter->keys_array = g_ptr_array_new_full(MAX_KEYS + 1, g_free);
@@ -168,15 +171,16 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	// So we can directly use the GPtrArray for g_strjoinv().
 	g_ptr_array_add(emitter->keys_array, NULL);
 
+	// TODO: Detect pkexec cancel?
 	emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 			G_SUBPROCESS_FLAGS_STDERR_PIPE,
 		&emitter->error, "pkexec",
 		INSTALL_PREFIX "/bin/showmethekey-cli",
 		NULL);
-	if (emitter->cli == NULL) {
+	// emitter->error is already set, just return.
+	if (emitter->cli == NULL)
 		return;
-	}
 	// Actually I don't wait the subprocess to return, they work like
 	// clients and daemons, why clients want to wait for daemons' exiting?
 	// This is just spawn subprocess.
@@ -187,9 +191,9 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	emitter->polling = TRUE;
 	emitter->poller = g_thread_try_new("poller", poller_function, emitter,
 					   &emitter->error);
-	if (emitter->poller == NULL) {
+	// emitter->error is already set, just return.
+	if (emitter->poller == NULL)
 		return;
-	}
 }
 
 static void smtk_keys_emitter_dispose(GObject *object)
@@ -274,7 +278,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
 	if (emitter->error != NULL && error != NULL) {
 		*error = emitter->error;
 		g_object_unref(emitter);
-		emitter = NULL;
+		return NULL;
 	}
 
 	return emitter;

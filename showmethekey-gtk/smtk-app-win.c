@@ -71,6 +71,7 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 				g_critical("%s\n", error->message);
 				g_error_free(error);
 				gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
+				return;
 			}
 			smtk_app_win_disable(win);
 			g_signal_connect_object(

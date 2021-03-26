@@ -197,6 +197,9 @@ static void smtk_keys_win_constructed(GObject *object)
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	win->emitter = smtk_keys_emitter_new(win->mode, &win->error);
+	// win->error is set so just return.
+	if (win->emitter == NULL)
+		return;
 	g_signal_connect_object(
 		win->emitter, "update-label",
 		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
@@ -269,8 +272,11 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 
 	if (win->error != NULL && error != NULL) {
 		*error = win->error;
-		g_object_unref(win);
-		win = NULL;
+		// GtkWidget is GInitiallyUnowned,
+		// so we need to sink the floating first.
+		g_object_ref_sink(win);
+		gtk_widget_destroy(GTK_WIDGET(win));
+		return NULL;
 	}
 
 	// GTK always return GtkWidget, so do I.

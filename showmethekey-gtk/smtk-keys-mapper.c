@@ -18,25 +18,31 @@ struct _SmtkKeysMapper {
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
+G_DEFINE_QUARK(smtk - keys - mapper - error - quark, smtk_keys_mapper_error)
+
 static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 {
 	mapper->error = NULL;
 	mapper->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 	if (mapper->xkb_context == NULL) {
-		g_critical("Create XKB context error.\n");
-		// TODO: Add some kind of custom error domains,
-		// and report error like SmtkKeysEmitter.
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_CONTEXT,
+			    "Failed to create XKB context.");
 		return;
 	}
 	mapper->xkb_keymap = xkb_keymap_new_from_names(
 		mapper->xkb_context, NULL, XKB_KEYMAP_COMPILE_NO_FLAGS);
 	if (mapper->xkb_keymap == NULL) {
-		g_critical("Create XKB keymap error.\n");
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
+			    "Failed to create XKB keymap.");
 		return;
 	}
 	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
 	if (mapper->xkb_state == NULL) {
-		g_critical("Create XKB state error.\n");
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			    "Failed to create XKB state.");
 		return;
 	}
 
@@ -204,9 +210,15 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 	G_OBJECT_CLASS(mapper_class)->dispose = smtk_keys_mapper_dispose;
 }
 
-SmtkKeysMapper *smtk_keys_mapper_new(void)
+SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
 {
 	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
+
+	if (mapper->error != NULL && error != NULL) {
+		*error = mapper->error;
+		g_object_unref(mapper);
+		return NULL;
+	}
 
 	return mapper;
 }
