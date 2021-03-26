@@ -16,6 +16,20 @@ struct _SmtkAppWin {
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 
+static void smtk_app_win_enable(SmtkAppWin *win)
+{
+	gtk_widget_set_sensitive(win->mode_selector, TRUE);
+	gtk_widget_set_sensitive(win->width_entry, TRUE);
+	gtk_widget_set_sensitive(win->height_entry, TRUE);
+}
+
+static void smtk_app_win_disable(SmtkAppWin *win)
+{
+	gtk_widget_set_sensitive(win->mode_selector, FALSE);
+	gtk_widget_set_sensitive(win->width_entry, FALSE);
+	gtk_widget_set_sensitive(win->height_entry, FALSE);
+}
+
 static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 					     gpointer user_data,
 					     SmtkKeysWin *keys_win)
@@ -23,9 +37,7 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 	if (win->keys_win != NULL) {
 		win->keys_win = NULL;
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
-		gtk_widget_set_sensitive(win->mode_selector, TRUE);
-		gtk_widget_set_sensitive(win->width_entry, TRUE);
-		gtk_widget_set_sensitive(win->height_entry, TRUE);
+		smtk_app_win_enable(win);
 	}
 }
 
@@ -53,10 +65,14 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 							 win->height_entry)),
 						 NULL, 10);
 			height = height == 0 ? 200 : height;
-			gtk_widget_set_sensitive(win->mode_selector, FALSE);
-			gtk_widget_set_sensitive(win->width_entry, FALSE);
-			gtk_widget_set_sensitive(win->height_entry, FALSE);
-			win->keys_win = smtk_keys_win_new(mode, width, height);
+			GError *error = NULL;
+			win->keys_win = smtk_keys_win_new(mode, width, height, &error);
+			if (win->keys_win == NULL) {
+				g_critical("%s\n", error->message);
+				g_error_free(error);
+				gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
+			}
+			smtk_app_win_disable(win);
 			g_signal_connect_object(
 				win->keys_win, "destroy",
 				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
@@ -67,9 +83,7 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 		if (win->keys_win != NULL) {
 			gtk_widget_destroy(GTK_WIDGET(win->keys_win));
 			win->keys_win = NULL;
-			gtk_widget_set_sensitive(win->mode_selector, TRUE);
-			gtk_widget_set_sensitive(win->width_entry, TRUE);
-			gtk_widget_set_sensitive(win->height_entry, TRUE);
+			smtk_app_win_enable(win);
 		}
 	}
 }
