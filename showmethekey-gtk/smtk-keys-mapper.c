@@ -18,7 +18,10 @@ struct _SmtkKeysMapper {
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
-G_DEFINE_QUARK(smtk - keys - mapper - error - quark, smtk_keys_mapper_error)
+// Prevent clang-format from adding space between minus.
+// clang-format off
+G_DEFINE_QUARK(smtk-keys-mapper-error-quark, smtk_keys_mapper_error)
+// clang-format on
 
 static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 {
@@ -214,8 +217,8 @@ SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
 {
 	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
 
-	if (mapper->error != NULL && error != NULL) {
-		*error = mapper->error;
+	if (mapper->error != NULL) {
+		g_propagate_error(error, mapper->error);
 		g_object_unref(mapper);
 		return NULL;
 	}

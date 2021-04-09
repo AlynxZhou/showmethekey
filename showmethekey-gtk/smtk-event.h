@@ -15,11 +15,16 @@ typedef enum {
 	SMTK_EVENT_STATE_PRESSED
 } SmtkEventState;
 
+#define SMTK_EVENT_ERROR smtk_event_error_quark()
+typedef enum {
+        SMTK_EVENT_ERROR_SOURCE,
+        SMTK_EVENT_ERROR_XKB_UNKNOWN
+} SmtkEventError;
+
 #define SMTK_TYPE_EVENT smtk_event_get_type()
 G_DECLARE_FINAL_TYPE(SmtkEvent, smtk_event, SMTK, EVENT, GObject)
 
-SmtkEvent *smtk_event_new(void);
-int smtk_event_parse_json(SmtkEvent *event, const char *json_line);
+SmtkEvent *smtk_event_new(gchar *source, GError **error);
 SmtkEventType smtk_event_get_event_type(SmtkEvent *event);
 SmtkEventState smtk_event_get_event_state(SmtkEvent *event);
 gchar *smtk_event_get_device_name(SmtkEvent *event);

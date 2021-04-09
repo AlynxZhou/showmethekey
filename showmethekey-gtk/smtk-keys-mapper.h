@@ -15,7 +15,7 @@ typedef enum {
         SMTK_KEYS_MAPPER_ERROR_XKB_CONTEXT,
         SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
         SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-        SMTK_KEYS_MAPPER_ERROR_XKB_UNKNOWN
+        SMTK_KEYS_MAPPER_ERROR_UNKNOWN
 } SmtkKeysMapperError;
 
 SmtkKeysMapper *smtk_keys_mapper_new(GError **error);

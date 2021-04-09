@@ -160,15 +160,12 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	g_signal_connect(win, "size-allocate",
 			 G_CALLBACK(smtk_keys_win_on_size_allocate), NULL);
 
-	// TODO: Those only works for GNOME X11 session,
-	// for GNOME Wayland session, show some message to let user click
-	// app menu by themselves.
 	const gchar *xdg_session_type = g_getenv("XDG_SESSION_TYPE");
 	if (xdg_session_type != NULL) {
 		if (strcmp(xdg_session_type, "wayland") == 0) {
 			GtkWidget *dialog = gtk_message_dialog_new(
-				GTK_WINDOW(win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
-				GTK_BUTTONS_CLOSE,
+				GTK_WINDOW(win), GTK_DIALOG_MODAL,
+				GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE,
 				"Wayland does not allow windows for keeping above, please right click the \"Clickable Area\" and check \"Always on Top\" and \"Always on Visible Workspace\" from your compositor's menu!");
 			gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
@@ -182,6 +179,7 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 
 	// We can not make a half transparent window with CSS,
 	// and need to set visual and do custom draw.
+	// GTK4 dropped this and we may update it.
 	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(win));
 	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
 	if (visual != NULL)
