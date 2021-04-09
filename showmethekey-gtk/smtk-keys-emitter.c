@@ -21,9 +21,40 @@ struct _SmtkKeysEmitter {
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
+enum { SIG_UPDATE_LABEL, SIG_CLI_EXIT, N_SIGNALS };
+
+static guint obj_signals[N_SIGNALS] = { 0 };
+
 enum { PROP_0, PROP_MODE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+
+// Check whether user choose cancel for pkexec.
+static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
+					      GAsyncResult *res,
+					      gpointer user_data)
+{
+	// We got a copy of SmtkKeysEmitter's address when setting up this
+	// callback, and there is a condition, that user closes the switch,
+	// and emitter is disposed, then this callback is called, and the
+	// address we hold is invalid, it might point to other objects, and
+	// still not NULL. To solve this problem we hold a reference to this
+	// callback to prevent the emitter to be disposed and manually drop it.
+	g_print("smtk_keys_emitter_cli_on_complete called\n");
+	
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	if (emitter->cli != NULL &&
+	    g_subprocess_get_exit_status(emitter->cli) != 0) {
+		// Better to close thread here to prevent a lot of error.
+		emitter->polling = FALSE;
+		if (emitter->poller != NULL) {
+			g_thread_join(emitter->poller);
+			emitter->poller = NULL;
+		}
+		g_signal_emit_by_name(emitter, "cli-exit");
+	}
+	g_object_unref(emitter);
+}
 
 static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
 					   const GValue *value,
@@ -58,10 +89,6 @@ static void smtk_keys_emitter_get_property(GObject *object, guint property_id,
 	}
 }
 
-enum { SMTK_KEYS_EMITTER_UPDATE_LABEL, N_SIGNALS };
-
-static guint obj_signals[N_SIGNALS] = { 0 };
-
 static void idle_destroy_function(gpointer user_data)
 {
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
@@ -92,16 +119,18 @@ static gpointer poller_function(gpointer user_data)
 		// See <https://developer.gnome.org/gio/2.56/GDataInputStream.html#g-data-input-stream-read-line>.
 		if (line == NULL) {
 			if (read_line_error != NULL) {
-				g_critical("Read line error: %s.\n",
-					   read_line_error->message);
+				g_warning("Read line error: %s.\n",
+					  read_line_error->message);
 				g_error_free(read_line_error);
 			}
 			continue;
 		}
 
-		SmtkEvent *event = smtk_event_new();
-		if (smtk_event_parse_json(event, line) != 0) {
-			g_object_unref(event);
+		GError *event_error = NULL;
+		SmtkEvent *event = smtk_event_new(line, &event_error);
+		if (event == NULL) {
+			g_warning("Create event error: %s.\n",
+				  event_error->message);
 			g_free(line);
 			continue;
 		}
@@ -159,7 +188,13 @@ static gpointer poller_function(gpointer user_data)
 
 static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 {
+	emitter->mapper = NULL;
+	emitter->cli = NULL;
+	emitter->cli_out = NULL;
+	emitter->poller = NULL;
+	emitter->keys_array = NULL;
 	emitter->error = NULL;
+
 	emitter->mapper = smtk_keys_mapper_new(&emitter->error);
 	// emitter->error is already set, just return.
 	if (emitter->mapper == NULL)
@@ -170,69 +205,6 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	// Append a NULL first and always insert elements before it.
 	// So we can directly use the GPtrArray for g_strjoinv().
 	g_ptr_array_add(emitter->keys_array, NULL);
-
-	// TODO: Detect pkexec cancel?
-	emitter->cli = g_subprocess_new(
-		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
-			G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		&emitter->error, "pkexec",
-		INSTALL_PREFIX "/bin/showmethekey-cli",
-		NULL);
-	// emitter->error is already set, just return.
-	if (emitter->cli == NULL)
-		return;
-	// Actually I don't wait the subprocess to return, they work like
-	// clients and daemons, why clients want to wait for daemons' exiting?
-	// This is just spawn subprocess.
-	g_subprocess_wait_async(emitter->cli, NULL, NULL, NULL);
-	emitter->cli_out = g_data_input_stream_new(
-		g_subprocess_get_stdout_pipe(emitter->cli));
-
-	emitter->polling = TRUE;
-	emitter->poller = g_thread_try_new("poller", poller_function, emitter,
-					   &emitter->error);
-	// emitter->error is already set, just return.
-	if (emitter->poller == NULL)
-		return;
-}
-
-static void smtk_keys_emitter_dispose(GObject *object)
-{
-	// We only drop reference here.
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
-
-	// Don't know why but I need to stop cli before poller.
-	if (emitter->cli != NULL) {
-		// Because we run subprocess with pkexec,
-		// so we cannot force kill it,
-		// we use stdin pipe to write a "stop\n",
-		// and let it exit by itself.
-		const char *stop = "stop\n";
-		GBytes *input = g_bytes_new(stop, sizeof(stop));
-		g_subprocess_communicate(emitter->cli, input, NULL, NULL, NULL,
-					 NULL);
-		g_bytes_unref(input);
-		// g_subprocess_force_exit(emitter->cli);
-		g_object_unref(emitter->cli);
-		emitter->cli = NULL;
-	}
-
-	if (emitter->poller != NULL) {
-		emitter->polling = FALSE;
-		// This will wait until thread exited.
-		// It will call g_thread_unref() internal
-		// so we don't need to do it.
-		g_thread_join(emitter->poller);
-		// g_thread_unref(emitter->poller);
-		emitter->poller = NULL;
-	}
-
-	if (emitter->mapper != NULL) {
-		g_object_unref(emitter->mapper);
-		emitter->mapper = NULL;
-	}
-
-	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->dispose(object);
 }
 
 static void smtk_keys_emitter_finalize(GObject *object)
@@ -254,13 +226,15 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	object_class->set_property = smtk_keys_emitter_set_property;
 	object_class->get_property = smtk_keys_emitter_get_property;
 
-	object_class->dispose = smtk_keys_emitter_dispose;
 	object_class->finalize = smtk_keys_emitter_finalize;
 
-	obj_signals[SMTK_KEYS_EMITTER_UPDATE_LABEL] = g_signal_new(
+	obj_signals[SIG_UPDATE_LABEL] = g_signal_new(
 		"update-label", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
 		G_TYPE_STRING);
+	obj_signals[SIG_CLI_EXIT] = g_signal_new(
+		"cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0, NULL,
+		NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 	obj_properties[PROP_MODE] =
 		g_param_spec_enum("mode", "Mode", "Key Mode",
@@ -273,13 +247,92 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 
 SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
 {
-	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode", mode, NULL);
+	SmtkKeysEmitter *emitter =
+		g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode", mode, NULL);
 
-	if (emitter->error != NULL && error != NULL) {
-		*error = emitter->error;
+	if (emitter->error != NULL) {
+		g_propagate_error(error, emitter->error);
 		g_object_unref(emitter);
 		return NULL;
 	}
 
 	return emitter;
+}
+
+// Those two functions are splitted from init and dispose functions,
+// because we need to pass a reference to the async callback of GTask,
+// and don't want a loop reference (e.g. a emitter reference is dropped
+// only when callback is called, and callback is called only when cli stopped,
+// but cli is stopped only when emitter is disposed, and emitter is disposed
+// only when reference is dropped!). So we break it into different functions
+// and let the caller stop the cli before dispose.
+void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
+{
+	g_print("smtk_keys_emitter_start_async called\n");
+
+	emitter->cli = g_subprocess_new(
+		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+			G_SUBPROCESS_FLAGS_STDERR_PIPE,
+		error, "pkexec", INSTALL_PREFIX "/bin/showmethekey-cli", NULL);
+	// emitter->error is already set, just return.
+	if (emitter->cli == NULL)
+		return;
+	// Actually I don't wait the subprocess to return, they work like
+	// clients and daemons, why clients want to wait for daemons' exiting?
+	// This is just spawn subprocess.
+	// smtk_keys_emitter_cli_on_complete is called when GTask finished,
+	// and this is async and might the SmtkKeysWin is already destroyed.
+	// So we have to manually reference to emitter here.
+	g_subprocess_wait_check_async(emitter->cli, NULL,
+				      smtk_keys_emitter_cli_on_complete,
+				      g_object_ref(emitter));
+	emitter->cli_out = g_data_input_stream_new(
+		g_subprocess_get_stdout_pipe(emitter->cli));
+
+	emitter->polling = TRUE;
+	emitter->poller =
+		g_thread_try_new("poller", poller_function, emitter, error);
+	// emitter->error is already set, just return.
+	if (emitter->poller == NULL)
+		return;
+}
+
+void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
+{
+	g_print("smtk_keys_emitter_stop_async called\n");
+
+	// Don't know why but I need to stop cli before poller.
+	if (emitter->cli != NULL) {
+		// Because we run subprocess with pkexec,
+		// so we cannot force kill it,
+		// we use stdin pipe to write a "stop\n",
+		// and let it exit by itself.
+		const char *stop = "stop\n";
+		GBytes *input = g_bytes_new(stop, sizeof(stop));
+		g_subprocess_communicate(emitter->cli, input, NULL, NULL, NULL,
+					 NULL);
+		g_bytes_unref(input);
+		// g_subprocess_force_exit(emitter->cli);
+		// Just close it, I am not interested in its error.
+		g_input_stream_close(G_INPUT_STREAM(emitter->cli_out), NULL,
+				     NULL);
+		emitter->cli_out = NULL;
+		g_object_unref(emitter->cli);
+		emitter->cli = NULL;
+	}
+
+	if (emitter->poller != NULL) {
+		emitter->polling = FALSE;
+		// This will wait until thread exited.
+		// It will call g_thread_unref() internal
+		// so we don't need to do it.
+		g_thread_join(emitter->poller);
+		// g_thread_unref(emitter->poller);
+		emitter->poller = NULL;
+	}
+
+	if (emitter->mapper != NULL) {
+		g_object_unref(emitter->mapper);
+		emitter->mapper = NULL;
+	}
 }

@@ -14,6 +14,8 @@ typedef enum {
 } SmtkKeyMode;
 
 SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error);
+void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error);
+void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter);
 
 G_END_DECLS
 

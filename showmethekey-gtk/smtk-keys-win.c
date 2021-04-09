@@ -51,6 +51,14 @@ static void smtk_keys_win_get_property(GObject *object, guint property_id,
 	}
 }
 
+static void smtk_keys_win_emitter_on_cli_exit(SmtkKeysWin *win,
+					      SmtkKeysEmitter *emitter)
+{
+	// It seems calling g_object_unref() on gtk_widget is not enough?
+	// We need to call gtk_widget_destroy().
+	gtk_widget_destroy(GTK_WIDGET(win));
+}
+
 static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
 						  char *label_text,
 						  SmtkKeysEmitter *emitter)
@@ -121,7 +129,8 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// Disable subtitle to get a compact header bar.
 	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), FALSE);
 	win->handle = gtk_label_new("Clickable Area");
-	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(win->header_bar), win->handle);
+	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(win->header_bar),
+					win->handle);
 	gtk_widget_show(win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
 	// We need to mark widget as visible manually in GTK3.
@@ -154,8 +163,22 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// TODO: Those only works for GNOME X11 session,
 	// for GNOME Wayland session, show some message to let user click
 	// app menu by themselves.
-	gtk_window_set_keep_above(GTK_WINDOW(win), TRUE);
-	gtk_window_stick(GTK_WINDOW(win));
+	const gchar *xdg_session_type = g_getenv("XDG_SESSION_TYPE");
+	if (xdg_session_type != NULL) {
+		if (strcmp(xdg_session_type, "wayland") == 0) {
+			GtkWidget *dialog = gtk_message_dialog_new(
+				GTK_WINDOW(win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
+				GTK_BUTTONS_CLOSE,
+				"Wayland does not allow windows for keeping above, please right click the \"Clickable Area\" and check \"Always on Top\" and \"Always on Visible Workspace\" from your compositor's menu!");
+			gtk_dialog_run(GTK_DIALOG(dialog));
+			gtk_widget_destroy(dialog);
+		} else {
+			// GTK4 dropped those API, so we need to implement
+			// those for GTK4 by ourselves via WM hints.
+			gtk_window_set_keep_above(GTK_WINDOW(win), TRUE);
+			gtk_window_stick(GTK_WINDOW(win));
+		}
+	}
 
 	// We can not make a half transparent window with CSS,
 	// and need to set visual and do custom draw.
@@ -200,10 +223,17 @@ static void smtk_keys_win_constructed(GObject *object)
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
+	g_signal_connect_object(win->emitter, "cli-exit",
+				G_CALLBACK(smtk_keys_win_emitter_on_cli_exit),
+				win, G_CONNECT_SWAPPED);
 	g_signal_connect_object(
 		win->emitter, "update-label",
 		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
 		G_CONNECT_SWAPPED);
+
+	smtk_keys_emitter_start_async(win->emitter, &win->error);
+	if (win->error != NULL)
+		return;
 
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
 }
@@ -217,6 +247,7 @@ static void smtk_keys_win_dispose(GObject *object)
 	// so we will add children unparent code here in future.
 
 	if (win->emitter != NULL) {
+		smtk_keys_emitter_stop_async(win->emitter);
 		g_object_unref(win->emitter);
 		win->emitter = NULL;
 	}
@@ -270,8 +301,8 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 		"resizable", FALSE, "skip-pager-hint", TRUE,
 		"skip-taskbar-hint", TRUE, "mode", mode, NULL);
 
-	if (win->error != NULL && error != NULL) {
-		*error = win->error;
+	if (win->error != NULL) {
+		g_propagate_error(error, win->error);
 		// GtkWidget is GInitiallyUnowned,
 		// so we need to sink the floating first.
 		g_object_ref_sink(win);
