@@ -9,8 +9,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(SmtkKeysEmitter, smtk_keys_emitter, SMTK, KEYS_EMITTER,
 		     GObject)
 
-// It looks like glib cannot make enums if clang-format make this in one line.
-// But why???
+// It looks like glib-mkenums cannot make enums
+// if clang-format make this in one line. But why???
 // clang-format off
 typedef enum {
 	SMTK_KEY_MODE_COMPOSED,
