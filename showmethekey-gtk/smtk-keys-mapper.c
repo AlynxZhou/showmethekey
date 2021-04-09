@@ -159,6 +159,8 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 			    g_strdup("Space"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Print"),
 			    g_strdup("PrintScreen"));
+	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Sys_Req"),
+			    g_strdup("SysReq"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Scroll_Lock"),
 			    g_strdup("ScrollLock"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Prior"),
@@ -238,7 +240,7 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 					     XKB_KEY_DOWN :
 					     XKB_KEY_UP);
 	}
-	return smtk_event_get_key_name(event);
+	return g_strdup(smtk_event_get_key_name(event));
 }
 
 char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
@@ -263,7 +265,7 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_keysym_get_name(xkb_key_sym, main_key,
 				    XKB_KEY_SYM_NAME_LENGTH);
 	} else {
-		main_key = smtk_event_get_key_name(event);
+		main_key = g_strdup(smtk_event_get_key_name(event));
 	}
 	// Just ignore mods so we can prevent text like mod+mod.
 	if (g_hash_table_contains(mapper->xkb_mod_names, main_key)) {

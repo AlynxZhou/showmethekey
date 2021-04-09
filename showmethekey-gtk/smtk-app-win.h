@@ -8,7 +8,8 @@
 G_BEGIN_DECLS
 
 #define SMTK_TYPE_APP_WIN smtk_app_win_get_type()
-G_DECLARE_FINAL_TYPE(SmtkAppWin, smtk_app_win, SMTK, APP_WIN, GtkApplicationWindow)
+G_DECLARE_FINAL_TYPE(SmtkAppWin, smtk_app_win, SMTK, APP_WIN,
+		     GtkApplicationWindow)
 
 GtkWidget *smtk_app_win_new(SmtkApp *app);
 

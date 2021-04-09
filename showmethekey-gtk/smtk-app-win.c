@@ -51,6 +51,7 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 		if (win->keys_win == NULL) {
 			const char *mode_id = gtk_combo_box_get_active_id(
 				GTK_COMBO_BOX(win->mode_selector));
+			g_debug("Mode: %s.", mode_id);
 			SmtkKeyMode mode;
 			if (g_strcmp0(mode_id, "raw") == 0)
 				mode = SMTK_KEY_MODE_RAW;
@@ -65,12 +66,16 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 							 win->height_entry)),
 						 NULL, 10);
 			height = height == 0 ? 200 : height;
+			g_debug("Size: %lux%lu.", width, height);
 			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(mode, width, height, &error);
+			win->keys_win =
+				smtk_keys_win_new(mode, width, height, &error);
 			if (win->keys_win == NULL) {
-				g_critical("%s\n", error->message);
+				g_warning(error->message);
 				g_error_free(error);
-				gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
+				gtk_switch_set_active(
+					GTK_SWITCH(win->keys_win_switch),
+					FALSE);
 				return;
 			}
 			smtk_app_win_disable(win);

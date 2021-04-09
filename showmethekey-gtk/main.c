@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 
+#include "smtk.h"
 #include "smtk-app.h"
 
 int main(int argc, char *argv[])

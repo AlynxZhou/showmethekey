@@ -27,8 +27,8 @@ G_DECLARE_FINAL_TYPE(SmtkEvent, smtk_event, SMTK, EVENT, GObject)
 SmtkEvent *smtk_event_new(gchar *source, GError **error);
 SmtkEventType smtk_event_get_event_type(SmtkEvent *event);
 SmtkEventState smtk_event_get_event_state(SmtkEvent *event);
-gchar *smtk_event_get_device_name(SmtkEvent *event);
-gchar *smtk_event_get_key_name(SmtkEvent *event);
+const gchar *smtk_event_get_device_name(SmtkEvent *event);
+const gchar *smtk_event_get_key_name(SmtkEvent *event);
 guint32 smtk_event_get_key_code(SmtkEvent *event);
 guint32 smtk_event_get_time_stamp(SmtkEvent *event);
 

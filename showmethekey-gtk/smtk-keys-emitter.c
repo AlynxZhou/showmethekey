@@ -21,7 +21,7 @@ struct _SmtkKeysEmitter {
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
-enum { SIG_UPDATE_LABEL, SIG_CLI_EXIT, N_SIGNALS };
+enum { SIG_UPDATE_LABEL, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static guint obj_signals[N_SIGNALS] = { 0 };
 
@@ -40,18 +40,21 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	// address we hold is invalid, it might point to other objects, and
 	// still not NULL. To solve this problem we hold a reference to this
 	// callback to prevent the emitter to be disposed and manually drop it.
-	g_print("smtk_keys_emitter_cli_on_complete called\n");
-	
+	g_debug("smtk_keys_emitter_cli_on_complete() called.");
+
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	// Cli may already released normally, and this function only cares about
+	// when cli exited with error, for example user cancelled pkexec.
 	if (emitter->cli != NULL &&
 	    g_subprocess_get_exit_status(emitter->cli) != 0) {
 		// Better to close thread here to prevent a lot of error.
 		emitter->polling = FALSE;
 		if (emitter->poller != NULL) {
+			g_debug("Stop poller because cli exitted.");
 			g_thread_join(emitter->poller);
 			emitter->poller = NULL;
 		}
-		g_signal_emit_by_name(emitter, "cli-exit");
+		g_signal_emit_by_name(emitter, "error-cli-exit");
 	}
 	g_object_unref(emitter);
 }
@@ -102,8 +105,10 @@ static gboolean idle_function(gpointer user_data)
 	// So we cannot use a common label_text in emitter.
 	// Instead we only join them here.
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
-	gchar *label_text =
-		g_strjoinv(" ", (gchar **)emitter->keys_array->pdata);
+	// Need to use sans, monospace cannot be smaller.
+	gchar *label_text = g_strjoinv(
+		"<span font_family=\"sans\" size=\"smaller\"> </span>",
+		(gchar **)emitter->keys_array->pdata);
 	g_signal_emit_by_name(emitter, "update-label", label_text);
 	g_free(label_text);
 	return FALSE;
@@ -119,7 +124,7 @@ static gpointer poller_function(gpointer user_data)
 		// See <https://developer.gnome.org/gio/2.56/GDataInputStream.html#g-data-input-stream-read-line>.
 		if (line == NULL) {
 			if (read_line_error != NULL) {
-				g_warning("Read line error: %s.\n",
+				g_warning("Read line error: %s.",
 					  read_line_error->message);
 				g_error_free(read_line_error);
 			}
@@ -129,7 +134,7 @@ static gpointer poller_function(gpointer user_data)
 		GError *event_error = NULL;
 		SmtkEvent *event = smtk_event_new(line, &event_error);
 		if (event == NULL) {
-			g_warning("Create event error: %s.\n",
+			g_warning("Create event error: %s.",
 				  event_error->message);
 			g_free(line);
 			continue;
@@ -149,13 +154,18 @@ static gpointer poller_function(gpointer user_data)
 			// Should never be here.
 			break;
 		}
-		// We don't free key here, GPtrArray will free them.
 		if (key != NULL) {
 			if (smtk_event_get_event_state(event) ==
 			    SMTK_EVENT_STATE_PRESSED) {
+				// We don't free inserted text here,
+				// GPtrArray will free them.
+				gchar *escaped = g_markup_escape_text(key, -1);
+				gchar *marked = g_strconcat("<u>", escaped,
+							    "</u>", NULL);
+				g_free(escaped);
 				g_ptr_array_insert(emitter->keys_array,
 						   emitter->keys_array->len - 1,
-						   key);
+						   marked);
 				if (emitter->keys_array->len - 1 > MAX_KEYS)
 					// We set free function for GPtrArray,
 					// So it will free automatically.
@@ -169,9 +179,9 @@ static gpointer poller_function(gpointer user_data)
 				// an async callback into glib's main loop
 				// (the same as GTK UI thread).
 				// Signals are not async!
-				// So we cannot use signal callback directly
-				// here, because they will run in
-				// poller thread instead of UI thread.
+				// So we cannot emit signal here,
+				// because they will run in poller thread
+				// instead of UI thread.
 				// `g_idle_add()` is not suitable because we
 				// have a high priority.
 				g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
@@ -179,6 +189,7 @@ static gpointer poller_function(gpointer user_data)
 						   g_object_ref(emitter),
 						   idle_destroy_function);
 			}
+			g_free(key);
 		}
 		g_object_unref(event);
 		g_free(line);
@@ -232,9 +243,9 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 		"update-label", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
 		G_TYPE_STRING);
-	obj_signals[SIG_CLI_EXIT] = g_signal_new(
-		"cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0, NULL,
-		NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	obj_signals[SIG_ERROR_CLI_EXIT] = g_signal_new(
+		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
+		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 	obj_properties[PROP_MODE] =
 		g_param_spec_enum("mode", "Mode", "Key Mode",
@@ -268,7 +279,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
 // and let the caller stop the cli before dispose.
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 {
-	g_print("smtk_keys_emitter_start_async called\n");
+	g_debug("smtk_keys_emitter_start_async() called.");
 
 	emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
@@ -299,7 +310,7 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 {
-	g_print("smtk_keys_emitter_stop_async called\n");
+	g_debug("smtk_keys_emitter_stop_async() called.");
 
 	// Don't know why but I need to stop cli before poller.
 	if (emitter->cli != NULL) {

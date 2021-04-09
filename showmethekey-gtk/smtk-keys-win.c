@@ -51,8 +51,8 @@ static void smtk_keys_win_get_property(GObject *object, guint property_id,
 	}
 }
 
-static void smtk_keys_win_emitter_on_cli_exit(SmtkKeysWin *win,
-					      SmtkKeysEmitter *emitter)
+static void smtk_keys_win_emitter_on_error_cli_exit(SmtkKeysWin *win,
+						    SmtkKeysEmitter *emitter)
 {
 	// It seems calling g_object_unref() on gtk_widget is not enough?
 	// We need to call gtk_widget_destroy().
@@ -63,7 +63,7 @@ static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
 						  char *label_text,
 						  SmtkKeysEmitter *emitter)
 {
-	gtk_label_set_text(GTK_LABEL(win->keys_label), label_text);
+	gtk_label_set_markup(GTK_LABEL(win->keys_label), label_text);
 	// It seems that we cannot free argument in callback.
 	// Looks like GValue will automatically free this for us.
 	// And this is not the same as the outside one.
@@ -100,8 +100,8 @@ static void smtk_keys_win_on_size_allocate(SmtkKeysWin *win,
 	pango_font_description_set_family(font, "monospace");
 	// I am not sure why the avaliable height * PANGO_SCALE is too big,
 	// just make it smaller, also too big will have less chars.
-	pango_font_description_set_absolute_size(
-		font, allocation->height * 0.5 * PANGO_SCALE);
+	pango_font_description_set_size(font,
+					allocation->height * 0.3 * PANGO_SCALE);
 
 	pango_layout_set_font_description(layout, font);
 	pango_font_description_free(font);
@@ -138,7 +138,7 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 
 	// CSS is used to make a transparent titlebar,
 	// because it's above window.
-	win->keys_label = gtk_label_new("");
+	win->keys_label = gtk_label_new(NULL);
 	// If there are too much keys, we hide older keys.
 	gtk_label_set_ellipsize(GTK_LABEL(win->keys_label),
 				PANGO_ELLIPSIZE_START);
@@ -148,6 +148,7 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// it does not limit the label to only 1 char, which is I want.
 	// See <https://developer.gnome.org/gtk3/stable/GtkLabel.html#label-text-layout>.
 	gtk_label_set_max_width_chars(GTK_LABEL(win->keys_label), 1);
+	gtk_label_set_use_markup(GTK_LABEL(win->keys_label), TRUE);
 	// We should update label size on window's `size-allocation` signal.
 	gtk_container_add(GTK_CONTAINER(win), win->keys_label);
 	gtk_widget_show(win->keys_label);
@@ -221,9 +222,10 @@ static void smtk_keys_win_constructed(GObject *object)
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
-	g_signal_connect_object(win->emitter, "cli-exit",
-				G_CALLBACK(smtk_keys_win_emitter_on_cli_exit),
-				win, G_CONNECT_SWAPPED);
+	g_signal_connect_object(
+		win->emitter, "error-cli-exit",
+		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win,
+		G_CONNECT_SWAPPED);
 	g_signal_connect_object(
 		win->emitter, "update-label",
 		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,

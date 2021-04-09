@@ -74,7 +74,9 @@ static void smtk_event_constructed(GObject *object)
 	SmtkEvent *event = SMTK_EVENT(object);
 
 	if (event->source == NULL || strlen(event->source) == 0) {
-		g_set_error(&event->error, SMTK_EVENT_ERROR, SMTK_EVENT_ERROR_SOURCE, "Failed to create event because of empty source.");
+		g_set_error(&event->error, SMTK_EVENT_ERROR,
+			    SMTK_EVENT_ERROR_SOURCE,
+			    "Failed to create event because of empty source.");
 		return;
 	}
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-Utility-API.html#json-from-string>.
@@ -101,12 +103,13 @@ static void smtk_event_constructed(GObject *object)
 		event->event_state = SMTK_EVENT_STATE_RELEASED;
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-JSON-Object.html#json-object-get-member>.
 	// Transfer none, so we need g_strdup().
-	event->device_name =
-		g_strdup(json_object_get_string_member(json_object, "device_name"));
-	event->key_name =
-		g_strdup(json_object_get_string_member(json_object, "key_name"));
+	event->device_name = g_strdup(
+		json_object_get_string_member(json_object, "device_name"));
+	event->key_name = g_strdup(
+		json_object_get_string_member(json_object, "key_name"));
 	event->key_code = json_object_get_int_member(json_object, "key_code");
-	event->time_stamp = json_object_get_int_member(json_object, "time_stamp");
+	event->time_stamp =
+		json_object_get_int_member(json_object, "time_stamp");
 	json_node_unref(json);
 }
 
@@ -138,9 +141,9 @@ static void smtk_event_class_init(SmtkEventClass *event_class)
 
 	object_class->finalize = smtk_event_finalize;
 
-	obj_properties[PROP_SOURCE] =
-		g_param_spec_string("source", "Source", "Event Text Source",
-				    NULL, G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE);
+	obj_properties[PROP_SOURCE] = g_param_spec_string(
+		"source", "Source", "Event Text Source", NULL,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
@@ -148,7 +151,8 @@ static void smtk_event_class_init(SmtkEventClass *event_class)
 
 SmtkEvent *smtk_event_new(gchar *source, GError **error)
 {
-	SmtkEvent *event = g_object_new(SMTK_TYPE_EVENT, "source", source, NULL);
+	SmtkEvent *event =
+		g_object_new(SMTK_TYPE_EVENT, "source", source, NULL);
 
 	if (event->error != NULL) {
 		g_propagate_error(error, event->error);
@@ -169,14 +173,14 @@ SmtkEventState smtk_event_get_event_state(SmtkEvent *event)
 	return event->event_state;
 }
 
-gchar *smtk_event_get_device_name(SmtkEvent *event)
+const gchar *smtk_event_get_device_name(SmtkEvent *event)
 {
-	return g_strdup(event->device_name);
+	return event->device_name;
 }
 
-gchar *smtk_event_get_key_name(SmtkEvent *event)
+const gchar *smtk_event_get_key_name(SmtkEvent *event)
 {
-	return g_strdup(event->key_name);
+	return event->key_name;
 }
 
 guint32 smtk_event_get_key_code(SmtkEvent *event)
