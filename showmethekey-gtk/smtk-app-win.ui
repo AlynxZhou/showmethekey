@@ -32,7 +32,11 @@
                 <property name="visible">true</property>
                 <property name="hexpand">false</property>
                 <property name="halign">center</property>
-                <signal name="notify::active" handler="smtk_app_win_on_switch_active" object="SmtkAppWin" swapped="yes" />
+                <signal
+                  name="notify::active"
+                  handler="smtk_app_win_on_switch_active"
+                  object="SmtkAppWin"
+                  swapped="yes" />
               </object>
             </child>
           </object>
@@ -55,7 +59,7 @@
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">center</property>
-                <!-- <signal name="notify::active" handler="smtk_app_win_on_switch_active" object="SmtkAppWin" swapped="yes" /> -->
+                <!-- Must keep the same sequence with SmtkKeyMode. -->
                 <property name="active-id">composed</property>
                 <items>
                   <item translatable="yes" id="composed">Composed</item>
@@ -79,11 +83,12 @@
               </object>
             </child>
             <child>
-              <object class="GtkEntry" id="width_entry">
+              <object class="GtkSpinButton" id="width_entry">
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">center</property>
-                <property name="input-purpose">number</property>
+                <!-- Keep 0 digit after dot because we are using it as int. -->
+                <property name="digits">0</property>
                 <property name="text">1500</property>
               </object>
             </child>
@@ -102,11 +107,12 @@
               </object>
             </child>
             <child>
-              <object class="GtkEntry" id="height_entry">
+              <object class="GtkSpinButton" id="height_entry">
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">center</property>
-                <property name="input-purpose">number</property>
+                <!-- Keep 0 digit after dot because we are using it as int. -->
+                <property name="digits">0</property>
                 <property name="text">200</property>
               </object>
             </child>

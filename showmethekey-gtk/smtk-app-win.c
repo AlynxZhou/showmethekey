@@ -8,6 +8,7 @@
 
 struct _SmtkAppWin {
 	GtkApplicationWindow parent_instance;
+	GSettings *settings;
 	GtkWidget *keys_win_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
@@ -15,6 +16,8 @@ struct _SmtkAppWin {
 	GtkWidget *keys_win;
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
+
+// TODO: Internationalization.
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
@@ -52,21 +55,16 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 			const char *mode_id = gtk_combo_box_get_active_id(
 				GTK_COMBO_BOX(win->mode_selector));
 			g_debug("Mode: %s.", mode_id);
-			SmtkKeyMode mode;
-			if (g_strcmp0(mode_id, "raw") == 0)
+			SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
+			if (strcmp(mode_id, "raw") == 0)
 				mode = SMTK_KEY_MODE_RAW;
-			else
-				mode = SMTK_KEY_MODE_COMPOSED;
-			guint64 width = g_ascii_strtoull(
-				gtk_entry_get_text(GTK_ENTRY(win->width_entry)),
-				NULL, 10);
-			width = width == 0 ? 1500 : width;
-			guint64 height =
-				g_ascii_strtoull(gtk_entry_get_text(GTK_ENTRY(
-							 win->height_entry)),
-						 NULL, 10);
-			height = height == 0 ? 200 : height;
-			g_debug("Size: %lux%lu.", width, height);
+			gint width = gtk_spin_button_get_value_as_int(
+				GTK_SPIN_BUTTON(win->width_entry));
+			width = width <= 0 ? 1500 : width;
+			gint height = gtk_spin_button_get_value_as_int(
+				GTK_SPIN_BUTTON(win->height_entry));
+			height = height <= 0 ? 200 : height;
+			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
 			win->keys_win =
 				smtk_keys_win_new(mode, width, height, &error);
@@ -105,23 +103,46 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	// gtk_widget_set_parent(win->canvas_switch, GTK_WIDGET(win));
 
 	gtk_widget_init_template(GTK_WIDGET(win));
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->width_entry), 0,
+				  INT_MAX);
+	// FIXME: Page increment works wrongly, consider a GTK problem.
+	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->width_entry), 100,
+				       500);
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->height_entry), 0,
+				  INT_MAX);
+	// FIXME: Page increment works wrongly, consider a GTK problem.
+	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->height_entry), 100,
+				       500);
 
-	// TODO: Use GSettings for settings.
+	win->settings = g_settings_new("one.alynx.showmethekey");
+	// Though gschema's enum has a int value property,
+	// it uses string nick property for binding.
+	g_settings_bind(win->settings, "mode", win->mode_selector, "active_id",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "width", win->width_entry, "value",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "height", win->height_entry, "value",
+			G_SETTINGS_BIND_DEFAULT);
 }
 
-// static void smtk_app_win_dispose(GObject *object)
-// {
-// 	SmtkAppWin *win = SMTK_APP_WIN(object);
-//
-// 	g_clear_pointer(&win->canvas_switch, gtk_widget_unparent);
-//
-// 	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(object);
-// }
+static void smtk_app_win_dispose(GObject *object)
+{
+	SmtkAppWin *win = SMTK_APP_WIN(object);
+
+	// g_clear_pointer(&win->canvas_switch, gtk_widget_unparent);
+
+	if (win->settings != NULL) {
+		g_object_unref(win->settings);
+		win->settings = NULL;
+	}
+
+	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(object);
+}
 
 static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 {
-	// // In GTK4, we need to free children which is added in code in dispose.
-	// G_OBJECT_CLASS(win_class)->dispose = smtk_app_win_dispose;
+	// In GTK4, we need to free children which is added in code in dispose.
+	G_OBJECT_CLASS(win_class)->dispose = smtk_app_win_dispose;
 
 	// // In GTK4, we need to set a layout manager to add childrens in code.
 	// gtk_widget_class_set_layout_manager_type(GTK_WIDGET_CLASS(win_class),

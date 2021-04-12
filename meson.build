@@ -84,12 +84,14 @@ gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango, xkbcommon]
 
 resources = gnome.compile_resources(
   'smtk-resources',
-  'showmethekey-gtk/smtk.gresource.xml',
+  'showmethekey-gtk/one.alynx.showmethekey.gresource.xml',
   source_dir: 'showmethekey-gtk/',
   c_name: 'smtk'
 )
 
 enum_types = gnome.mkenums_simple('smtk-enum-types', sources: gtk_headers)
+
+schema_dir = get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
 
 executable(
   'showmethekey-gtk',
@@ -103,7 +105,7 @@ executable(
 
 install_data(
   'LICENSE',
-  install_dir: get_option('datadir') / 'licenses' / meson.project_name()
+  install_dir: get_option('prefix') / get_option('datadir') / 'licenses' / meson.project_name()
 )
 # install_data(
 #   'dists' / 'showmethekey.png',
@@ -111,5 +113,14 @@ install_data(
 # )
 install_data(
   'dists' / 'showmethekey.desktop',
-  install_dir: get_option('datadir') / 'applications'
+  install_dir: get_option('prefix') / get_option('datadir') / 'applications'
+)
+install_data(
+  'dists' / 'one.alynx.showmethekey.gschema.xml',
+  install_dir: get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
+)
+
+meson.add_install_script(
+  'glib-compile-schemas',
+  get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
 )

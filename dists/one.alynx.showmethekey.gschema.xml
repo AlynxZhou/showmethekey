@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schemalist>
+  <!--
+    Must keep the same sequence with SmtkKeyMode
+    and the same name with mode_selector.
+  -->
+  <enum id="one.alynx.showmethekey.mode">
+    <value nick="composed" value="0" />
+    <value nick="raw" value="1" />
+  </enum>
+  <schema path="/one/alynx/showmethekey/" id="one.alynx.showmethekey">
+    <key enum="one.alynx.showmethekey.mode" name="mode">
+      <summary>Keys Display Mode</summary>
+      <description>Display keys in raw or composed mode.</description>
+      <!-- We need to add quote manually here for type `s`. -->
+      <default>"composed"</default>
+    </key>
+    <!-- GtkSpinButton only support double, not int. -->
+    <key type="d" name="width">
+      <summary>Floating Window Width</summary>
+      <description>The width of the floating window, in pixels.</description>
+      <default>1500</default>
+      <range min="0" />
+    </key>
+    <key type="d" name="height">
+      <summary>Floating Window Height</summary>
+      <description>The height of the floating window, in pixels.</description>
+      <default>200</default>
+      <range min="0" />
+    </key>
+  </schema>
+</schemalist>
