@@ -120,7 +120,19 @@ install_data(
   install_dir: get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
 )
 
-meson.add_install_script(
-  'glib-compile-schemas',
-  get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
-)
+# We should not compile schemas by ourselves when packaging for distributions.
+# A simple way to detect packaging is the `DISTDIR` env, but before Meson 0.57.0
+# does not support this and it also does not allow us to get env,
+# so typically we use a Python script here as fallback.
+if meson.version().version_compare('>= 0.57.0')
+  meson.add_install_script(
+    'glib-compile-schemas',
+    get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas',
+    skip_if_destdir: true
+  )
+else
+  meson.add_install_script(
+    'meson_post_install.py',
+    get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
+  )
+endif
