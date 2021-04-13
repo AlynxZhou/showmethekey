@@ -128,7 +128,7 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	win->header_bar = gtk_header_bar_new();
 	// Disable subtitle to get a compact header bar.
 	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), FALSE);
-	win->handle = gtk_label_new("Clickable Area");
+	win->handle = gtk_label_new(_("Clickable Area"));
 	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(win->header_bar),
 					win->handle);
 	gtk_widget_show(win->handle);
@@ -205,11 +205,24 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	gtk_css_provider_load_from_resource(
 		header_bar_css_provider,
 		"/one/alynx/showmethekey/smtk-keys-win-header-bar.css");
-	GtkStyleContext *headerbar_style_context =
+	GtkStyleContext *header_bar_style_context =
 		gtk_widget_get_style_context(win->header_bar);
 	gtk_style_context_add_provider(
-		headerbar_style_context,
+		header_bar_style_context,
 		GTK_STYLE_PROVIDER(header_bar_css_provider),
+		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+	// It turns out that GtkStyleContext cannot affect child GtkWidgets,
+	// so we have to create independent CSS for keys label.
+	GtkCssProvider *keys_label_css_provider = gtk_css_provider_new();
+	gtk_css_provider_load_from_resource(
+		keys_label_css_provider,
+		"/one/alynx/showmethekey/smtk-keys-win-keys-label.css");
+	GtkStyleContext *keys_label_style_context =
+		gtk_widget_get_style_context(win->keys_label);
+	gtk_style_context_add_provider(
+		keys_label_style_context,
+		GTK_STYLE_PROVIDER(keys_label_css_provider),
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 

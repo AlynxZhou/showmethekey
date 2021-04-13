@@ -27,6 +27,5 @@ static void smtk_app_class_init(SmtkAppClass *app_class)
 SmtkApp *smtk_app_new(void)
 {
 	return g_object_new(SMTK_TYPE_APP, "application-id",
-			    "one.alynx.showmethekey", "flags",
-			    G_APPLICATION_HANDLES_OPEN, NULL);
+			    "one.alynx.showmethekey", NULL);
 }

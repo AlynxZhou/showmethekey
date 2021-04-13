@@ -103,6 +103,15 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	// gtk_widget_set_parent(win->canvas_switch, GTK_WIDGET(win));
 
 	gtk_widget_init_template(GTK_WIDGET(win));
+
+	// gtk_widget_grab_focus(win->keys_win_switch);
+	// See <https://stackoverflow.com/questions/8728172/gtk-set-default-button-for-dialog>.
+	// The comment said that to use gtk_window_set_default(),
+	// you need to clear focus first.
+	// And for GTK4 use gtk_window_set_default_widget().
+	gtk_window_set_focus(GTK_WINDOW(win), NULL);
+	gtk_window_set_default(GTK_WINDOW(win), win->keys_win_switch);
+
 	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->width_entry), 0,
 				  INT_MAX);
 	// FIXME: Page increment works wrongly, consider a GTK problem.

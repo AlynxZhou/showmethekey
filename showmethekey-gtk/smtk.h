@@ -6,6 +6,8 @@
 #define G_LOG_DOMAIN "showmethekey-gtk"
 #endif
 
+#include <glib/gi18n.h>
+
 #include "config.h"
 // Type generated in meson.build.
 // See <https://developer.gnome.org/gobject/stable/glib-mkenums.html>

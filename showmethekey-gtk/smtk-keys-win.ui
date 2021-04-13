@@ -2,7 +2,6 @@
 <interface>
   <template class="SmtkKeysWin" parent="GtkWindow">
     <property name="visible">true</property>
-    <property name="title" translatable="yes">Show Me The Key</property>
     <property name="default-width">800</property>
     <property name="default-height">200</property>
     <!-- <property name="decorated">false</property> -->

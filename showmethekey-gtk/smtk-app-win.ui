@@ -2,9 +2,32 @@
 <interface>
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
     <property name="visible">true</property>
-    <property name="title">Show Me The Key</property>
     <!-- <property name="default-width">800</property> -->
     <!-- <property name="default-height">600</property> -->
+    <child type="titlebar">
+      <object class="GtkHeaderBar" id="header">
+        <property name="visible">true</property>
+        <property name="title">Show Me The Key</property>
+        <property name="show-close-button">true</property>
+        <child>
+          <object class="GtkSwitch" id="keys_win_switch">
+            <property name="visible">true</property>
+            <property name="hexpand">false</property>
+            <property name="halign">center</property>
+            <!--
+              If you want a widget to grab default focus,
+              you need to set this manually.
+            -->
+            <property name="can-default">true</property>
+            <signal
+              name="notify::active"
+              handler="smtk_app_win_on_switch_active"
+              object="SmtkAppWin"
+              swapped="yes" />
+          </object>
+        </child>
+      </object>
+    </child>
     <child>
       <object class="GtkBox">
         <property name="visible">true</property>
@@ -14,33 +37,6 @@
         <property name="margin-bottom">10</property>
         <property name="margin-end">10</property>
         <property name="spacing">10</property>
-        <child>
-          <object class="GtkBox">
-            <property name="visible">true</property>
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">true</property>
-                <property name="label" translatable="yes">Switch</property>
-                <property name="hexpand">true</property>
-                <property name="halign">center</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="keys_win_switch">
-                <property name="visible">true</property>
-                <property name="hexpand">false</property>
-                <property name="halign">center</property>
-                <signal
-                  name="notify::active"
-                  handler="smtk_app_win_on_switch_active"
-                  object="SmtkAppWin"
-                  swapped="yes" />
-              </object>
-            </child>
-          </object>
-        </child>
         <child>
           <object class="GtkBox">
             <property name="visible">true</property>
