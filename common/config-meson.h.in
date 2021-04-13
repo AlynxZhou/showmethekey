@@ -2,5 +2,7 @@
 
 #define INSTALL_PREFIX "@install_prefix@"
 #define PROJECT_VERSION "@project_version@"
+#define GETTEXT_PACKAGE "@gettext_package@"
+#define PACKAGE_LOCALEDIR "@package_localedir@"
 
 #endif

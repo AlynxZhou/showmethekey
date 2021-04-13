@@ -6,8 +6,6 @@ project(
   default_options: ['c_std=c11']
 )
 
-gnome = import('gnome')
-
 cc = meson.get_compiler('c')
 
 c_args = []
@@ -19,6 +17,8 @@ endif
 conf_data = configuration_data()
 conf_data.set('install_prefix', get_option('prefix'))
 conf_data.set('project_version', meson.project_version())
+conf_data.set('gettext_package', meson.project_name())
+conf_data.set('package_localedir', get_option('localedir'))
 
 configure_file(
   input: 'common/config-meson.h.in',
@@ -26,82 +26,9 @@ configure_file(
   configuration: conf_data
 )
 
-cli_sources = files(
-  'showmethekey-cli/main.c'
-)
+subdir('showmethekey-cli')
 
-cli_dependencies = []
-cli_include_directories = []
-libevdev = dependency('libevdev', required: true)
-libudev = dependency('libudev', required: true)
-libinput = dependency('libinput', required: true)
-threads = dependency('threads', required: true)
-cli_dependencies += [libevdev, libudev, libinput, threads]
-
-executable(
-  'showmethekey-cli',
-  sources: cli_sources,
-  c_args: c_args,
-  dependencies: cli_dependencies,
-  include_directories: cli_include_directories,
-  install: true,
-  install_dir: get_option('prefix') / 'bin'
-)
-
-gtk_sources = files(
-  'showmethekey-gtk/main.c',
-  'showmethekey-gtk/smtk-app.c',
-  'showmethekey-gtk/smtk-app-win.c',
-  'showmethekey-gtk/smtk-keys-win.c',
-  'showmethekey-gtk/smtk-keys-emitter.c',
-  'showmethekey-gtk/smtk-keys-mapper.c',
-  'showmethekey-gtk/smtk-event.c'
-)
-
-gtk_headers = files(
-  'showmethekey-gtk/smtk.h',
-  'showmethekey-gtk/smtk-app.h',
-  'showmethekey-gtk/smtk-app-win.h',
-  'showmethekey-gtk/smtk-keys-emitter.h',
-  'showmethekey-gtk/smtk-keys-win.h',
-  'showmethekey-gtk/smtk-keys-mapper.h',
-  'showmethekey-gtk/smtk-event.h'
-)
-
-gtk_dependencies = []
-# Generated enum types sources need this.
-gtk_include_directories = ['showmethekey-gtk/']
-gtk = dependency('gtk+-3.0', required: true)
-glib = dependency('glib-2.0', required: true)
-json_glib = dependency('json-glib-1.0', required: true)
-gio = dependency('gio-2.0', required: true)
-cairo = dependency('cairo', required: true)
-pango = dependency('pango', required: true)
-xkbcommon = dependency('xkbcommon', required: true)
-# x11 = dependency('x11', required: true)
-# xext = dependency('xext', required: true)
-gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango, xkbcommon]
-
-resources = gnome.compile_resources(
-  'smtk-resources',
-  'showmethekey-gtk/one.alynx.showmethekey.gresource.xml',
-  source_dir: 'showmethekey-gtk/',
-  c_name: 'smtk'
-)
-
-enum_types = gnome.mkenums_simple('smtk-enum-types', sources: gtk_headers)
-
-schema_dir = get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
-
-executable(
-  'showmethekey-gtk',
-  sources: gtk_sources + resources + enum_types,
-  c_args: c_args,
-  dependencies: gtk_dependencies,
-  include_directories: gtk_include_directories,
-  install: true,
-  install_dir: get_option('prefix') / 'bin'
-)
+subdir('showmethekey-gtk')
 
 install_data(
   'LICENSE',

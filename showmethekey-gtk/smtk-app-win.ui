@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
+  <!--
+    Don't indent translatable properties because we will translate it,
+    and don't want space.
+  -->
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
     <property name="visible">true</property>
     <!-- <property name="default-width">800</property> -->
@@ -7,7 +11,7 @@
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header">
         <property name="visible">true</property>
-        <property name="title">Show Me The Key</property>
+        <property name="title" translatable="yes">Show Me The Key</property>
         <property name="show-close-button">true</property>
         <child>
           <object class="GtkSwitch" id="keys_win_switch">
@@ -45,16 +49,16 @@
             <child>
               <object class="GtkLabel">
                 <property name="visible">true</property>
-                <property name="label" translatable="yes">Mode</property>
+                <property name="label" translatable="yes">Display Mode</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <child>
               <object class="GtkComboBoxText" id="mode_selector">
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">end</property>
                 <!-- Must keep the same sequence with SmtkKeyMode. -->
                 <property name="active-id">composed</property>
                 <items>
@@ -75,14 +79,14 @@
                 <property name="visible">true</property>
                 <property name="label" translatable="yes">Width</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <child>
               <object class="GtkSpinButton" id="width_entry">
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">end</property>
                 <!-- Keep 0 digit after dot because we are using it as int. -->
                 <property name="digits">0</property>
                 <property name="text">1500</property>
@@ -99,14 +103,14 @@
                 <property name="visible">true</property>
                 <property name="label" translatable="yes">Height</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <child>
               <object class="GtkSpinButton" id="height_entry">
                 <property name="visible">true</property>
                 <property name="hexpand">true</property>
-                <property name="halign">center</property>
+                <property name="halign">end</property>
                 <!-- Keep 0 digit after dot because we are using it as int. -->
                 <property name="digits">0</property>
                 <property name="text">200</property>

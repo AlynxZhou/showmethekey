@@ -8,7 +8,7 @@ A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that work
 
 # Usage
 
-Clone this repo and run `mkdir build && cd build && meson setup . .. && meson compile && meson install` to install, then run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
+Clone this repo and run `mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install` to install, then run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
 
 Still in development and might have some bugs.
 
@@ -30,6 +30,10 @@ It generates JSON in lines like `{"event_name": "KEYBOARD_KEY", "event_type": 30
 
 A GUI frontend based on GTK, will run CLI backend as root via `pkexec`.
 
+# Translate
+
+If you changed translatable strings, don't forget to run `meson compile showmethekey-update-po` in build directory and then edit po files.
+
 ### Special Notice for GNOME Wayland Session Users
 
 There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. Also Mutter has no way to let a program to set it always on top. But don't worry, users are always allowed to do those things by themselves, so after turning on the switch, please right click the title bar of the keys window and check "Always on Top" and "Always on Visible Workspace", and Mutter will do as what you set!
@@ -39,3 +43,5 @@ For other Wayland DEs (personally I only care about KDE Plasma), I will do more 
 # Name
 
 As I want some clear name that hints its usage, but `screenkey` is already taken and I think `visualkey` sounds like `Visual Studio` and it's horrible. My friend [@LGiki](https://github.com/LGiki) suggests `Show Me The Key` which sounds like "Show me the code" from Linus Torvalds. At first I think it's a little bit long, but now it is acceptable so it's called `showmethekey` or `Show Me The Key`.
+
+The Chinese translate of this program name should be `让我看键`, and it's only used for window title, debug output, package name and desktop entry name should not be translated.

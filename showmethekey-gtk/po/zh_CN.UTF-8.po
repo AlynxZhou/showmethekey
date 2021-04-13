@@ -1,0 +1,46 @@
+# Chinese translations for showmethekey package
+# showmethekey 软件包的简体中文翻译.
+# Copyright (C) 2021 THE showmethekey'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the showmethekey package.
+# Automatically generated, 2021.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: showmethekey\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-04-13 17:36+0800\n"
+"PO-Revision-Date: 2021-04-13 17:36+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: showmethekey-gtk/smtk-app-win.ui:14
+msgid "Show Me The Key"
+msgstr "让我看键"
+
+#: showmethekey-gtk/smtk-app-win.ui:52
+msgid "Display Mode"
+msgstr "显示模式"
+
+#: showmethekey-gtk/smtk-app-win.ui:65
+msgid "Composed"
+msgstr "组合键"
+
+#: showmethekey-gtk/smtk-app-win.ui:66
+msgid "Raw"
+msgstr "按键名"
+
+#: showmethekey-gtk/smtk-app-win.ui:80
+msgid "Width"
+msgstr "宽度"
+
+#: showmethekey-gtk/smtk-app-win.ui:104
+msgid "Height"
+msgstr "高度"
+
+#: showmethekey-gtk/smtk-keys-win.c:131
+msgid "Clickable Area"
+msgstr "可点击区域"
