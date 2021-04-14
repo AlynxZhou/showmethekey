@@ -2,9 +2,9 @@
 Type=Application
 Name=Show Me The Key
 Comment=Show keys you typed on screen.
-Icon=input-dialpad
-Exec=showmethekey
-TryExec=/usr/bin/showmethekey
+Icon=showmethekey
+Exec=showmethekey-gtk
+TryExec=/usr/bin/showmethekey-gtk
 StartupNotify=false
 Terminal=false
 Categories=Utility

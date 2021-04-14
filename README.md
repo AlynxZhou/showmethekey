@@ -45,3 +45,7 @@ For other Wayland DEs (personally I only care about KDE Plasma), I will do more 
 As I want some clear name that hints its usage, but `screenkey` is already taken and I think `visualkey` sounds like `Visual Studio` and it's horrible. My friend [@LGiki](https://github.com/LGiki) suggests `Show Me The Key` which sounds like "Show me the code" from Linus Torvalds. At first I think it's a little bit long, but now it is acceptable so it's called `showmethekey` or `Show Me The Key`.
 
 The Chinese translate of this program name should be `让我看键`, and it's only used for window title, debug output, package name and desktop entry name should not be translated.
+
+# Icon
+
+Program icon made by <a href="https://www.freepik.com" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a>.

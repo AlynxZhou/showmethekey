@@ -34,10 +34,10 @@ install_data(
   'LICENSE',
   install_dir: get_option('prefix') / get_option('datadir') / 'licenses' / meson.project_name()
 )
-# install_data(
-#   'dists' / 'showmethekey.png',
-#   install_dir: get_option('datadir') / 'pixmaps'
-# )
+install_data(
+  'dists' / 'showmethekey.png',
+  install_dir: get_option('prefix') / get_option('datadir') / 'pixmaps'
+)
 install_data(
   'dists' / 'showmethekey.desktop',
   install_dir: get_option('prefix') / get_option('datadir') / 'applications'

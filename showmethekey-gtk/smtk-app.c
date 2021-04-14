@@ -6,17 +6,24 @@
 
 struct _SmtkApp {
 	GtkApplication parent_instance;
+	GtkWidget *win;
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, GTK_TYPE_APPLICATION)
 
 static void smtk_app_init(SmtkApp *app)
 {
+	app->win = NULL;
 }
 
-static void smtk_app_activate(GApplication *app)
+static void smtk_app_activate(GApplication *gapp)
 {
-	GtkWidget *win = smtk_app_win_new(SMTK_APP(app));
-	gtk_window_present(GTK_WINDOW(win));
+	// Application is already single instance.
+	// We use this to prevent mutliply windows.
+	SmtkApp *app = SMTK_APP(gapp);
+	if (app->win == NULL) {
+		app->win = smtk_app_win_new(SMTK_APP(app));
+		gtk_window_present(GTK_WINDOW(app->win));
+	}
 }
 
 static void smtk_app_class_init(SmtkAppClass *app_class)

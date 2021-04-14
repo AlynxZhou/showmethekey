@@ -311,8 +311,10 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 		"hexpand", FALSE, "hexpand-set", TRUE,
 		// We cannot focus on this window, and it has no border,
 		// so user resize is meaningless for it.
-		"resizable", FALSE, "skip-pager-hint", TRUE,
-		"skip-taskbar-hint", TRUE, "mode", mode, NULL);
+		"resizable", FALSE,
+		// Wayland does not support this, it's ok.
+		// "skip-pager-hint", TRUE, "skip-taskbar-hint", TRUE,
+		"mode", mode, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
