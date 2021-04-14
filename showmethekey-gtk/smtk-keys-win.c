@@ -162,22 +162,10 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	g_signal_connect(win, "size-allocate",
 			 G_CALLBACK(smtk_keys_win_on_size_allocate), NULL);
 
-	const gchar *xdg_session_type = g_getenv("XDG_SESSION_TYPE");
-	if (xdg_session_type != NULL) {
-		if (strcmp(xdg_session_type, "wayland") == 0) {
-			GtkWidget *dialog = gtk_message_dialog_new(
-				GTK_WINDOW(win), GTK_DIALOG_MODAL,
-				GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE,
-				_("Wayland does not allow a client to set \"Always on Top\" and \"Always on Visible Workspace\" by itself, please right click the \"Clickable Area\" to show your window manager's menu and check \"Always on Top\" and \"Always on Visible Workspace\" in it!"));
-			gtk_dialog_run(GTK_DIALOG(dialog));
-			gtk_widget_destroy(dialog);
-		} else {
-			// GTK4 dropped those API, so we need to implement
-			// those for GTK4 by ourselves via WM hints.
-			gtk_window_set_keep_above(GTK_WINDOW(win), TRUE);
-			gtk_window_stick(GTK_WINDOW(win));
-		}
-	}
+	// GTK4 dropped those API, so we need to implement
+	// those when upgrading GTK4 by ourselves via WM hints.
+	gtk_window_set_keep_above(GTK_WINDOW(win), TRUE);
+	gtk_window_stick(GTK_WINDOW(win));
 
 	// We can not make a half transparent window with CSS,
 	// and need to set visual and do custom draw.
