@@ -167,7 +167,7 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 			GtkWidget *dialog = gtk_message_dialog_new(
 				GTK_WINDOW(win), GTK_DIALOG_MODAL,
 				GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE,
-				"Wayland does not allow windows for keeping above, please right click the \"Clickable Area\" and check \"Always on Top\" and \"Always on Visible Workspace\" from your compositor's menu!");
+				_("Wayland does not allow a client to set \"Always on Top\" and \"Always on Visible Workspace\" by itself, please right click the \"Clickable Area\" to show your window manager's menu and check \"Always on Top\" and \"Always on Visible Workspace\" in it!"));
 			gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
 		} else {
