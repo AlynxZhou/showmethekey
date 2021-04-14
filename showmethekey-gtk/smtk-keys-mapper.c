@@ -71,6 +71,10 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	// Shift modified key raw. For example ISO_Left_Tab here.
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ISO_Left_Tab"),
 			    g_strdup("Shift+Tab"));
+	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Meta_L"),
+			    g_strdup("Meta"));
+	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Meta_R"),
+			    g_strdup("Meta"));
 	g_hash_table_insert(mapper->xkb_replace_names,
 			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
 	g_hash_table_insert(mapper->xkb_replace_names,
@@ -289,8 +293,13 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
 					 XKB_STATE_MODS_EFFECTIVE) > 0)
 		g_string_append(buffer, "Ctrl+");
+	// Shift+Alt will get Meta_L and Meta_R,
+	// and we should not add Alt for it.
+	// I think Meta should be a modifier, but Xkbcommon does not.
+	// Sounds like a bug.
 	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
+					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
+	    strcmp(main_key, "Meta") != 0)
 		g_string_append(buffer, "Alt+");
 	// Shift is a little bit complex,
 	// it can be consumed by capitalization transformation,
