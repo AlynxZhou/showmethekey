@@ -8,8 +8,6 @@
 
 #include "config.h"
 
-#include <glib/gi18n.h>
-
 // Type generated in meson.build.
 // See <https://developer.gnome.org/gobject/stable/glib-mkenums.html>
 // and <https://mesonbuild.com/Gnome-module.html#gnomemkenums_simple>.

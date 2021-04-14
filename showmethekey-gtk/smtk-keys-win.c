@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <glib/gi18n.h>
 
 #include "smtk.h"
 #include "smtk-keys-win.h"

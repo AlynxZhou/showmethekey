@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <getopt.h>
 #include <pthread.h>
 
 #include <libudev.h>
@@ -167,8 +168,50 @@ static void run_mainloop(struct libinput *libinput)
 		handle_events(libinput);
 }
 
+void print_help(char *program_name)
+{
+	printf("The backend of Show Me The Key.\n");
+	printf("Version " PROJECT_VERSION ".\n");
+	printf("Usage: %s [OPTION…]\n", program_name);
+	printf("Options:\n");
+	printf("\t-h, --help\tDisplay help then exit.\n");
+	printf("\t-v, --version\tDisplay version then exit.\n");
+	printf("Warning: This is the backend and is not designed to run "
+	       "by users. You should run the frontend of Show Me The Key, "
+	       "and the frontend will run this.\n");
+}
+
 int main(int argc, char *argv[])
 {
+	const struct option long_options[] = { { "version", no_argument, 0,
+						 'v' },
+					       { "help", no_argument, 0, 'h' },
+					       { NULL, 0, NULL, 0 } };
+
+	int option_index = 0;
+	int opt = 0;
+	while ((opt = getopt_long(argc, argv, "vh", long_options,
+				  &option_index)) != -1) {
+		switch (opt) {
+		case 0:
+			// We don't use this.
+			break;
+		case 'v':
+			printf(PROJECT_VERSION "\n");
+			return 0;
+		case 'h':
+			print_help(argv[0]);
+			return 0;
+		case '?':
+			// getopt_long already printed an error message.
+			break;
+		default:
+			fprintf(stderr, "%s: Invalid option `-%c`.\n", argv[0],
+				opt);
+			break;
+		}
+	}
+
 	struct udev *udev = udev_new();
 	if (udev == NULL) {
 		fprintf(stderr, "Failed to initialize udev.\n");

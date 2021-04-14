@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-14 09:36+0800\n"
+"POT-Creation-Date: 2021-04-14 16:16+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,12 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app-win.ui:14
+#: showmethekey-gtk/smtk-app.c:18 showmethekey-gtk/smtk-app-win.ui:14
 msgid "Show Me The Key"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app.c:23
+msgid "Display version then exit."
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:52
@@ -41,11 +45,11 @@ msgstr ""
 msgid "Height"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:131
+#: showmethekey-gtk/smtk-keys-win.c:132
 msgid "Clickable Area"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:170
+#: showmethekey-gtk/smtk-keys-win.c:171
 msgid ""
 "Wayland does not allow a client to set \"Always on Top\" and \"Always on "
 "Visible Workspace\" by itself, please right click the \"Clickable Area\" to "
