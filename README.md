@@ -10,7 +10,13 @@ A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that work
 
 Clone this repo and run `mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install` to install, then run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
 
-Still in development and might have some bugs.
+You need to toggle the switch to start it manually and need to input your password to `pkexec`'s dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
+
+## Special Notice for GNOME Wayland Session Users
+
+There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. Also Mutter has no way to let a program to set itself always on top. But don't worry, users are always allowed to do those things by themselves, so after turning on the switch, please right click the "Clickable Area" in titlebar of the floating window and check "Always on Top" and "Always on Visible Workspace", and Mutter will do as what you set!
+
+For other Wayland DEs (personally I only care about KDE Plasma), I will do more test and update here.
 
 # Feature
 
@@ -28,17 +34,11 @@ It generates JSON in lines like `{"event_name": "KEYBOARD_KEY", "event_type": 30
 
 ## GTK
 
-A GUI frontend based on GTK, will run CLI backend as root via `pkexec`.
+A GUI frontend based on GTK, will run CLI backend as root via `pkexec`, and show a transparent floating window to display events.
 
 # Translate
 
 If you changed translatable strings, don't forget to run `meson compile showmethekey-update-po` in build directory and then edit po files.
-
-### Special Notice for GNOME Wayland Session Users
-
-There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. Also Mutter has no way to let a program to set it always on top. But don't worry, users are always allowed to do those things by themselves, so after turning on the switch, please right click the title bar of the keys window and check "Always on Top" and "Always on Visible Workspace", and Mutter will do as what you set!
-
-For other Wayland DEs (personally I only care about KDE Plasma), I will do more test and update here.
 
 # Name
 
