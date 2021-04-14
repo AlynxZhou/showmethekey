@@ -9,6 +9,11 @@
     <value nick="raw" value="1" />
   </enum>
   <schema path="/one/alynx/showmethekey/" id="one.alynx.showmethekey">
+    <key name="first-time" type="b">
+      <summary>First Time Launch or Not</summary>
+      <description>The program is running for the first time.</description>
+      <default>true</default>
+    </key>
     <key enum="one.alynx.showmethekey.mode" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>

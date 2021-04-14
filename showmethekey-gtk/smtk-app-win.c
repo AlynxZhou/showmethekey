@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <glib/gi18n.h>
 
 #include "smtk.h"
 #include "smtk-app.h"
@@ -17,7 +18,37 @@ struct _SmtkAppWin {
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 
-// TODO: Internationalization.
+// TODO: Add menu for usage dialog.
+static void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
+{
+	GtkWidget *dialog = gtk_message_dialog_new(
+		GTK_WINDOW(win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
+		GTK_BUTTONS_CLOSE,
+		_("Usage:\n\n"
+		  "1. Please input your password after toggling the switch, "
+		  "because it needs superuser permission to read input events, "
+		  "and Wayland does not allow running graphics program with "
+		  "superuser permission, so it uses polkit to run a backend "
+		  "with superuser permission. This program does not handle or "
+		  "store your password.\n\n"
+		  "2. After you toggle the switch to show the floating window, "
+		  "you need to drag it manually to anywhere you want, "
+		  "because Wayland does not allow window to set its position. "
+		  "Though the floating window is mostly transparent for click, "
+		  "the \"Clickable Area\" label on titlebar are clickable and "
+		  "can be dragged as a handle.\n\n"
+		  "3. Because Wayland does not allow a window to set "
+		  "\"Always on Top\" and \"Always on Visible Workspace\" "
+		  "by itself, you should set it manually if you are in a "
+		  "Wayland session and your window manager support it. "
+		  "For example if you are using GNOME Shell, you can right "
+		  "click the \"Clickable Area\" in titlebar to show a window "
+		  "manager menu and check \"Always on Top\" and \"Always on "
+		  "Visible Workspace\" in it.\n\n"
+		   "You can open this dialog again from Menu -> Usage."));
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
@@ -132,6 +163,11 @@ static void smtk_app_win_init(SmtkAppWin *win)
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "height", win->height_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
+
+	if (g_settings_get_boolean(win->settings, "first-time")) {
+		smtk_app_win_show_usage_dialog(win);
+		g_settings_set_boolean(win->settings, "first-time", FALSE);
+	}
 }
 
 static void smtk_app_win_dispose(GObject *object)
