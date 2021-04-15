@@ -6,9 +6,15 @@ A screenkey alternative that works under Wayland via libinput.
 
 A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that works under Wayland via libinput](https://hackweek.suse.com/20/projects/a-screenkey-alternative-that-works-under-wayland-via-reading-evdev-directly).
 
+# Install
+
+Clone this repo and run `mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install` to install, then you can run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
+
+Arch Linux users can also install it from [AUR](https://aur.archlinux.org/packages/showmethekey/).
+
 # Usage
 
-Clone this repo and run `mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install` to install, then run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
+For detailed usage please run usage dialog from app menu!
 
 You need to toggle the switch to start it manually and need to input your password to `pkexec`'s dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
 
