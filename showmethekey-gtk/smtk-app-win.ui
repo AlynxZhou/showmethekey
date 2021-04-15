@@ -4,6 +4,48 @@
     Don't indent translatable properties because we will translate it,
     and don't want space.
   -->
+  <object class="GtkImage" id="menu_image">
+    <property name="visible">true</property>
+    <property name="icon_name">open-menu-symbolic</property>
+  </object>
+  <!--
+    We could build popover menu here directly, but it seems GTK tutorial
+    prefer building menu from GMenuModel.
+  -->
+  <!-- <object class="GtkPopoverMenu" id="menu">
+    <property name="can-focus">false</property>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">true</property>
+        <property name="can_focus">false</property>
+        <property name="margin">12</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkModelButton">
+            <property name="visible">true</property>
+            <property name="can_focus">false</property>
+            <property name="text" translatable="yes">_Usage</property>
+            <property name="action-name">app.usage</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">true</property>
+            <property name="margin-top">6</property>
+            <property name="margin-bottom">6</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkModelButton">
+            <property name="visible">true</property>
+            <property name="can_focus">false</property>
+            <property name="text" translatable="yes">_Quit</property>
+            <property name="action-name">app.quit</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object> -->
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
     <property name="visible">true</property>
     <!-- <property name="default-width">800</property> -->
@@ -29,6 +71,22 @@
               object="SmtkAppWin"
               swapped="yes" />
           </object>
+          <packing>
+            <property name="pack_type">start</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkMenuButton" id="menu_button">
+            <property name="visible">true</property>
+            <property name="use-popover">true</property>
+            <property name="image">menu_image</property>
+            <property name="tooltip-text" translatable="yes">Menu</property>
+            <!-- Will bind GMenuModel in code. -->
+            <!-- <property name="popover">menu</property> -->
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+          </packing>
         </child>
       </object>
     </child>

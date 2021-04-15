@@ -12,6 +12,7 @@ G_DECLARE_FINAL_TYPE(SmtkAppWin, smtk_app_win, SMTK, APP_WIN,
 		     GtkApplicationWindow)
 
 GtkWidget *smtk_app_win_new(SmtkApp *app);
+void smtk_app_win_show_usage_dialog(SmtkAppWin *win);
 
 G_END_DECLS
 

@@ -2,7 +2,7 @@
 <gresources>
   <gresource prefix="/one/alynx/showmethekey">
     <file preprocess="xml-stripblanks">smtk-app-win.ui</file>
-    <file preprocess="xml-stripblanks">smtk-keys-win.ui</file>
+    <file preprocess="xml-stripblanks">smtk-app-win-menu.ui</file>
     <file>smtk-keys-win.css</file>
     <file>smtk-keys-win-header-bar.css</file>
     <file>smtk-keys-win-keys-label.css</file>

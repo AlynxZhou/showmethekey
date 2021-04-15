@@ -11,6 +11,21 @@ struct _SmtkApp {
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, GTK_TYPE_APPLICATION)
 
+static void usage_activated(GSimpleAction *action, GVariant *parameter,
+			    gpointer user_data)
+{
+	SmtkApp *app = SMTK_APP(user_data);
+	if (app->win != NULL)
+		smtk_app_win_show_usage_dialog(SMTK_APP_WIN(app->win));
+}
+
+static void quit_activated(GSimpleAction *action, GVariant *parameter,
+			   gpointer user_data)
+{
+	GApplication *g_app = G_APPLICATION(user_data);
+	g_application_quit(g_app);
+}
+
 static void smtk_app_init(SmtkApp *app)
 {
 	app->win = NULL;
@@ -38,6 +53,25 @@ static void smtk_app_activate(GApplication *g_app)
 	}
 }
 
+static void smtk_app_startup(GApplication *g_app)
+{
+	G_APPLICATION_CLASS(smtk_app_parent_class)->startup(g_app);
+
+	SmtkApp *app = SMTK_APP(g_app);
+	GActionEntry app_entries[] = {
+		{ "usage", usage_activated, NULL, NULL, NULL },
+		{ "quit", quit_activated, NULL, NULL, NULL }
+	};
+	const char *usage_accels[] = { "<Ctrl>U", NULL };
+	const char *quit_accels[] = { "<Ctrl>Q", NULL };
+	g_action_map_add_action_entries(G_ACTION_MAP(app), app_entries,
+					G_N_ELEMENTS(app_entries), app);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.usage",
+					      usage_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.quit",
+					      quit_accels);
+}
+
 // See <https://developer.gnome.org/gio/stable/GApplication.html#GApplication-handle-local-options>.
 static gint smtk_app_handle_local_options(GApplication *application,
 					  GVariantDict *options)
@@ -55,6 +89,7 @@ static void smtk_app_class_init(SmtkAppClass *app_class)
 	GApplicationClass *g_app_class = G_APPLICATION_CLASS(app_class);
 
 	g_app_class->activate = smtk_app_activate;
+	g_app_class->startup = smtk_app_startup;
 
 	// See <https://developer.gnome.org/CommandLine/>.
 	g_app_class->handle_local_options = smtk_app_handle_local_options;

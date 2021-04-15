@@ -120,10 +120,9 @@ static gboolean smtk_keys_win_on_draw(SmtkKeysWin *win, cairo_t *cr,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
-	win->error = NULL;
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
-	// gtk_widget_init_template(GTK_WIDGET(win));
+	win->error = NULL;
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
@@ -259,13 +258,6 @@ static void smtk_keys_win_dispose(GObject *object)
 
 static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 {
-	// gtk_widget_class_set_template_from_resource(
-	// GTK_WIDGET_CLASS(win_class),
-	// "/one/alynx/showmethekey/smtk-keys-win.ui");
-	// gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class), SmtkKeysWin, keys_label);
-	// gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class), smtk_keys_win_on_configure);
-	// gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class), smtk_keys_win_on_draw);
-
 	GObjectClass *object_class = G_OBJECT_CLASS(win_class);
 
 	object_class->set_property = smtk_keys_win_set_property;

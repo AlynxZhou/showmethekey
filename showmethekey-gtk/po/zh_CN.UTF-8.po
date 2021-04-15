@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-15 00:46+0800\n"
+"POT-Creation-Date: 2021-04-15 09:32+0800\n"
 "PO-Revision-Date: 2021-04-13 17:36+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:18 showmethekey-gtk/smtk-app-win.ui:14
+#: showmethekey-gtk/smtk-app.c:33 showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:23
+#: showmethekey-gtk/smtk-app.c:38
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:26
+#: showmethekey-gtk/smtk-app-win.c:199
 msgid ""
 "Usage:\n"
 "\n"
@@ -67,26 +67,38 @@ msgstr ""
 "\n"
 "你可以通过 菜单 -> 使用说明 来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.ui:52
+#: showmethekey-gtk/smtk-app-win.ui:83
+msgid "Menu"
+msgstr "菜单"
+
+#: showmethekey-gtk/smtk-app-win.ui:110
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:65
+#: showmethekey-gtk/smtk-app-win.ui:123
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:66
+#: showmethekey-gtk/smtk-app-win.ui:124
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:80
+#: showmethekey-gtk/smtk-app-win.ui:138
 msgid "Width"
 msgstr "宽度"
 
-#: showmethekey-gtk/smtk-app-win.ui:104
+#: showmethekey-gtk/smtk-app-win.ui:162
 msgid "Height"
 msgstr "高度"
 
-#: showmethekey-gtk/smtk-keys-win.c:132
+#: showmethekey-gtk/smtk-app-win-menu.ui:6
+msgid "_Usage"
+msgstr "使用说明"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:12
+msgid "_Quit"
+msgstr "退出"
+
+#: showmethekey-gtk/smtk-keys-win.c:131
 msgid "Clickable Area"
 msgstr "可点击区域"

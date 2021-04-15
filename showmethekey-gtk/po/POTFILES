@@ -2,8 +2,8 @@ showmethekey-gtk/main.c
 showmethekey-gtk/smtk-app.c
 showmethekey-gtk/smtk-app-win.c
 showmethekey-gtk/smtk-app-win.ui
+showmethekey-gtk/smtk-app-win-menu.ui
 showmethekey-gtk/smtk-event.c
 showmethekey-gtk/smtk-keys-emitter.c
 showmethekey-gtk/smtk-keys-mapper.c
 showmethekey-gtk/smtk-keys-win.c
-showmethekey-gtk/smtk-keys-win.ui
