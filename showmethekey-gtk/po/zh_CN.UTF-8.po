@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-15 09:32+0800\n"
+"POT-Creation-Date: 2021-04-16 22:07+0800\n"
 "PO-Revision-Date: 2021-04-13 17:36+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:33 showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app.c:41 showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:38
+#: showmethekey-gtk/smtk-app.c:46
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:199
+#: showmethekey-gtk/smtk-app-win.c:236
 msgid ""
 "Usage:\n"
 "\n"
@@ -48,6 +48,10 @@ msgid ""
 "titlebar to show a window manager menu and check \"Always on Top\" and "
 "\"Always on Visible Workspace\" in it.\n"
 "\n"
+"4. If you want to temporary pause it (for example you need to insert "
+"password), you can use the \"Temporary Hide\" switch, it will not record "
+"your keys while hiding.\n"
+"\n"
 "You can open this dialog again from Menu -> Usage."
 msgstr ""
 "使用说明：\n"
@@ -61,33 +65,40 @@ msgstr ""
 "区域”标签仍然是可以点击的并且可以作为把手来拖拽。\n"
 "\n"
 "3. 因为 Wayland 不允许窗口自行设置 “置顶”和“总在可见工作区”，所以如果你在使"
-"用 Wayland 会话，你需要手动设置这两种功能，如果你的窗口管理器支持的话。例如如"
-"果你在使用 GNOME Shell，你可以右键点击标题栏上的“可点击区域”来显示窗口管理器"
+"用 Wayland 会话，您需要手动设置这两种功能，如果您的窗口管理器支持的话。例如如"
+"果您在使用 GNOME Shell，您可以右键点击标题栏上的“可点击区域”来显示窗口管理器"
 "菜单并勾选“置顶”和“总在可见工作区”。\n"
 "\n"
-"你可以通过 菜单 -> 使用说明 来再次访问此对话框。"
+"4. 如果您想要临时暂停该程序（比如你需要输入密码），您可以使用“临时隐藏”开关，"
+"在隐藏状态下它不会记录您的按键。\n"
+"\n"
+"您可以通过 菜单 -> 使用说明 来再次访问此对话框。"
 
 #: showmethekey-gtk/smtk-app-win.ui:83
 msgid "Menu"
 msgstr "菜单"
 
 #: showmethekey-gtk/smtk-app-win.ui:110
+msgid "Temporary Hide"
+msgstr "临时隐藏"
+
+#: showmethekey-gtk/smtk-app-win.ui:138
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:123
+#: showmethekey-gtk/smtk-app-win.ui:151
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:124
+#: showmethekey-gtk/smtk-app-win.ui:152
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:138
+#: showmethekey-gtk/smtk-app-win.ui:166
 msgid "Width"
 msgstr "宽度"
 
-#: showmethekey-gtk/smtk-app-win.ui:162
+#: showmethekey-gtk/smtk-app-win.ui:190
 msgid "Height"
 msgstr "高度"
 
@@ -99,6 +110,6 @@ msgstr "使用说明"
 msgid "_Quit"
 msgstr "退出"
 
-#: showmethekey-gtk/smtk-keys-win.c:131
+#: showmethekey-gtk/smtk-keys-win.c:133
 msgid "Clickable Area"
 msgstr "可点击区域"

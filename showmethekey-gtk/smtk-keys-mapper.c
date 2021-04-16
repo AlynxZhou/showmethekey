@@ -234,6 +234,9 @@ SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
 
 char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 {
+	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(event != NULL, NULL);
+
 	// XKBcommon only handles keyboard.
 	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
 		xkb_keycode_t xkb_key_code =
@@ -249,6 +252,9 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 
 char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 {
+	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(event != NULL, NULL);
+
 	char *main_key = NULL;
 	// We put xkb_key_code here because the Shift detection use it.
 	// Though Xkbcommon don't handle mouse button state, we can still

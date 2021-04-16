@@ -2,8 +2,8 @@
 #define __SMTK_H__
 
 #ifdef G_LOG_DOMAIN
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "showmethekey-gtk"
+#	undef G_LOG_DOMAIN
+#	define G_LOG_DOMAIN "showmethekey-gtk"
 #endif
 
 #include "config.h"

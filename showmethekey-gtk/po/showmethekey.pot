@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-15 09:32+0800\n"
+"POT-Creation-Date: 2021-04-16 22:07+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,15 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:33 showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app.c:41 showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:38
+#: showmethekey-gtk/smtk-app.c:46
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:199
+#: showmethekey-gtk/smtk-app-win.c:236
 msgid ""
 "Usage:\n"
 "\n"
@@ -48,6 +48,10 @@ msgid ""
 "titlebar to show a window manager menu and check \"Always on Top\" and "
 "\"Always on Visible Workspace\" in it.\n"
 "\n"
+"4. If you want to temporary pause it (for example you need to insert "
+"password), you can use the \"Temporary Hide\" switch, it will not record "
+"your keys while hiding.\n"
+"\n"
 "You can open this dialog again from Menu -> Usage."
 msgstr ""
 
@@ -56,22 +60,26 @@ msgid "Menu"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:110
-msgid "Display Mode"
-msgstr ""
-
-#: showmethekey-gtk/smtk-app-win.ui:123
-msgid "Composed"
-msgstr ""
-
-#: showmethekey-gtk/smtk-app-win.ui:124
-msgid "Raw"
+msgid "Temporary Hide"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:138
+msgid "Display Mode"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:151
+msgid "Composed"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:152
+msgid "Raw"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:166
 msgid "Width"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:162
+#: showmethekey-gtk/smtk-app-win.ui:190
 msgid "Height"
 msgstr ""
 
@@ -83,6 +91,6 @@ msgstr ""
 msgid "_Quit"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:131
+#: showmethekey-gtk/smtk-keys-win.c:133
 msgid "Clickable Area"
 msgstr ""

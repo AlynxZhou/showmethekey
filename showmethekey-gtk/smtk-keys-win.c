@@ -20,6 +20,8 @@ enum { PROP_0, PROP_MODE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
+// TODO: Support window temporary hiding and pass it to emitter.
+
 static void smtk_keys_win_set_property(GObject *object, guint property_id,
 				       const GValue *value, GParamSpec *pspec)
 {
@@ -308,4 +310,20 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 
 	// GTK always return GtkWidget, so do I.
 	return GTK_WIDGET(win);
+}
+
+void smtk_keys_win_hide(SmtkKeysWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	smtk_keys_emitter_pause(win->emitter);
+	gtk_widget_hide(GTK_WIDGET(win));
+}
+
+void smtk_keys_win_show(SmtkKeysWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	gtk_widget_show(GTK_WIDGET(win));
+	smtk_keys_emitter_resume(win->emitter);
 }

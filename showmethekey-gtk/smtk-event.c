@@ -165,30 +165,43 @@ SmtkEvent *smtk_event_new(gchar *source, GError **error)
 
 SmtkEventType smtk_event_get_event_type(SmtkEvent *event)
 {
+	g_return_val_if_fail(event != NULL, SMTK_EVENT_TYPE_UNKNOWN);
+
 	return event->event_type;
 }
 
 SmtkEventState smtk_event_get_event_state(SmtkEvent *event)
 {
+	g_return_val_if_fail(event != NULL, SMTK_EVENT_STATE_UNKNOWN);
+
 	return event->event_state;
 }
 
 const gchar *smtk_event_get_device_name(SmtkEvent *event)
 {
+	g_return_val_if_fail(event != NULL, NULL);
+
 	return event->device_name;
 }
 
 const gchar *smtk_event_get_key_name(SmtkEvent *event)
 {
+	g_return_val_if_fail(event != NULL, NULL);
+
 	return event->key_name;
 }
 
 guint32 smtk_event_get_key_code(SmtkEvent *event)
 {
+	// 0 is KEY_RESERVED for evdev.
+	g_return_val_if_fail(event != NULL, 0);
+
 	return event->key_code;
 }
 
 guint32 smtk_event_get_time_stamp(SmtkEvent *event)
 {
+	g_return_val_if_fail(event != NULL, 0);
+
 	return event->time_stamp;
 }

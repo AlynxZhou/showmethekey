@@ -12,6 +12,7 @@ struct _SmtkAppWin {
 	GSettings *settings;
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
+	GtkWidget *hide_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
@@ -21,6 +22,7 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
+	gtk_widget_set_sensitive(win->hide_switch, FALSE);
 	gtk_widget_set_sensitive(win->mode_selector, TRUE);
 	gtk_widget_set_sensitive(win->width_entry, TRUE);
 	gtk_widget_set_sensitive(win->height_entry, TRUE);
@@ -28,6 +30,7 @@ static void smtk_app_win_enable(SmtkAppWin *win)
 
 static void smtk_app_win_disable(SmtkAppWin *win)
 {
+	gtk_widget_set_sensitive(win->hide_switch, TRUE);
 	gtk_widget_set_sensitive(win->mode_selector, FALSE);
 	gtk_widget_set_sensitive(win->width_entry, FALSE);
 	gtk_widget_set_sensitive(win->height_entry, FALSE);
@@ -40,6 +43,7 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 	if (win->keys_win != NULL) {
 		win->keys_win = NULL;
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), FALSE);
+		gtk_switch_set_active(GTK_SWITCH(win->hide_switch), FALSE);
 		smtk_app_win_enable(win);
 	}
 }
@@ -47,8 +51,9 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 // See <https://mail.gnome.org/archives/networkmanager-list/2010-October/msg00129.html>.
 // notify of property have one more argument for property
 // in the middle of instance and object.
-static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
-					  GtkSwitch *keys_win_switch)
+static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
+						   GParamSpec *prop,
+						   GtkSwitch *keys_win_switch)
 {
 	if (gtk_switch_get_active(GTK_SWITCH(win->keys_win_switch))) {
 		if (win->keys_win == NULL) {
@@ -84,12 +89,26 @@ static void smtk_app_win_on_switch_active(SmtkAppWin *win, GParamSpec *prop,
 			gtk_window_present(GTK_WINDOW(win->keys_win));
 		}
 	} else {
-		if (win->keys_win != NULL) {
+		// We clear pointer and change widget states in signal callback.
+		if (win->keys_win != NULL)
 			gtk_widget_destroy(GTK_WIDGET(win->keys_win));
-			win->keys_win = NULL;
-			smtk_app_win_enable(win);
-		}
 	}
+}
+
+static void smtk_app_win_on_hide_switch_active(SmtkAppWin *win,
+					       GParamSpec *prop,
+					       GtkSwitch *hide_switch)
+{
+	// This only works when keys_win is open.
+	// We don't disable or turn off it here,
+	// doing this when keys_win destroyed is enough.
+	if (win->keys_win == NULL)
+		return;
+
+	if (gtk_switch_get_active(GTK_SWITCH(win->hide_switch)))
+		smtk_keys_win_hide(SMTK_KEYS_WIN(win->keys_win));
+	else
+		smtk_keys_win_show(SMTK_KEYS_WIN(win->keys_win));
 }
 
 static void smtk_app_win_init(SmtkAppWin *win)
@@ -173,17 +192,23 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 		GTK_WIDGET_CLASS(win_class),
 		"/one/alynx/showmethekey/smtk-app-win.ui");
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, keys_win_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, menu_button);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, keys_win_switch);
+					     SmtkAppWin, hide_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mode_selector);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, width_entry);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, height_entry);
-	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
-						smtk_app_win_on_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_keys_win_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_hide_switch_active);
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)
@@ -191,8 +216,20 @@ GtkWidget *smtk_app_win_new(SmtkApp *app)
 	return g_object_new(SMTK_TYPE_APP_WIN, "application", app, NULL);
 }
 
+void smtk_app_win_toggle_hide_switch(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	if (gtk_widget_get_sensitive(win->hide_switch))
+		gtk_switch_set_active(
+			GTK_SWITCH(win->hide_switch),
+			!gtk_switch_get_active(GTK_SWITCH(win->hide_switch)));
+}
+
 void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 {
+	g_return_if_fail(win != NULL);
+
 	GtkWidget *dialog = gtk_message_dialog_new(
 		GTK_WINDOW(win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
 		GTK_BUTTONS_CLOSE,
@@ -217,6 +254,9 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "click the \"Clickable Area\" in titlebar to show a window "
 		  "manager menu and check \"Always on Top\" and \"Always on "
 		  "Visible Workspace\" in it.\n\n"
+		  "4. If you want to temporary pause it (for example you need "
+		  "to insert password), you can use the \"Temporary Hide\" "
+		  "switch, it will not record your keys while hiding.\n\n"
 		  "You can open this dialog again from Menu -> Usage."));
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);

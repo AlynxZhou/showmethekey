@@ -17,6 +17,7 @@ struct _SmtkKeysEmitter {
 	gboolean polling;
 	GPtrArray *keys_array;
 	SmtkKeyMode mode;
+	gboolean waiting;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
@@ -152,11 +153,14 @@ static gpointer poller_function(gpointer user_data)
 			break;
 		default:
 			// Should never be here.
+			g_warn_if_reached();
 			break;
 		}
 		if (key != NULL) {
+			// Don't save key if hiding.
 			if (smtk_event_get_event_state(event) ==
-			    SMTK_EVENT_STATE_PRESSED) {
+				    SMTK_EVENT_STATE_PRESSED &&
+			    !emitter->waiting) {
 				// We don't free inserted text here,
 				// GPtrArray will free them.
 				gchar *escaped = g_markup_escape_text(key, -1);
@@ -280,6 +284,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 {
 	g_debug("smtk_keys_emitter_start_async() called.");
+	g_return_if_fail(emitter != NULL);
 
 	emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
@@ -311,6 +316,7 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 {
 	g_debug("smtk_keys_emitter_stop_async() called.");
+	g_return_if_fail(emitter != NULL);
 
 	// Don't know why but I need to stop cli before poller.
 	if (emitter->cli != NULL) {
@@ -346,4 +352,18 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		g_object_unref(emitter->mapper);
 		emitter->mapper = NULL;
 	}
+}
+
+void smtk_keys_emitter_pause(SmtkKeysEmitter *emitter)
+{
+	g_return_if_fail(emitter != NULL);
+
+	emitter->waiting = TRUE;
+}
+
+void smtk_keys_emitter_resume(SmtkKeysEmitter *emitter)
+{
+	g_return_if_fail(emitter != NULL);
+
+	emitter->waiting = FALSE;
 }

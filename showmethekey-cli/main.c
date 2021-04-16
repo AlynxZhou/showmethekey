@@ -130,6 +130,7 @@ static int handle_events(struct libinput *libinput)
 	struct libinput_event *event;
 
 	libinput_dispatch(libinput);
+	// Please keep printing a line per json.
 	while ((event = libinput_get_event(libinput)) != 0) {
 		switch (libinput_event_get_type(event)) {
 		// This program only handle key event.

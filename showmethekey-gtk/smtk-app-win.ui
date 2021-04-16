@@ -67,7 +67,7 @@
             <property name="can-default">true</property>
             <signal
               name="notify::active"
-              handler="smtk_app_win_on_switch_active"
+              handler="smtk_app_win_on_keys_win_switch_active"
               object="SmtkAppWin"
               swapped="yes" />
           </object>
@@ -99,6 +99,34 @@
         <property name="margin-bottom">10</property>
         <property name="margin-end">10</property>
         <property name="spacing">10</property>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">true</property>
+            <property name="orientation">horizontal</property>
+            <property name="spacing">10</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">true</property>
+                <property name="label" translatable="yes">Temporary Hide</property>
+                <property name="hexpand">true</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSwitch" id="hide_switch">
+                <property name="visible">true</property>
+                <property name="hexpand">false</property>
+                <property name="halign">end</property>
+                <property name="sensitive">false</property>
+                <signal
+                  name="notify::active"
+                  handler="smtk_app_win_on_hide_switch_active"
+                  object="SmtkAppWin"
+                  swapped="yes" />
+              </object>
+            </child>
+          </object>
+        </child>
         <child>
           <object class="GtkBox">
             <property name="visible">true</property>
