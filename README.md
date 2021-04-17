@@ -4,6 +4,8 @@ Show Me The Key
 Show keys you typed on screen.
 ------------------------------
 
+[Project Website](https://showmethekey.alynx.one/)
+
 A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that works under Wayland via libinput](https://hackweek.suse.com/20/projects/a-screenkey-alternative-that-works-under-wayland-via-reading-evdev-directly).
 
 # Install
@@ -18,11 +20,13 @@ For detailed usage please run usage dialog from app menu!
 
 You need to toggle the switch to start it manually and need to input your password to `pkexec`'s dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
 
-## Special Notice for GNOME Wayland Session Users
+## Special Notice for Wayland Session Users
 
-There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. Also Mutter has no way to let a program to set itself always on top. But don't worry, users are always allowed to do those things by themselves, so after turning on the switch, please right click the "Clickable Area" in titlebar of the floating window and check "Always on Top" and "Always on Visible Workspace", and Mutter will do as what you set!
+There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. But don't worry, users are always allowed to do those things by themselves if their compositors support it.
 
-For other Wayland DEs (personally I only care about KDE Plasma), I will do more test and update here.
+For example if you are using GNOME Shell (Wayland), you can right click the "Clickable Area" on title bar to show a window manager menu and check "Always on Top" and "Always on Visible Workspace" in it.
+
+If you are using KDE Plasma (Wayland), you can right click "Floating Window - Show Me The Key" on task bar, check "Move to Desktop" -> "All Desktops" and "More Actions" -> "Keep Above Others".
 
 # Feature
 

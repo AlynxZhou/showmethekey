@@ -8,25 +8,26 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-17 10:12+0800\n"
-"PO-Revision-Date: 2021-04-13 17:36+0800\n"
+"POT-Creation-Date: 2021-04-17 14:51+0800\n"
+"PO-Revision-Date: 2021-04-17 14:15+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.1\n"
 
-#: showmethekey-gtk/smtk-app.c:53 showmethekey-gtk/smtk-app-win.c:282
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:291
 #: showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:58
+#: showmethekey-gtk/smtk-app.c:62
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:239
+#: showmethekey-gtk/smtk-app-win.c:243
 msgid ""
 "Usage:\n"
 "\n"
@@ -44,16 +45,19 @@ msgid ""
 "\n"
 "3. Because Wayland does not allow a window to set \"Always on Top\" and "
 "\"Always on Visible Workspace\" by itself, you should set it manually if you "
-"are in a Wayland session and your window manager support it. For example if "
-"you are using GNOME Shell, you can right click the \"Clickable Area\" in "
-"titlebar to show a window manager menu and check \"Always on Top\" and "
-"\"Always on Visible Workspace\" in it.\n"
+"are in a Wayland session and your window manager support it.\n"
+"For example if you are using GNOME Shell (Wayland), you can right click the "
+"\"Clickable Area\" on title bar to show a window manager menu and check "
+"\"Always on Top\" and \"Always on Visible Workspace\" in it.\n"
+"If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
+"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All Desktops"
+"\" and \"More Actions\" -> \"Keep Above Others\".\n"
 "\n"
 "4. If you want to temporary pause it (for example you need to insert "
 "password), you can use the \"Temporary Hide\" switch, it will not record "
 "your keys while hiding.\n"
 "\n"
-"You can open this dialog again from Menu -> Usage."
+"You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 "使用说明：\n"
 "\n"
@@ -65,25 +69,27 @@ msgstr ""
 "不允许窗口自行设定位置。尽管悬浮窗口的大部分面积都无法点击，标题栏上的“可点击"
 "区域”标签仍然是可以点击的并且可以作为把手来拖拽。\n"
 "\n"
-"3. 因为 Wayland 不允许窗口自行设置 “置顶”和“总在可见工作区”，所以如果你在使"
-"用 Wayland 会话，您需要手动设置这两种功能，如果您的窗口管理器支持的话。例如如"
-"果您在使用 GNOME Shell，您可以右键点击标题栏上的“可点击区域”来显示窗口管理器"
-"菜单并勾选“置顶”和“总在可见工作区”。\n"
+"3. 因为 Wayland 不允许窗口自行设置“置顶”和“总在可见工作区”，所以如果你在使用 "
+"Wayland 会话，您需要手动设置这两种功能，如果您的窗口管理器支持的话。\n"
+"例如如果您在使用 GNOME Shell (Wayland)，您可以右键点击标题栏上的“可点击区"
+"域”来显示窗口管理器菜单并勾选“置顶”和“总在可见工作区”。\n"
+"如果您在使用 KDE Plasma (Wayland)，您可以右键点击任务栏上的“悬浮窗口 - 让我看"
+"键”，勾选“移动到桌面”->“全部桌面”和“更多动作”->“常居顶端”。\n"
 "\n"
 "4. 如果您想要临时暂停该程序（比如你需要输入密码），您可以使用“临时隐藏”开关，"
 "在隐藏状态下它不会记录您的按键。\n"
 "\n"
-"您可以通过 菜单 -> 使用说明 来再次访问此对话框。"
+"您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:281
+#: showmethekey-gtk/smtk-app-win.c:290
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:281
+#: showmethekey-gtk/smtk-app-win.c:290
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:283
+#: showmethekey-gtk/smtk-app-win.c:292
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -130,3 +136,7 @@ msgstr "退出（_Q）"
 #: showmethekey-gtk/smtk-keys-win.c:131
 msgid "Clickable Area"
 msgstr "可点击区域"
+
+#: showmethekey-gtk/smtk-keys-win.c:284
+msgid "Floating Window - Show Me The Key"
+msgstr "悬浮窗口 - 让我看键"

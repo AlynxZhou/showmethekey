@@ -256,15 +256,20 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "3. Because Wayland does not allow a window to set "
 		  "\"Always on Top\" and \"Always on Visible Workspace\" "
 		  "by itself, you should set it manually if you are in a "
-		  "Wayland session and your window manager support it. "
-		  "For example if you are using GNOME Shell, you can right "
-		  "click the \"Clickable Area\" in titlebar to show a window "
-		  "manager menu and check \"Always on Top\" and \"Always on "
-		  "Visible Workspace\" in it.\n\n"
+		  "Wayland session and your window manager support it.\n"
+		  "For example if you are using GNOME Shell (Wayland), you can "
+		  "right click the \"Clickable Area\" on title bar to show a "
+		  "window manager menu and check \"Always on Top\" and "
+		  "\"Always on Visible Workspace\" in it.\n"
+		  "If you are using KDE Plasma (Wayland), you can right click "
+		  "\"Floating Window - Show Me The Key\" on task bar, check "
+		  "\"Move to Desktop\" -> \"All Desktops\" and "
+		  "\"More Actions\" -> \"Keep Above Others\".\n\n"
 		  "4. If you want to temporary pause it (for example you need "
 		  "to insert password), you can use the \"Temporary Hide\" "
 		  "switch, it will not record your keys while hiding.\n\n"
-		  "You can open this dialog again from Menu -> Usage."));
+		  "You can open this dialog again via menu icon on title bar "
+		  "-> \"Usage\"."));
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
 }

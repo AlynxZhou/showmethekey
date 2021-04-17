@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-17 10:12+0800\n"
+"POT-Creation-Date: 2021-04-17 14:51+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:53 showmethekey-gtk/smtk-app-win.c:282
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:291
 #: showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:58
+#: showmethekey-gtk/smtk-app.c:62
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:239
+#: showmethekey-gtk/smtk-app-win.c:243
 msgid ""
 "Usage:\n"
 "\n"
@@ -44,27 +44,30 @@ msgid ""
 "\n"
 "3. Because Wayland does not allow a window to set \"Always on Top\" and "
 "\"Always on Visible Workspace\" by itself, you should set it manually if you "
-"are in a Wayland session and your window manager support it. For example if "
-"you are using GNOME Shell, you can right click the \"Clickable Area\" in "
-"titlebar to show a window manager menu and check \"Always on Top\" and "
-"\"Always on Visible Workspace\" in it.\n"
+"are in a Wayland session and your window manager support it.\n"
+"For example if you are using GNOME Shell (Wayland), you can right click the "
+"\"Clickable Area\" on title bar to show a window manager menu and check "
+"\"Always on Top\" and \"Always on Visible Workspace\" in it.\n"
+"If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
+"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All Desktops"
+"\" and \"More Actions\" -> \"Keep Above Others\".\n"
 "\n"
 "4. If you want to temporary pause it (for example you need to insert "
 "password), you can use the \"Temporary Hide\" switch, it will not record "
 "your keys while hiding.\n"
 "\n"
-"You can open this dialog again from Menu -> Usage."
+"You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:281
+#: showmethekey-gtk/smtk-app-win.c:290
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:281
+#: showmethekey-gtk/smtk-app-win.c:290
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:283
+#: showmethekey-gtk/smtk-app-win.c:292
 msgid "Show keys you typed on screen."
 msgstr ""
 
@@ -110,4 +113,8 @@ msgstr ""
 
 #: showmethekey-gtk/smtk-keys-win.c:131
 msgid "Clickable Area"
+msgstr ""
+
+#: showmethekey-gtk/smtk-keys-win.c:284
+msgid "Floating Window - Show Me The Key"
 msgstr ""

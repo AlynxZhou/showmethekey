@@ -280,9 +280,10 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 			     GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
-		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title", "Show Me The Key",
-		"width-request", width, "height-request", height, "can-focus",
-		FALSE, "focus-on-click", FALSE,
+		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title",
+		_("Floating Window - Show Me The Key"), "width-request", width,
+		"height-request", height, "can-focus", FALSE, "focus-on-click",
+		FALSE,
 		// This window is able to be focused, so this prevent that when
 		// you start it and press Enter, and focus is on the app window,
 		// and it closes.
