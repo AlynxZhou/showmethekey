@@ -14,6 +14,7 @@ G_DECLARE_FINAL_TYPE(SmtkAppWin, smtk_app_win, SMTK, APP_WIN,
 GtkWidget *smtk_app_win_new(SmtkApp *app);
 void smtk_app_win_toggle_hide_switch(SmtkAppWin *win);
 void smtk_app_win_show_usage_dialog(SmtkAppWin *win);
+void smtk_app_win_show_about_dialog(SmtkAppWin *win);
 
 G_END_DECLS
 

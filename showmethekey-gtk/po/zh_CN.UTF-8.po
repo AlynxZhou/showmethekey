@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-16 22:07+0800\n"
+"POT-Creation-Date: 2021-04-17 10:12+0800\n"
 "PO-Revision-Date: 2021-04-13 17:36+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -17,15 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:41 showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app.c:53 showmethekey-gtk/smtk-app-win.c:282
+#: showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:46
+#: showmethekey-gtk/smtk-app.c:58
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:236
+#: showmethekey-gtk/smtk-app-win.c:239
 msgid ""
 "Usage:\n"
 "\n"
@@ -74,42 +75,58 @@ msgstr ""
 "\n"
 "您可以通过 菜单 -> 使用说明 来再次访问此对话框。"
 
+#: showmethekey-gtk/smtk-app-win.c:281
+msgid "translator-credits"
+msgstr "Alynx Zhou"
+
+#: showmethekey-gtk/smtk-app-win.c:281
+msgid "About Show Me The Key"
+msgstr "关于让我看键"
+
+#: showmethekey-gtk/smtk-app-win.c:283
+msgid "Show keys you typed on screen."
+msgstr "在屏幕上显示你按的键。"
+
 #: showmethekey-gtk/smtk-app-win.ui:83
 msgid "Menu"
 msgstr "菜单"
 
-#: showmethekey-gtk/smtk-app-win.ui:110
-msgid "Temporary Hide"
-msgstr "临时隐藏"
+#: showmethekey-gtk/smtk-app-win.ui:111
+msgid "Temporary _Hide"
+msgstr "临时隐藏（_H）"
 
-#: showmethekey-gtk/smtk-app-win.ui:138
+#: showmethekey-gtk/smtk-app-win.ui:140
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:151
+#: showmethekey-gtk/smtk-app-win.ui:153
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:152
+#: showmethekey-gtk/smtk-app-win.ui:154
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:166
+#: showmethekey-gtk/smtk-app-win.ui:168
 msgid "Width"
 msgstr "宽度"
 
-#: showmethekey-gtk/smtk-app-win.ui:190
+#: showmethekey-gtk/smtk-app-win.ui:192
 msgid "Height"
 msgstr "高度"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:6
 msgid "_Usage"
-msgstr "使用说明"
+msgstr "使用说明（_U）"
 
-#: showmethekey-gtk/smtk-app-win-menu.ui:12
+#: showmethekey-gtk/smtk-app-win-menu.ui:10
+msgid "_About Show Me The Key"
+msgstr "关于让我看键（_A）"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:16
 msgid "_Quit"
-msgstr "退出"
+msgstr "退出（_Q）"
 
-#: showmethekey-gtk/smtk-keys-win.c:133
+#: showmethekey-gtk/smtk-keys-win.c:131
 msgid "Clickable Area"
 msgstr "可点击区域"

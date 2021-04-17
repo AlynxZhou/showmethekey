@@ -1,8 +1,8 @@
 Show Me The Key
 ===============
 
-A screenkey alternative that works under Wayland via libinput.
---------------------------------------------------------------
+Show keys you typed on screen.
+------------------------------
 
 A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that works under Wayland via libinput](https://hackweek.suse.com/20/projects/a-screenkey-alternative-that-works-under-wayland-via-reading-evdev-directly).
 

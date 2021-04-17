@@ -106,8 +106,10 @@
             <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
+                <property name="use-underline">true</property>
                 <property name="visible">true</property>
-                <property name="label" translatable="yes">Temporary Hide</property>
+                <property name="label" translatable="yes">Temporary _Hide</property>
+                <property name="mnemonic-widget">hide_switch</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
               </object>

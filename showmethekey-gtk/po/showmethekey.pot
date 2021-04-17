@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-16 22:07+0800\n"
+"POT-Creation-Date: 2021-04-17 10:12+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,15 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:41 showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app.c:53 showmethekey-gtk/smtk-app-win.c:282
+#: showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:46
+#: showmethekey-gtk/smtk-app.c:58
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:236
+#: showmethekey-gtk/smtk-app-win.c:239
 msgid ""
 "Usage:\n"
 "\n"
@@ -55,31 +56,43 @@ msgid ""
 "You can open this dialog again from Menu -> Usage."
 msgstr ""
 
+#: showmethekey-gtk/smtk-app-win.c:281
+msgid "translator-credits"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.c:281
+msgid "About Show Me The Key"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.c:283
+msgid "Show keys you typed on screen."
+msgstr ""
+
 #: showmethekey-gtk/smtk-app-win.ui:83
 msgid "Menu"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:110
-msgid "Temporary Hide"
+#: showmethekey-gtk/smtk-app-win.ui:111
+msgid "Temporary _Hide"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:138
+#: showmethekey-gtk/smtk-app-win.ui:140
 msgid "Display Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:151
+#: showmethekey-gtk/smtk-app-win.ui:153
 msgid "Composed"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:152
+#: showmethekey-gtk/smtk-app-win.ui:154
 msgid "Raw"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:166
+#: showmethekey-gtk/smtk-app-win.ui:168
 msgid "Width"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:190
+#: showmethekey-gtk/smtk-app-win.ui:192
 msgid "Height"
 msgstr ""
 
@@ -87,10 +100,14 @@ msgstr ""
 msgid "_Usage"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win-menu.ui:12
+#: showmethekey-gtk/smtk-app-win-menu.ui:10
+msgid "_About Show Me The Key"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:16
 msgid "_Quit"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:133
+#: showmethekey-gtk/smtk-keys-win.c:131
 msgid "Clickable Area"
 msgstr ""

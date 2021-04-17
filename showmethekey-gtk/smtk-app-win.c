@@ -181,8 +181,11 @@ static void smtk_app_win_dispose(GObject *object)
 
 static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(win_class);
+
+	// object_class->constructed = smtk_app_win_constructed;
 	// In GTK4, we need to free children which is added in code in dispose.
-	G_OBJECT_CLASS(win_class)->dispose = smtk_app_win_dispose;
+	object_class->dispose = smtk_app_win_dispose;
 
 	// // In GTK4, we need to set a layout manager to add childrens in code.
 	// gtk_widget_class_set_layout_manager_type(GTK_WIDGET_CLASS(win_class),
@@ -260,4 +263,26 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "You can open this dialog again from Menu -> Usage."));
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
+}
+
+void smtk_app_win_show_about_dialog(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	const gchar *authors[] = { "Alynx Zhou", "LGiki", NULL };
+
+	const gchar *artists[] = { "Freepik", NULL };
+
+	const gchar *documenters[] = { "Alynx Zhou", NULL };
+
+	gtk_show_about_dialog(
+		GTK_WINDOW(win), "authors", authors, "artists", artists,
+		"documenters", documenters, "translator-credits",
+		_("translator-credits"), "title", _("About Show Me The Key"),
+		"program-name", _("Show Me The Key"), "comments",
+		_("Show keys you typed on screen."), "copyright",
+		"Copyright © 2021 Alynx Zhou", "license-type",
+		GTK_LICENSE_APACHE_2_0, "logo-icon-name", "showmethekey",
+		"website", "https://showmethekey.alynx.one/", "website-label",
+		"showmethekey.alynx.one", "version", PROJECT_VERSION, NULL);
 }

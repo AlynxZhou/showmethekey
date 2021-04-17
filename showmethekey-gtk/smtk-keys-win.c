@@ -20,8 +20,6 @@ enum { PROP_0, PROP_MODE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
-// TODO: Support window temporary hiding and pass it to emitter.
-
 static void smtk_keys_win_set_property(GObject *object, guint property_id,
 				       const GValue *value, GParamSpec *pspec)
 {

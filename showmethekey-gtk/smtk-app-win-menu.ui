@@ -6,6 +6,10 @@
         <attribute name="label" translatable="yes">_Usage</attribute>
         <attribute name="action">app.usage</attribute>
       </item>
+      <item>
+        <attribute name="label" translatable="yes">_About Show Me The Key</attribute>
+        <attribute name="action">app.about</attribute>
+      </item>
     </section>
     <section>
       <item>
