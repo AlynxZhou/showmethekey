@@ -41,9 +41,13 @@ static void about_action(GSimpleAction *action, GVariant *parameter,
 static void quit_action(GSimpleAction *action, GVariant *parameter,
 			gpointer user_data)
 {
-	GApplication *g_app = G_APPLICATION(user_data);
+	SmtkApp *app = SMTK_APP(user_data);
 
-	g_application_quit(g_app);
+	// Destroy window manually so we can told CLI backend to stop.
+	if (app->win != NULL)
+		gtk_widget_destroy(app->win);
+
+	g_application_quit(G_APPLICATION(app));
 }
 
 static void smtk_app_init(SmtkApp *app)

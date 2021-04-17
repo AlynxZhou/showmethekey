@@ -176,6 +176,10 @@ static void smtk_app_win_dispose(GObject *object)
 		win->settings = NULL;
 	}
 
+	// Manually destroy keys_win, so CLI backend will be told to stop.
+	if (win->keys_win != NULL)
+		gtk_widget_destroy(win->keys_win);
+
 	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(object);
 }
 
