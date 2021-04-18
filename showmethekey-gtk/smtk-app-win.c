@@ -74,7 +74,7 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			win->keys_win =
 				smtk_keys_win_new(mode, width, height, &error);
 			if (win->keys_win == NULL) {
-				g_warning(error->message);
+				g_warning("%s", error->message);
 				g_error_free(error);
 				gtk_switch_set_active(
 					GTK_SWITCH(win->keys_win_switch),
