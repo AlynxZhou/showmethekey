@@ -26,3 +26,6 @@ div.subtitle {
 div.screenshots {
   text-align: center;
 }
+.screenshot {
+  width: 100%;
+}
