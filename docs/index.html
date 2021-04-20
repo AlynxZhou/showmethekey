@@ -1,17 +1,109 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
+  <head>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-		<meta name="theme-color" content="#33363b">
+    <meta name="theme-color" content="#33363b">
     <meta name="msapplication-TileColor" content="#33363b">
     <link rel="canonical" href="https://showmethekey.alynx.one/">
-		<title>Show Me The Key</title>
-	</head>
-	<body>
-    <h1>Show Me The Key</h1>
-    <h2>Show keys you typed on screen.</h2>
-    <p>This page is currently working in progress, for more info please visit <a href="https://github.com/AlynxZhou/showmethekey/" target="_blank">project repo</a>.</p>
-	</body>
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <title>Show Me The Key</title>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="title"><a href="/">Show Me The Key</a></div>
+        <div class="subtitle">Show keys you typed on screen.</div>
+      </div>
+    </header>
+    <main>
+      <div class="container">
+        <h1>Description</h1>
+        <p>
+          Show keys you typed on screen, so your audiences can see what you do clearly while you are streaming or recording.
+        </p>
+        <p>
+          This is a <a href="https://www.thregr.org/~wavexx/software/screenkey/" target="_blank" rel="external nofollow noreferrer noopener">screenkey</a> alternative, and works not only on X11 but also Wayland.
+        </p>
+        <p>
+          Your desktop must support composition and you may need to set "always on top" and "show on all workspaces" manually so be sure your desktop supports them.
+        </p>
+        <h1>Feature</h1>
+        <ul>
+          <li>Key events reading via libinput.</li>
+          <li>Configurable floating window size.</li>
+          <li>Click-through but dragable floating window.</li>
+          <li>Temporary hiding support.</li>
+          <li>Keymap handling via xkbcommon.</li>
+          <li>Mouse button support.</li>
+        </ul>
+        <h1>Release</h1>
+        <p>
+          Please go to <a href="https://github.com/AlynxZhou/showmethekey/releases" target="_blank" rel="external nofollow noreferrer noopener">GitHub Release Page</a>.
+        </p>
+        <h1>Installation</h1>
+        <div>
+          <h2>Distribution Package (Recommanded)</h2>
+          <h3>Arch Linux</h3>
+          <h4>Install From AUR</h4>
+          <pre class="code">
+            $ yay showmethekey
+          </pre>
+          <p>Or use other AUR helpers.</p>
+          <h4>Install From <code>archlinuxcn</code></h4>
+          <p>First <a href="https://www.archlinuxcn.org/archlinux-cn-repo-and-mirror/" target="_blank" rel="external nofollow noreferrer noopener">add archlinuxcn repo to your system</a>.</p>
+          <pre class="code">
+            # pacman -S showmethekey
+          </pre>
+          <h3>Other Distributions</h3>
+          <p>
+            Please help package showmethekey to your distribution!
+          </p>
+          <h2>Build From Source</h2>
+          <h3>Dependencies</h3>
+          <ul>
+            <li>libevdev</li>
+            <li>udev (or systemd)</li>
+            <li>libinput</li>
+            <li>glib2</li>
+            <li>gtk3</li>
+            <li>json-glib</li>
+            <li>cairo</li>
+            <li>pango</li>
+            <li>libxkbcommon</li>
+            <li>meson</li>
+            <li>ninja</li>
+            <li>gcc</li>
+          </ul>
+          <h3>Build</h3>
+          <pre class="code">
+            $ git clone https://github.com/AlynxZhou/showmethekey.git
+            $ cd showmethekey
+            $ mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install
+            $ showmethekey-gtk
+          </pre>
+        </div>
+        <h1>Usage</h1>
+        <p>
+          For detailed usage please run usage dialog from app menu!
+        </p>
+        <p>
+          You need to toggle the switch to start it manually and need to input your password to pkexec's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
+        </p>
+        <h1>Screenshots</h1>
+        <div class="screenshots">
+          <img src="/images/screenshot.gif" alt="screenshot.gif">
+          <img src="/images/screenshot.png" alt="screenshot.png">
+        </div>
+      </div>
+    </main>
+    <footer>
+      <div class="container">
+        <p>This page is currently working in progress, for more info please visit <a href="https://github.com/AlynxZhou/showmethekey/" target="_blank" rel="external nofollow noreferrer noopener">project repo</a>.</p>
+        Copyright Alynx Zhou 2021
+      </div>
+    </footer>
+  </body>
 </html>

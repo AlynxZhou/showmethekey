@@ -1,0 +1,28 @@
+div.container {
+  padding: 0;
+  margin: 0 auto;
+  width: 75%;
+  height: 100%;
+  /* You have a brand screen! You must be so rich but we take care your neck. */
+  max-width: 120em;
+}
+pre.code {
+  /* Keep Chinese and English the same height. */
+  line-height: 1.5;
+  font-feature-settings: "liga" 0;
+  white-space: pre-line;
+}
+div.title {
+  font: bold 2rem Roboto, sans-serif;
+}
+div.title a {
+  color: #000;
+  text-decoration: none;
+  border-bottom: none;
+}
+div.subtitle {
+  font: italic 1.5rem Roboto, sans-serif;
+}
+div.screenshots {
+  text-align: center;
+}

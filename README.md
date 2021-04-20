@@ -10,9 +10,55 @@ A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that work
 
 # Install
 
-Clone this repo and run `mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install` to install, then you can run `showmethekey-gtk` from terminal or click `Show Me The Key` in launcher.
+## Distribution Package (Recommanded)
 
-Arch Linux users can also install it from [AUR](https://aur.archlinux.org/packages/showmethekey/).
+### Arch Linux
+
+#### Install From AUR
+
+```
+$ yay showmethekey
+```
+
+Or use other AUR helpers.
+
+#### Install From `archlinuxcn`
+
+First [add archlinuxcn repo to your system](ttps://www.archlinuxcn.org/archlinux-cn-repo-and-mirror/).
+
+```
+# pacman -S showmethekey
+```
+
+### Other Distributions
+
+Please help package showmethekey to your distribution!
+
+## Build From Source
+
+### Dependencies
+
+- libevdev
+- udev (or systemd)
+- libinput
+- glib2
+- gtk3
+- json-glib
+- cairo
+- pango
+- libxkbcommon
+- meson
+- ninja
+- gcc
+
+### Build
+
+```
+$ git clone https://github.com/AlynxZhou/showmethekey.git
+$ cd showmethekey
+$ mkdir build && cd build && meson setup --prefix=/usr . .. && meson compile && meson install
+$ showmethekey-gtk
+```
 
 # Usage
 
