@@ -78,10 +78,10 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	g_hash_table_insert(mapper->xkb_replace_names,
 			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
 	g_hash_table_insert(mapper->xkb_replace_names,
-			    g_strdup("XF86AudioLowerVolumn"),
+			    g_strdup("XF86AudioLowerVolume"),
 			    g_strdup("VolumnDown"));
 	g_hash_table_insert(mapper->xkb_replace_names,
-			    g_strdup("XF86AudioRaiseVolumn"),
+			    g_strdup("XF86AudioRaiseVolume"),
 			    g_strdup("VolumnUp"));
 	g_hash_table_insert(mapper->xkb_replace_names,
 			    g_strdup("XF86MonBrightnessDown"),
