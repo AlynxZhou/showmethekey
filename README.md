@@ -96,6 +96,8 @@ A GUI frontend based on GTK, will run CLI backend as root via `pkexec`, and show
 
 If you changed translatable strings, don't forget to run `meson compile showmethekey-update-po` in build directory and then edit po files, and please check if there are `fuzzy` tag in comment, you should remove them and make translation exact, otherwise it will not work.
 
+If you added new source files with translatable strings, don't forget to add it to `showmethekey-gtk/po/POTFILES.in` before running `meson compile showmethekey-update-po`. File paths in `POTFILES.in` should be relative to project directory.
+
 If you want to add languages, first add a country code in `showmethekey-gtk/po/LINGUAS`, then run `meson compile showmethekey-update-po`, you will get a new `.po` file with your added country code. If this language needs UTF-8 encoding, don't use words like `zh_CN.UTF-8` in `showmethekey-gtk/po/LINGUAS` or file name, because RPM's find\_lang script may ignore them sometimes, and you should change to `charset=UTF-8` manually in the header.
 
 # Name
