@@ -17,6 +17,7 @@ struct _SmtkKeysEmitter {
 	gboolean polling;
 	GPtrArray *keys_array;
 	SmtkKeyMode mode;
+	gboolean show_mouse;
 	gboolean waiting;
 	GError *error;
 };
@@ -26,7 +27,7 @@ enum { SIG_UPDATE_LABEL, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static guint obj_signals[N_SIGNALS] = { 0 };
 
-enum { PROP_0, PROP_MODE, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -70,6 +71,9 @@ static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
 	case PROP_MODE:
 		emitter->mode = g_value_get_enum(value);
 		break;
+	case PROP_SHOW_MOUSE:
+		emitter->show_mouse = g_value_get_boolean(value);
+		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -85,6 +89,9 @@ static void smtk_keys_emitter_get_property(GObject *object, guint property_id,
 	switch (property_id) {
 	case PROP_MODE:
 		g_value_set_enum(value, emitter->mode);
+		break;
+	case PROP_SHOW_MOUSE:
+		g_value_set_boolean(value, emitter->show_mouse);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -137,6 +144,15 @@ static gpointer poller_function(gpointer user_data)
 		if (event == NULL) {
 			g_warning("Create event error: %s.",
 				  event_error->message);
+			g_free(line);
+			continue;
+		}
+
+		// Don't handle if skip mouse button.
+		if (!emitter->show_mouse &&
+		    smtk_event_get_event_type(event) ==
+			    SMTK_EVENT_TYPE_POINTER_BUTTON) {
+			g_object_unref(event);
 			g_free(line);
 			continue;
 		}
@@ -255,15 +271,20 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 		g_param_spec_enum("mode", "Mode", "Key Mode",
 				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
+		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(SmtkKeyMode mode, GError **error)
+SmtkKeysEmitter *smtk_keys_emitter_new(gboolean show_mouse, SmtkKeyMode mode,
+				       GError **error)
 {
-	SmtkKeysEmitter *emitter =
-		g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode", mode, NULL);
+	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode",
+						mode, "show-mouse", show_mouse,
+						NULL);
 
 	if (emitter->error != NULL) {
 		g_propagate_error(error, emitter->error);

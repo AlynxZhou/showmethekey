@@ -13,6 +13,7 @@ struct _SmtkAppWin {
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
 	GtkWidget *hide_switch;
+	GtkWidget *mouse_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
@@ -23,6 +24,7 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
 	gtk_widget_set_sensitive(win->hide_switch, FALSE);
+	gtk_widget_set_sensitive(win->mouse_switch, TRUE);
 	gtk_widget_set_sensitive(win->mode_selector, TRUE);
 	gtk_widget_set_sensitive(win->width_entry, TRUE);
 	gtk_widget_set_sensitive(win->height_entry, TRUE);
@@ -31,6 +33,7 @@ static void smtk_app_win_enable(SmtkAppWin *win)
 static void smtk_app_win_disable(SmtkAppWin *win)
 {
 	gtk_widget_set_sensitive(win->hide_switch, TRUE);
+	gtk_widget_set_sensitive(win->mouse_switch, FALSE);
 	gtk_widget_set_sensitive(win->mode_selector, FALSE);
 	gtk_widget_set_sensitive(win->width_entry, FALSE);
 	gtk_widget_set_sensitive(win->height_entry, FALSE);
@@ -57,6 +60,8 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 {
 	if (gtk_switch_get_active(GTK_SWITCH(win->keys_win_switch))) {
 		if (win->keys_win == NULL) {
+			gboolean show_mouse = gtk_switch_get_active(
+				GTK_SWITCH(win->mouse_switch));
 			const char *mode_id = gtk_combo_box_get_active_id(
 				GTK_COMBO_BOX(win->mode_selector));
 			g_debug("Mode: %s.", mode_id);
@@ -71,8 +76,8 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
-			win->keys_win =
-				smtk_keys_win_new(mode, width, height, &error);
+			win->keys_win = smtk_keys_win_new(
+				show_mouse, mode, width, height, &error);
 			if (win->keys_win == NULL) {
 				g_warning("%s", error->message);
 				g_error_free(error);
@@ -150,6 +155,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 				       500);
 
 	win->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
+			"active", G_SETTINGS_BIND_DEFAULT);
 	// Though gschema's enum has a int value property,
 	// it uses string nick property for binding.
 	g_settings_bind(win->settings, "mode", win->mode_selector, "active_id",
@@ -204,6 +211,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 					     SmtkAppWin, menu_button);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, hide_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, mouse_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mode_selector);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),

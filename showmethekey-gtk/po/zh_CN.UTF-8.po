@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-17 14:51+0800\n"
+"POT-Creation-Date: 2021-04-21 11:00+0800\n"
 "PO-Revision-Date: 2021-04-17 14:15+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.4.1\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:291
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:300
 #: showmethekey-gtk/smtk-app-win.ui:56
 msgid "Show Me The Key"
 msgstr "让我看键"
@@ -27,7 +27,7 @@ msgstr "让我看键"
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:243
+#: showmethekey-gtk/smtk-app-win.c:252
 msgid ""
 "Usage:\n"
 "\n"
@@ -81,15 +81,15 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:290
+#: showmethekey-gtk/smtk-app-win.c:299
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:290
+#: showmethekey-gtk/smtk-app-win.c:299
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:292
+#: showmethekey-gtk/smtk-app-win.c:301
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -101,23 +101,27 @@ msgstr "菜单"
 msgid "Temporary _Hide"
 msgstr "临时隐藏（_H）"
 
-#: showmethekey-gtk/smtk-app-win.ui:140
+#: showmethekey-gtk/smtk-app-win.ui:141
+msgid "Show _Mouse Button"
+msgstr "显示鼠标按钮（_M）"
+
+#: showmethekey-gtk/smtk-app-win.ui:165
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:153
+#: showmethekey-gtk/smtk-app-win.ui:178
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:154
+#: showmethekey-gtk/smtk-app-win.ui:179
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:168
+#: showmethekey-gtk/smtk-app-win.ui:193
 msgid "Width"
 msgstr "宽度"
 
-#: showmethekey-gtk/smtk-app-win.ui:192
+#: showmethekey-gtk/smtk-app-win.ui:217
 msgid "Height"
 msgstr "高度"
 
@@ -133,10 +137,10 @@ msgstr "关于让我看键（_A）"
 msgid "_Quit"
 msgstr "退出（_Q）"
 
-#: showmethekey-gtk/smtk-keys-win.c:131
+#: showmethekey-gtk/smtk-keys-win.c:138
 msgid "Clickable Area"
 msgstr "可点击区域"
 
-#: showmethekey-gtk/smtk-keys-win.c:284
+#: showmethekey-gtk/smtk-keys-win.c:294
 msgid "Floating Window - Show Me The Key"
 msgstr "悬浮窗口 - 让我看键"

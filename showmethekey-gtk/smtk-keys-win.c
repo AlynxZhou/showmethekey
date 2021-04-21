@@ -12,11 +12,12 @@ struct _SmtkKeysWin {
 	GtkWidget *keys_label;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
+	gboolean show_mouse;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
-enum { PROP_0, PROP_MODE, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -28,6 +29,9 @@ static void smtk_keys_win_set_property(GObject *object, guint property_id,
 	switch (property_id) {
 	case PROP_MODE:
 		win->mode = g_value_get_enum(value);
+		break;
+	case PROP_SHOW_MOUSE:
+		win->show_mouse = g_value_get_boolean(value);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -44,6 +48,9 @@ static void smtk_keys_win_get_property(GObject *object, guint property_id,
 	switch (property_id) {
 	case PROP_MODE:
 		g_value_set_enum(value, win->mode);
+		break;
+	case PROP_SHOW_MOUSE:
+		g_value_set_boolean(value, win->show_mouse);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -219,7 +226,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	win->emitter = smtk_keys_emitter_new(win->mode, &win->error);
+	win->emitter = smtk_keys_emitter_new(win->show_mouse, win->mode, &win->error);
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
@@ -271,13 +278,16 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 		g_param_spec_enum("mode", "Mode", "Key Mode",
 				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
+		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
-			     GError **error)
+GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
+			     guint64 width, guint64 height, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title",
@@ -296,7 +306,7 @@ GtkWidget *smtk_keys_win_new(SmtkKeyMode mode, guint64 width, guint64 height,
 		"resizable", FALSE,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", TRUE, "skip-taskbar-hint", TRUE,
-		"mode", mode, NULL);
+		"mode", mode, "show-mouse", show_mouse, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
