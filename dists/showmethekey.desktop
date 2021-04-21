@@ -8,4 +8,4 @@ Exec=showmethekey-gtk
 TryExec=/usr/bin/showmethekey-gtk
 StartupNotify=false
 Terminal=false
-Categories=GTK;
+Categories=Utility;
