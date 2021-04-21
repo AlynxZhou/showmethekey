@@ -157,7 +157,7 @@ static gpointer poller_function(gpointer user_data)
 			continue;
 		}
 
-		gchar *key;
+		gchar *key = NULL;
 		// Always get key with SmtkKeysMapper, it will update XKB state.
 		switch (emitter->mode) {
 		case SMTK_KEY_MODE_COMPOSED:
