@@ -30,6 +30,19 @@ First [add archlinuxcn repo to your system](ttps://www.archlinuxcn.org/archlinux
 # pacman -S showmethekey
 ```
 
+### openSUSE
+
+#### Install from OBS
+
+Packages can be found in [my OBS project](https://build.opensuse.org/package/show/home:AZhou/showmethekey).
+
+```
+# zypper ar https://download.opensuse.org/repositories/home:/AZhou/openSUSE_Tumbleweed/home:AZhou.repo
+# zypper in showmethekey showmethekey-lang
+```
+
+Leap users please replace URL for Tumbleweed with URL for your Leap version.
+
 ### Other Distributions
 
 Please help package showmethekey to your distribution!
