@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-21 16:02+0800\n"
+"POT-Creation-Date: 2021-04-21 17:04+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:300
-#: showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:319
+#: showmethekey-gtk/smtk-app-win.ui:52 showmethekey-gtk/smtk-app-win.ui:58
 msgid "Show Me The Key"
 msgstr ""
 
@@ -59,47 +59,47 @@ msgid ""
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:299
+#: showmethekey-gtk/smtk-app-win.c:317
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:299
+#: showmethekey-gtk/smtk-app-win.c:318
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:301
+#: showmethekey-gtk/smtk-app-win.c:320
 msgid "Show keys you typed on screen."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:83
+#: showmethekey-gtk/smtk-app-win.ui:85
 msgid "Menu"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:111
+#: showmethekey-gtk/smtk-app-win.ui:113
 msgid "Temporary _Hide"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:141
+#: showmethekey-gtk/smtk-app-win.ui:143
 msgid "Show _Mouse Button"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:165
+#: showmethekey-gtk/smtk-app-win.ui:167
 msgid "Display Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:178
+#: showmethekey-gtk/smtk-app-win.ui:180
 msgid "Composed"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:179
+#: showmethekey-gtk/smtk-app-win.ui:181
 msgid "Raw"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:193
+#: showmethekey-gtk/smtk-app-win.ui:195
 msgid "Width"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:217
+#: showmethekey-gtk/smtk-app-win.ui:219
 msgid "Height"
 msgstr ""
 
@@ -119,6 +119,6 @@ msgstr ""
 msgid "Clickable Area"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:294
+#: showmethekey-gtk/smtk-keys-win.c:295
 msgid "Floating Window - Show Me The Key"
 msgstr ""

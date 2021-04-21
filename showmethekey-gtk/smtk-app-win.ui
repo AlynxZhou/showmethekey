@@ -48,6 +48,8 @@
   </object> -->
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
     <property name="visible">true</property>
+    <property name="icon-name">showmethekey</property>
+    <property name="title" translatable="yes">Show Me The Key</property>
     <!-- <property name="default-width">800</property> -->
     <!-- <property name="default-height">600</property> -->
     <child type="titlebar">

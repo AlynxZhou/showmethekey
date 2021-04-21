@@ -39,6 +39,10 @@ install_data(
   install_dir: get_option('prefix') / get_option('datadir') / 'pixmaps'
 )
 install_data(
+  'dists' / 'showmethekey.svg',
+  install_dir: get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
+)
+install_data(
   'dists' / 'showmethekey.desktop',
   install_dir: get_option('prefix') / get_option('datadir') / 'applications'
 )
