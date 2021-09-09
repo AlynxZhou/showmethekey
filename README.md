@@ -105,6 +105,12 @@ It generates JSON in lines like `{"event_name": "KEYBOARD_KEY", "event_type": 30
 
 A GUI frontend based on GTK, will run CLI backend as root via `pkexec`, and show a transparent floating window to display events.
 
+# FAQ
+
+## Why your program needs root permission? screenkey never asks for it!
+
+If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under `/dev`. **And if you want to interact with files under `/dev`, you need root permission.** screenkey does not needs root permission because it's heavily X11-based, **it gets input events from X server** instead of `/dev`, which already done it. And because of this it will never support Wayland.
+
 # Translate
 
 If you changed translatable strings, don't forget to run `meson compile showmethekey-update-po` in build directory and then edit po files, and please check if there are `fuzzy` tag in comment, you should remove them and make translation exact, otherwise it will not work.

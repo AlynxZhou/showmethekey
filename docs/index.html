@@ -100,6 +100,11 @@
         <p>
           You need to toggle the switch to start it manually and need to input your password to pkexec's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
         </p>
+        <h1>FAQ</h1>
+        <h2>Why your program needs root permission? screenkey never asks for it!</h2>
+        <p>
+          If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under <code>/dev</code>. <strong>And if you want to interact with files under <code>/dev</code>, you need root permission.</strong> screenkey does not needs root permission because it's heavily X11-based, <strong>it gets input events from X server</strong> instead of <code>/dev</code>, which already done it. And because of this it will never support Wayland.
+        </p>
         <h1>Screenshots</h1>
         <div class="screenshots">
           <img class="screenshot" src="/images/screenshot.gif" alt="screenshot.gif">
