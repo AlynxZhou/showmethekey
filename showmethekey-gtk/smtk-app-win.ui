@@ -192,7 +192,7 @@
             <child>
               <object class="GtkLabel">
                 <property name="visible">true</property>
-                <property name="label" translatable="yes">Width</property>
+                <property name="label" translatable="yes">Width (px)</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
               </object>
@@ -216,7 +216,7 @@
             <child>
               <object class="GtkLabel">
                 <property name="visible">true</property>
-                <property name="label" translatable="yes">Height</property>
+                <property name="label" translatable="yes">Height (px)</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
               </object>
@@ -229,6 +229,30 @@
                 <!-- Keep 0 digit after dot because we are using it as int. -->
                 <property name="digits">0</property>
                 <property name="text">200</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">true</property>
+            <property name="orientation">horizontal</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">true</property>
+                <property name="label" translatable="yes">Timeout (ms)</property>
+                <property name="hexpand">true</property>
+                <property name="halign">start</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSpinButton" id="timeout_entry">
+                <property name="visible">true</property>
+                <property name="hexpand">true</property>
+                <property name="halign">end</property>
+                <!-- Keep 0 digit after dot because we are using it as int. -->
+                <property name="digits">0</property>
+                <property name="text">0</property>
               </object>
             </child>
           </object>

@@ -91,7 +91,7 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 			    g_strdup("BrightnessUp"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Num_Lock"),
 			    g_strdup("NumLock"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ascitilde"),
+	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("asciitilde"),
 			    g_strdup("~"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("grave"),
 			    g_strdup("`"));
@@ -147,6 +147,8 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 			    g_strdup("\""));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Return"),
 			    g_strdup("Enter"));
+	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Escape"),
+			    g_strdup("Escape"));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("comma"),
 			    g_strdup(","));
 	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("less"),
