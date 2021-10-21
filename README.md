@@ -10,7 +10,7 @@ A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that work
 
 # Install
 
-## Distribution Package (Recommanded)
+## Distribution Package (Recommended)
 
 ### Arch Linux
 
@@ -107,9 +107,9 @@ A GUI frontend based on GTK, will run CLI backend as root via `pkexec`, and show
 
 # FAQ
 
-## Why your program needs root permission? screenkey never asks for it!
+## Why does your program need root permissions? screenkey never asks for it!
 
-If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under `/dev`. **And if you want to interact with files under `/dev`, you need root permission.** screenkey does not needs root permission because it's heavily X11-based, **it gets input events from X server** instead of `/dev`, which already done it. And because of this it will never support Wayland.
+If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under `/dev`. **And if you want to interact with files under `/dev`, you need root permissions.** screenkey does not need root permissions because it's heavily X11-based, **it gets input events from X server** instead of `/dev`, which already done it. And because of this it will never support Wayland.
 
 # Translate
 
@@ -121,7 +121,7 @@ If you want to add languages, first add a country code in `showmethekey-gtk/po/L
 
 # Name
 
-As I want some clear name that hints its usage, but `screenkey` is already taken and I think `visualkey` sounds like `Visual Studio` and it's horrible. My friend [@LGiki](https://github.com/LGiki) suggests `Show Me The Key` which sounds like "Show me the code" from Linus Torvalds. At first I think it's a little bit long, but now it is acceptable so it's called `showmethekey` or `Show Me The Key`.
+As I want some clear name that hints its usage, but `screenkey` is already taken and I think `visualkey` sounds like `Visual Studio` and it's horrible. My friend [@LGiki](https://github.com/LGiki) suggested `Show Me The Key` which sounds like "Show me the code" from Linus Torvalds. At first I thought it's a little bit long, but now it is acceptable so it's called `showmethekey` or `Show Me The Key`.
 
 The Chinese translate of this program name should be `让我看键`, and it's only used for window title, debug output, package name and desktop entry name should not be translated.
 
