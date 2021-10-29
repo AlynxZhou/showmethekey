@@ -13,11 +13,12 @@ struct _SmtkKeysWin {
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
 	gboolean show_mouse;
+	gint timeout;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -32,6 +33,9 @@ static void smtk_keys_win_set_property(GObject *object, guint property_id,
 		break;
 	case PROP_SHOW_MOUSE:
 		win->show_mouse = g_value_get_boolean(value);
+		break;
+	case PROP_TIMEOUT:
+		win->timeout = g_value_get_int(value);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -51,6 +55,9 @@ static void smtk_keys_win_get_property(GObject *object, guint property_id,
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, win->show_mouse);
+		break;
+	case PROP_TIMEOUT:
+		g_value_set_int(value, win->timeout);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -227,7 +234,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	win->emitter =
-		smtk_keys_emitter_new(win->show_mouse, win->mode, &win->error);
+		smtk_keys_emitter_new(win->show_mouse, win->mode, win->timeout, &win->error);
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
@@ -282,13 +289,16 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
+		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
 }
 
 GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
-			     guint64 width, guint64 height, GError **error)
+			     guint64 width, guint64 height, gint timeout, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title",
@@ -307,7 +317,7 @@ GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
 		"resizable", FALSE,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", TRUE, "skip-taskbar-hint", TRUE,
-		"mode", mode, "show-mouse", show_mouse, NULL);
+		"mode", mode, "show-mouse", show_mouse, "timeout", timeout, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);

@@ -13,9 +13,18 @@ struct _SmtkKeysEmitter {
 	SmtkKeysMapper *mapper;
 	GSubprocess *cli;
 	GDataInputStream *cli_out;
+
 	GThread *poller;
 	gboolean polling;
+
+	GThread *timer_thread;
+	gboolean timer_running;
+	GTimer *timer;
+	gint timeout;
+
 	GPtrArray *keys_array;
+	GMutex keys_mutex;
+
 	SmtkKeyMode mode;
 	gboolean show_mouse;
 	gboolean waiting;
@@ -27,7 +36,7 @@ enum { SIG_UPDATE_LABEL, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static guint obj_signals[N_SIGNALS] = { 0 };
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -74,6 +83,9 @@ static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
 	case PROP_SHOW_MOUSE:
 		emitter->show_mouse = g_value_get_boolean(value);
 		break;
+	case PROP_TIMEOUT:
+		emitter->timeout = g_value_get_int(value);
+		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -92,6 +104,9 @@ static void smtk_keys_emitter_get_property(GObject *object, guint property_id,
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
+		break;
+	case PROP_TIMEOUT:
+		g_value_set_int(value, emitter->timeout);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -120,6 +135,25 @@ static gboolean idle_function(gpointer user_data)
 	g_signal_emit_by_name(emitter, "update-label", label_text);
 	g_free(label_text);
 	return FALSE;
+}
+
+static void trigger_idle_function(SmtkKeysEmitter *emitter)
+{
+	// UI can only be modified in UI thread,
+	// and we are not in UI thread here.
+	// So we need to use `g_timeout_add()` to kick
+	// an async callback into glib's main loop
+	// (the same as GTK UI thread).
+	// Signals are not async!
+	// So we cannot emit signal here,
+	// because they will run in poller thread
+	// instead of UI thread.
+	// `g_idle_add()` is not suitable because we
+	// have a high priority.
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
+			   idle_function,
+			   g_object_ref(emitter),
+			   idle_destroy_function);
 }
 
 static gpointer poller_function(gpointer user_data)
@@ -183,6 +217,8 @@ static gpointer poller_function(gpointer user_data)
 				gchar *marked = g_strconcat("<u>", escaped,
 							    "</u>", NULL);
 				g_free(escaped);
+
+				g_mutex_lock(&emitter->keys_mutex);
 				g_ptr_array_insert(emitter->keys_array,
 						   emitter->keys_array->len - 1,
 						   marked);
@@ -193,26 +229,36 @@ static gpointer poller_function(gpointer user_data)
 						emitter->keys_array, 0,
 						emitter->keys_array->len - 1 -
 							MAX_KEYS);
-				// UI can only be modified in UI thread,
-				// and we are not in UI thread here.
-				// So we need to use `g_timeout_add()` to kick
-				// an async callback into glib's main loop
-				// (the same as GTK UI thread).
-				// Signals are not async!
-				// So we cannot emit signal here,
-				// because they will run in poller thread
-				// instead of UI thread.
-				// `g_idle_add()` is not suitable because we
-				// have a high priority.
-				g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
-						   idle_function,
-						   g_object_ref(emitter),
-						   idle_destroy_function);
+				g_timer_start(emitter->timer);
+				g_mutex_unlock(&emitter->keys_mutex);
+
+				trigger_idle_function(emitter);
 			}
 			g_free(key);
 		}
 		g_object_unref(event);
 		g_free(line);
+	}
+	return NULL;
+}
+
+static gpointer timer_function(gpointer user_data) {
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	while (emitter->timer_running) {
+		g_mutex_lock(&emitter->keys_mutex);
+		gint elapsed = g_timer_elapsed(emitter->timer, NULL) * 1000.0;
+		g_mutex_unlock(&emitter->keys_mutex);
+
+		if (emitter->timeout > 0 && elapsed > emitter->timeout) {
+			g_mutex_lock(&emitter->keys_mutex);
+			g_ptr_array_remove_range(emitter->keys_array, 0, emitter->keys_array->len - 1);
+			g_timer_start(emitter->timer);
+			g_mutex_unlock(&emitter->keys_mutex);
+
+			trigger_idle_function(emitter);
+		}
+
+		g_usleep(1000L);
 	}
 	return NULL;
 }
@@ -233,6 +279,7 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	// g_strjoinv() accepts a NULL terminated char pointer array,
 	// so we use a GPtrArray to store char pointer.
 	emitter->keys_array = g_ptr_array_new_full(MAX_KEYS + 1, g_free);
+	g_mutex_init(&emitter->keys_mutex);
 	// Append a NULL first and always insert elements before it.
 	// So we can directly use the GPtrArray for g_strjoinv().
 	g_ptr_array_add(emitter->keys_array, NULL);
@@ -274,16 +321,20 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
+		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(gboolean show_mouse, SmtkKeyMode mode,
+SmtkKeysEmitter *smtk_keys_emitter_new(gboolean show_mouse, SmtkKeyMode mode, gint timeout,
 				       GError **error)
 {
 	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode",
 						mode, "show-mouse", show_mouse,
+						"timeout", timeout,
 						NULL);
 
 	if (emitter->error != NULL) {
@@ -332,6 +383,13 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	// emitter->error is already set, just return.
 	if (emitter->poller == NULL)
 		return;
+
+	emitter->timer_running = TRUE;
+	emitter->timer = g_timer_new();
+
+	emitter->timer_thread = g_thread_try_new("timer", timer_function, emitter, error);
+	if (emitter->timer_thread == NULL)
+		return;
 }
 
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
@@ -367,6 +425,12 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		g_thread_join(emitter->poller);
 		// g_thread_unref(emitter->poller);
 		emitter->poller = NULL;
+	}
+
+	if (emitter->timer_thread != NULL) {
+		emitter->timer_running = FALSE;
+		g_thread_join(emitter->timer_thread);
+		emitter->timer_thread = NULL;
 	}
 
 	if (emitter->mapper != NULL) {
