@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-21 17:04+0800\n"
+"POT-Creation-Date: 2021-11-01 15:07+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:319
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:332
 #: showmethekey-gtk/smtk-app-win.ui:52 showmethekey-gtk/smtk-app-win.ui:58
 msgid "Show Me The Key"
 msgstr "让我看键"
@@ -25,7 +25,7 @@ msgstr "让我看键"
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:252
+#: showmethekey-gtk/smtk-app-win.c:264
 msgid ""
 "Usage:\n"
 "\n"
@@ -55,6 +55,8 @@ msgid ""
 "password), you can use the \"Temporary Hide\" switch, it will not record "
 "your keys while hiding.\n"
 "\n"
+"5. Set Timeout to 0 if you want to keep all keys.\n"
+"\n"
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 "使用说明：\n"
@@ -77,17 +79,19 @@ msgstr ""
 "4. 如果您想要临时暂停该程序（比如你需要输入密码），您可以使用“临时隐藏”开关，"
 "在隐藏状态下它不会记录您的按键。\n"
 "\n"
+"5. 如果想保留所有的按键记录，请将超时设为 0。\n"
+"\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:317
+#: showmethekey-gtk/smtk-app-win.c:330
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:318
+#: showmethekey-gtk/smtk-app-win.c:331
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:320
+#: showmethekey-gtk/smtk-app-win.c:333
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -116,12 +120,16 @@ msgid "Raw"
 msgstr "按键名"
 
 #: showmethekey-gtk/smtk-app-win.ui:195
-msgid "Width"
-msgstr "宽度"
+msgid "Width (px)"
+msgstr "宽度（像素）"
 
 #: showmethekey-gtk/smtk-app-win.ui:219
-msgid "Height"
-msgstr "高度"
+msgid "Height (px)"
+msgstr "高度（像素）"
+
+#: showmethekey-gtk/smtk-app-win.ui:243
+msgid "Timeout (ms)"
+msgstr "超时（毫秒）"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:6
 msgid "_Usage"
@@ -135,10 +143,10 @@ msgstr "关于让我看键（_A）"
 msgid "_Quit"
 msgstr "退出（_Q）"
 
-#: showmethekey-gtk/smtk-keys-win.c:138
+#: showmethekey-gtk/smtk-keys-win.c:145
 msgid "Clickable Area"
 msgstr "可点击区域"
 
-#: showmethekey-gtk/smtk-keys-win.c:295
+#: showmethekey-gtk/smtk-keys-win.c:305
 msgid "Floating Window - Show Me The Key"
 msgstr "悬浮窗口 - 让我看键"

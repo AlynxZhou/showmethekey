@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-21 17:04+0800\n"
+"POT-Creation-Date: 2021-11-01 15:07+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:319
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:332
 #: showmethekey-gtk/smtk-app-win.ui:52 showmethekey-gtk/smtk-app-win.ui:58
 msgid "Show Me The Key"
 msgstr ""
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:252
+#: showmethekey-gtk/smtk-app-win.c:264
 msgid ""
 "Usage:\n"
 "\n"
@@ -56,18 +56,20 @@ msgid ""
 "password), you can use the \"Temporary Hide\" switch, it will not record "
 "your keys while hiding.\n"
 "\n"
+"5. Set Timeout to 0 if you want to keep all keys.\n"
+"\n"
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:317
+#: showmethekey-gtk/smtk-app-win.c:330
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:318
+#: showmethekey-gtk/smtk-app-win.c:331
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:320
+#: showmethekey-gtk/smtk-app-win.c:333
 msgid "Show keys you typed on screen."
 msgstr ""
 
@@ -96,11 +98,15 @@ msgid "Raw"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:195
-msgid "Width"
+msgid "Width (px)"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:219
-msgid "Height"
+msgid "Height (px)"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:243
+msgid "Timeout (ms)"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:6
@@ -115,10 +121,10 @@ msgstr ""
 msgid "_Quit"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:138
+#: showmethekey-gtk/smtk-keys-win.c:145
 msgid "Clickable Area"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:295
+#: showmethekey-gtk/smtk-keys-win.c:305
 msgid "Floating Window - Show Me The Key"
 msgstr ""

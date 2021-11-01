@@ -289,6 +289,7 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "4. If you want to temporary pause it (for example you need "
 		  "to insert password), you can use the \"Temporary Hide\" "
 		  "switch, it will not record your keys while hiding.\n\n"
+		  "5. Set Timeout to 0 if you want to keep all keys.\n\n"
 		  "You can open this dialog again via menu icon on title bar "
 		  "-> \"Usage\"."));
 	gtk_dialog_run(GTK_DIALOG(dialog));
