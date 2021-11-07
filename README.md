@@ -12,6 +12,14 @@ A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that work
 
 ## Distribution Package (Recommanded)
 
+### AOSC OS
+
+Just run following command to install from offcial repository:
+
+```
+# apt install showmethekey
+```
+
 ### Arch Linux
 
 #### Install From AUR
