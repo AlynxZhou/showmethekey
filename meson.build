@@ -21,7 +21,7 @@ conf_data.set('gettext_package', meson.project_name())
 conf_data.set('package_localedir', get_option('localedir'))
 
 configure_file(
-  input: 'common/config-meson.h.in',
+  input: 'common' / 'config-meson.h.in',
   output: 'config.h',
   configuration: conf_data
 )
@@ -50,6 +50,18 @@ install_data(
   'dists' / 'one.alynx.showmethekey.gschema.xml',
   install_dir: get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
 )
+install_data(
+  'dists' / 'one.alynx.showmethekey.rules',
+  install_dir: get_option('prefix') / get_option('datadir') / 'polkit-1' / 'rules.d'
+)
+configure_file(
+  input: 'dists' / 'one.alynx.showmethekey.policy.in',
+  output: 'one.alynx.showmethekey.policy',
+  configuration: conf_data,
+  install: true,
+  install_dir: get_option('prefix') / get_option('datadir') / 'polkit-1' / 'actions'
+)
+
 
 # We should not compile schemas by ourselves when packaging for distributions.
 # A simple way to detect packaging is the `DISTDIR` env, but before Meson 0.57.0
