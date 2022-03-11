@@ -20,6 +20,7 @@ conf_data.set('project_version', meson.project_version())
 conf_data.set('gettext_package', meson.project_name())
 conf_data.set('package_bindir', get_option('bindir'))
 conf_data.set('package_localedir', get_option('localedir'))
+conf_data.set('pkexec_path', get_option('pkexec_path'))
 
 configure_file(
   input: 'common/config-meson.h.in',
