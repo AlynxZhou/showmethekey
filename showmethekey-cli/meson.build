@@ -19,5 +19,5 @@ executable(
   dependencies: cli_dependencies,
   include_directories: cli_include_directories,
   install: true,
-  install_dir: get_option('prefix') / 'bin'
+  install_dir: get_option('prefix') / get_option('bindir')
 )

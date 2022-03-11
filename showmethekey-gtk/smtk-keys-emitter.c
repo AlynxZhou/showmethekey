@@ -361,7 +361,7 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 			G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		error, "pkexec", INSTALL_PREFIX "/bin/showmethekey-cli", NULL);
+		error, "pkexec", INSTALL_PREFIX "/" PACKAGE_BINDIR "/showmethekey-cli", NULL);
 	// emitter->error is already set, just return.
 	if (emitter->cli == NULL)
 		return;

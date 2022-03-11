@@ -18,6 +18,7 @@ conf_data = configuration_data()
 conf_data.set('install_prefix', get_option('prefix'))
 conf_data.set('project_version', meson.project_version())
 conf_data.set('gettext_package', meson.project_name())
+conf_data.set('package_bindir', get_option('bindir'))
 conf_data.set('package_localedir', get_option('localedir'))
 
 configure_file(

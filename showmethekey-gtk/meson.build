@@ -51,7 +51,7 @@ executable(
   dependencies: gtk_dependencies,
   include_directories: gtk_include_directories,
   install: true,
-  install_dir: get_option('prefix') / 'bin'
+  install_dir: get_option('prefix') / get_option('bindir')
 )
 
 subdir('po')
