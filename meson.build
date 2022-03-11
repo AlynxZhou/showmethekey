@@ -27,6 +27,12 @@ configure_file(
   configuration: conf_data
 )
 
+desktop_file = configure_file(
+  input: 'dists/showmethekey.desktop.in',
+  output: 'showmethekey.desktop',
+  configuration: conf_data
+)
+
 subdir('showmethekey-cli')
 
 subdir('showmethekey-gtk')
@@ -44,7 +50,7 @@ install_data(
   install_dir: get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
 )
 install_data(
-  'dists' / 'showmethekey.desktop',
+  desktop_file,
   install_dir: get_option('prefix') / get_option('datadir') / 'applications'
 )
 install_data(
