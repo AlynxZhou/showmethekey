@@ -27,10 +27,11 @@ configure_file(
   configuration: conf_data
 )
 
-desktop_file = configure_file(
+configure_file(
   input: 'dists/showmethekey.desktop.in',
   output: 'showmethekey.desktop',
-  configuration: conf_data
+  configuration: conf_data,
+  install_dir: get_option('datadir') / 'applications'
 )
 
 subdir('showmethekey-cli')
@@ -48,10 +49,6 @@ install_data(
 install_data(
   'dists' / 'showmethekey.svg',
   install_dir: get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
-)
-install_data(
-  desktop_file,
-  install_dir: get_option('prefix') / get_option('datadir') / 'applications'
 )
 install_data(
   'dists' / 'one.alynx.showmethekey.gschema.xml',
