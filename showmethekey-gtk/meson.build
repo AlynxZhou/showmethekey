@@ -50,8 +50,7 @@ executable(
   c_args: c_args,
   dependencies: gtk_dependencies,
   include_directories: gtk_include_directories,
-  install: true,
-  install_dir: get_option('prefix') / 'bin'
+  install: true
 )
 
 subdir('po')
