@@ -15,15 +15,23 @@ if get_option('debug') == true
 endif
 
 conf_data = configuration_data()
-conf_data.set('install_prefix', get_option('prefix'))
 conf_data.set('project_version', meson.project_version())
 conf_data.set('gettext_package', meson.project_name())
-conf_data.set('package_localedir', get_option('localedir'))
+conf_data.set('package_bindir', join_paths(get_option('prefix'), get_option('bindir')))
+conf_data.set('package_localedir', join_paths(get_option('prefix'), get_option('localedir')))
+conf_data.set('pkexec_path', get_option('pkexec_path'))
 
 configure_file(
   input: 'common' / 'config-meson.h.in',
   output: 'config.h',
   configuration: conf_data
+)
+
+configure_file(
+  input: 'dists/showmethekey.desktop.in',
+  output: 'showmethekey.desktop',
+  configuration: conf_data,
+  install_dir: get_option('datadir') / 'applications'
 )
 
 subdir('showmethekey-cli')
@@ -41,10 +49,6 @@ install_data(
 install_data(
   'dists' / 'showmethekey.svg',
   install_dir: get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
-)
-install_data(
-  'dists' / 'showmethekey.desktop',
-  install_dir: get_option('prefix') / get_option('datadir') / 'applications'
 )
 install_data(
   'dists' / 'one.alynx.showmethekey.gschema.xml',

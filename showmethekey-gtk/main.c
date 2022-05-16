@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
 	setlocale(LC_ALL, "");
 	// Typically "/usr" "/" "share/locale".
-	bindtextdomain(GETTEXT_PACKAGE, INSTALL_PREFIX "/" PACKAGE_LOCALEDIR);
+	bindtextdomain(GETTEXT_PACKAGE, PACKAGE_LOCALEDIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
 
