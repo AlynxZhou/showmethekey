@@ -19,4 +19,7 @@ executable(
   dependencies: cli_dependencies,
   include_directories: cli_include_directories,
   install: true
+  # By default, meson install binary to
+  # `get_option('prefix') / get_option('bindir')`,
+  # so we can omit `install_dir` here.
 )

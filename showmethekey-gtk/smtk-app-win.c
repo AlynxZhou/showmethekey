@@ -81,8 +81,9 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(
-				show_mouse, mode, width, height, timeout, &error);
+			win->keys_win = smtk_keys_win_new(show_mouse, mode,
+							  width, height,
+							  timeout, &error);
 			if (win->keys_win == NULL) {
 				g_warning("%s", error->message);
 				g_error_free(error);
@@ -159,8 +160,10 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->height_entry), 100,
 				       500);
 
-	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->timeout_entry), 0, 30000);
-	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->timeout_entry), 100, 1000);
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->timeout_entry), 0,
+				  30000);
+	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->timeout_entry), 100,
+				       1000);
 
 	win->settings = g_settings_new("one.alynx.showmethekey");
 	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
@@ -325,15 +328,14 @@ void smtk_app_win_show_about_dialog(SmtkAppWin *win)
 		"governing permissions and\n"
 		"limitations under the License.";
 
-	gtk_show_about_dialog(GTK_WINDOW(win), "authors", authors, "artists",
-			      artists, "documenters", documenters,
-			      "translator-credits", _("translator-credits"),
-			      "title", _("About Show Me The Key"),
-			      "program-name", _("Show Me The Key"), "comments",
-			      _("Show keys you typed on screen."), "copyright",
-			      "Copyright © 2021 Alynx Zhou", "license", license,
-			      "logo-icon-name", "showmethekey", "website",
-			      "https://showmethekey.alynx.one/",
-			      "website-label", "showmethekey.alynx.one",
-			      "version", PROJECT_VERSION, NULL);
+	gtk_show_about_dialog(
+		GTK_WINDOW(win), "authors", authors, "artists", artists,
+		"documenters", documenters, "translator-credits",
+		_("translator-credits"), "title", _("About Show Me The Key"),
+		"program-name", _("Show Me The Key"), "comments",
+		_("Show keys you typed on screen."), "copyright",
+		"Copyright © 2021-2022 Alynx Zhou", "license", license,
+		"logo-icon-name", "one.alynx.showmethekey", "website",
+		"https://showmethekey.alynx.one/", "website-label",
+		"showmethekey.alynx.one", "version", PROJECT_VERSION, NULL);
 }

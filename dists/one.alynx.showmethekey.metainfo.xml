@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2022 Alynx Zhou -->
+<component type="desktop-application">
+  <id>one.alynx.showmethekey</id>
+  
+  <name>Show Me The Key</name>
+  <summary>Show keys you typed on screen.</summary>
+  
+  <metadata_license>CC-BY-SA-3.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+
+  <content_rating type="oars-1.1" />
+  
+  <launchable type="desktop-id">one.alynx.showmethekey.desktop</launchable>
+  
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+    <control>tablet</control>
+  </supports>
+  
+  <description>
+    <p>
+       Show keys you typed on screen, so your audiences can see what you do clearly while you are streaming or recording. This is a screenkey alternative, and works not only on X11 but also Wayland. 
+    </p>
+  </description>
+  <url type="homepage">https://showmethekey.alynx.one/</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://showmethekey.alynx.one/images/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.5.0" date="2021-11-01">
+      <description>
+        <p>Added text timeout feature.</p>
+      </description>
+    </release>
+    <release version="1.4.6" date="2021-04-21">
+      <description>
+        <p>Updated desktop entry.</p>
+      </description>
+    </release>
+    <release version="1.4.5" date="2021-04-21">
+      <description>
+        <p>Updated desktop entry.</p>
+      </description>
+    </release>
+  </releases>
+</component>

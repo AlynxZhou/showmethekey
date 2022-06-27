@@ -51,6 +51,9 @@ executable(
   dependencies: gtk_dependencies,
   include_directories: gtk_include_directories,
   install: true
+  # By default, meson install binary to
+  # `get_option('prefix') / get_option('bindir')`,
+  # so we can omit `install_dir` here.
 )
 
 subdir('po')
