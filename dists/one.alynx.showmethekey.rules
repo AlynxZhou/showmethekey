@@ -1,7 +1,8 @@
-// Allow any user in the 'wheel' group to run cli backend
+// Allow any user in the 'wheel' group to run CLI backend
 // without entering a password.
-polkit.addRule(function(action, subject) {
-  if (action.id == "one.alynx.showmethekey.cli" && subject.isInGroup("wheel")) {
+polkit.addRule(function (action, subject) {
+  if (action.id === "one.alynx.showmethekey.cli" &&
+      subject.isInGroup("wheel")) {
     return polkit.Result.YES;
   }
 });
