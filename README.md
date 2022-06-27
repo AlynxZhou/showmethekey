@@ -68,6 +68,7 @@ Please help package showmethekey to your distribution!
 - cairo
 - pango
 - libxkbcommon
+- polkit
 - meson
 - ninja
 - gcc
@@ -85,7 +86,7 @@ $ showmethekey-gtk
 
 For detailed usage please run usage dialog from app menu!
 
-You need to toggle the switch to start it manually and need to input your password to `pkexec`'s dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
+You need to toggle the switch to start it manually and need to input admin password to polkit authentication agent's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
 
 ## Special Notice for Wayland Session Users
 
@@ -118,6 +119,12 @@ A GUI frontend based on GTK, will run CLI backend as root via `pkexec`, and show
 ## Why your program needs root permission? screenkey never asks for it!
 
 If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under `/dev`. **And if you want to interact with files under `/dev`, you need root permission.** screenkey does not needs root permission because it's heavily X11-based, **it gets input events from X server** instead of `/dev`, which already done it. And because of this it will never support Wayland.
+
+## I am using Sway/Wayfire/[not DEs], and I always get `AUTHENTICATION FAILED` in terminal!
+
+This is a pkexec bug that it's tty authentication does not work, see <https://gitlab.freedesktop.org/polkit/polkit/-/issues/17>. Most DEs have their own authentication agents, but if you are not using them, pkexec will try to make itself an agent, and you get this bug.
+
+A possible workaround is <https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959>, actually you can use any agents, not only the gnome one.
 
 # Translate
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-01 15:07+0800\n"
+"POT-Creation-Date: 2022-06-27 18:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:332
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:335
 #: showmethekey-gtk/smtk-app-win.ui:52 showmethekey-gtk/smtk-app-win.ui:58
 msgid "Show Me The Key"
 msgstr ""
@@ -26,11 +26,11 @@ msgstr ""
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:264
+#: showmethekey-gtk/smtk-app-win.c:267
 msgid ""
 "Usage:\n"
 "\n"
-"1. Please input your password after toggling the switch, because it needs "
+"1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
 "running graphics program with superuser permission, so it uses polkit to run "
 "a backend with superuser permission. This program does not handle or store "
@@ -49,8 +49,8 @@ msgid ""
 "\"Clickable Area\" on title bar to show a window manager menu and check "
 "\"Always on Top\" and \"Always on Visible Workspace\" in it.\n"
 "If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
-"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All Desktops"
-"\" and \"More Actions\" -> \"Keep Above Others\".\n"
+"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
+"Desktops\" and \"More Actions\" -> \"Keep Above Others\".\n"
 "\n"
 "4. If you want to temporary pause it (for example you need to insert "
 "password), you can use the \"Temporary Hide\" switch, it will not record "
@@ -61,15 +61,15 @@ msgid ""
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:330
+#: showmethekey-gtk/smtk-app-win.c:334
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:331
+#: showmethekey-gtk/smtk-app-win.c:334
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:333
+#: showmethekey-gtk/smtk-app-win.c:336
 msgid "Show keys you typed on screen."
 msgstr ""
 

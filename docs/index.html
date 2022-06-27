@@ -81,6 +81,7 @@
             <li>cairo</li>
             <li>pango</li>
             <li>libxkbcommon</li>
+            <li>polkit</li>
             <li>meson</li>
             <li>ninja</li>
             <li>gcc</li>
@@ -98,12 +99,19 @@
           For detailed usage please run usage dialog from app menu!
         </p>
         <p>
-          You need to toggle the switch to start it manually and need to input your password to pkexec's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
+          You need to toggle the switch to start it manually and need to input admin password to pkexec's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
         </p>
         <h1>FAQ</h1>
         <h2>Why your program needs root permission? screenkey never asks for it!</h2>
         <p>
           If you debug with libinput, you'll find it needs root permission, too. Because this program support both Wayland and X11, it does not get input events via display protocol, actually it's reading directly from evdev interface under <code>/dev</code>. <strong>And if you want to interact with files under <code>/dev</code>, you need root permission.</strong> screenkey does not needs root permission because it's heavily X11-based, <strong>it gets input events from X server</strong> instead of <code>/dev</code>, which already done it. And because of this it will never support Wayland.
+        </p>
+        <h2>I am using Sway/Wayfire/[not DEs], and I always get <code>AUTHENTICATION FAILED</code> in terminal!</h2>
+        <p>
+          This is a pkexec bug that it's tty authentication does not work, see <a href="https://gitlab.freedesktop.org/polkit/polkit/-/issues/17" target="_blank" rel="external nofollow noreferrer noopener">https://gitlab.freedesktop.org/polkit/polkit/-/issues/17</a>. Most DEs have their own authentication agents, but if you are not using them, pkexec will try to make itself an agent, and you get this bug.
+        </p>
+        <p>
+          A possible workaround is <a href="https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959" target="_blank" rel="external nofollow noreferrer noopener">https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959</a>, actually you can use any agents, not only the gnome one.
         </p>
         <h1>Screenshots</h1>
         <div class="screenshots">

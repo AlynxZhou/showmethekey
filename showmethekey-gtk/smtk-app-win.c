@@ -265,7 +265,7 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		GTK_WINDOW(win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO,
 		GTK_BUTTONS_CLOSE,
 		_("Usage:\n\n"
-		  "1. Please input your password after toggling the switch, "
+		  "1. Please input admin password after toggling the switch, "
 		  "because it needs superuser permission to read input events, "
 		  "and Wayland does not allow running graphics program with "
 		  "superuser permission, so it uses polkit to run a backend "
