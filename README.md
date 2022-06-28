@@ -98,6 +98,15 @@ For example if you are using GNOME Shell (Wayland), you can right click the "Cli
 
 If you are using KDE Plasma (Wayland), you can right click "Floating Window - Show Me The Key" on task bar, check "Move to Desktop" -> "All Desktops" and "More Actions" -> "Keep Above Others".
 
+For Sway users, you can add following configurations into `~/.config/sway/config` to enable floating and sticky (thanks to [haxibami's blog post](https://zenn.dev/haxibami/articles/wayland-sway-install#%E3%82%A6%E3%82%A3%E3%83%B3%E3%83%89%E3%82%A6%E8%A8%AD%E5%AE%9A):
+
+```
+for_window [app_id="one.alynx.showmethekey" title="Floating Window - Show Me The Key"] {
+  floating enable
+  sticky enable
+}
+```
+
 # Feature
 
 [screenkey](https://gitlab.com/screenkey/screenkey) is a popular project for streamers or tutorial recorders because it can make your typing visual on screen, but it only works under X11, not Wayland because it uses X11 functions to get keyboard event.
