@@ -84,9 +84,16 @@ if meson.version().version_compare('>= 0.57.0')
     get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas',
     skip_if_destdir: true
   )
+  meson.add_install_script(
+    'gtk-update-icon-cache',
+    '-f',
+    '-t',
+    get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor',
+    skip_if_destdir: true
+  )
 else
   meson.add_install_script(
     'meson_post_install.py',
-    get_option('prefix') / get_option('datadir') / 'glib-2.0' / 'schemas'
+    get_option('prefix') / get_option('datadir')
   )
 endif
