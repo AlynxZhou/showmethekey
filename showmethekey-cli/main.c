@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
 
 #include <libudev.h>
 #include <libinput.h>
@@ -19,7 +21,13 @@
 
 #define MAX_BUFFER_LENGTH 512
 
-enum error_code { NO_ERROR, UDEV_FAILED, LIBINPUT_FAILED, SEAT_FAILED };
+enum error_code {
+	NO_ERROR,
+	UDEV_FAILED,
+	LIBINPUT_FAILED,
+	SEAT_FAILED,
+	PERMISSION_FAILED
+};
 
 struct input_handler_data {
 	struct udev *udev;
@@ -44,9 +52,13 @@ static void *handle_input(void *user_data)
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
+	fprintf(stderr, "%s\n", path);
+	struct stat st;
+	stat(path, &st);
+	fprintf(stderr, "%u:%u\n", major(st.st_rdev), minor(st.st_rdev));
 	int fd = open(path, flags);
 	if (fd < 0)
-		fprintf(stderr, "Failed to open %s because of %s\n", path,
+		fprintf(stderr, "Failed to open %s because of %s.\n", path,
 			strerror(errno));
 	return fd < 0 ? -errno : fd;
 }
@@ -77,7 +89,7 @@ static int print_key_event(struct libinput_event *event)
 		libinput_event_keyboard_get_key_state(keyboard);
 	const char *state_name = state_code == LIBINPUT_KEY_STATE_PRESSED ?
 					 "PRESSED" :
-					 "RELEASED";
+					       "RELEASED";
 
 	return printf("{"
 		      "\"event_name\": \"KEYBOARD_KEY\", "
@@ -109,7 +121,7 @@ static int print_button_event(struct libinput_event *event)
 		libinput_event_pointer_get_button_state(pointer);
 	const char *state_name = state_code == LIBINPUT_BUTTON_STATE_PRESSED ?
 					 "PRESSED" :
-					 "RELEASED";
+					       "RELEASED";
 	return printf("{"
 		      "\"event_name\": \"POINTER_BUTTON\", "
 		      "\"event_type\": %d, "
@@ -129,9 +141,11 @@ static int handle_events(struct libinput *libinput)
 	int result = -1;
 	struct libinput_event *event;
 
-	libinput_dispatch(libinput);
+	if (libinput_dispatch(libinput) < 0)
+		return result;
+
 	// Please keep printing a line per json.
-	while ((event = libinput_get_event(libinput)) != 0) {
+	while ((event = libinput_get_event(libinput)) != NULL) {
 		switch (libinput_event_get_type(event)) {
 		// This program only handle key event.
 		case LIBINPUT_EVENT_KEYBOARD_KEY:
@@ -156,17 +170,23 @@ static int handle_events(struct libinput *libinput)
 	return result;
 }
 
-static void run_mainloop(struct libinput *libinput)
+static int run_mainloop(struct libinput *libinput)
 {
 	struct pollfd fd;
 	fd.fd = libinput_get_fd(libinput);
 	fd.events = POLLIN;
 	fd.revents = 0;
 
-	if (handle_events(libinput) != 0)
-		fprintf(stderr, "Failed to clear event queue on startup.\n");
+	if (handle_events(libinput) != 0) {
+		fprintf(stderr,
+			"Expected device added events on startup but "
+			"got none. Maybe you don't have the right permissions?"
+			"\n");
+		return -1;
+	}
 	while (poll(&fd, 1, -1) > -1)
 		handle_events(libinput);
+	return 0;
 }
 
 void print_help(char *program_name)
@@ -242,7 +262,8 @@ int main(int argc, char *argv[])
 	struct input_handler_data input_handler_data = { udev, libinput };
 	pthread_create(&input_handler, NULL, handle_input, &input_handler_data);
 
-	run_mainloop(libinput);
+	if (run_mainloop(libinput) < 0)
+		return PERMISSION_FAILED;
 
 	libinput_unref(libinput);
 	udev_unref(udev);

@@ -403,7 +403,7 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		// so we cannot force kill it,
 		// we use stdin pipe to write a "stop\n",
 		// and let it exit by itself.
-		const char *stop = "stop\n";
+		const char stop[] = "stop\n";
 		GBytes *input = g_bytes_new(stop, sizeof(stop));
 		g_subprocess_communicate(emitter->cli, input, NULL, NULL, NULL,
 					 NULL);
