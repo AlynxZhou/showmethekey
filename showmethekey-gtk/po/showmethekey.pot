@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-28 17:10+0800\n"
+"POT-Creation-Date: 2022-06-28 18:41+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -123,8 +123,4 @@ msgstr ""
 
 #: showmethekey-gtk/smtk-keys-win.c:145
 msgid "Clickable Area"
-msgstr ""
-
-#: showmethekey-gtk/smtk-keys-win.c:305
-msgid "Floating Window - Show Me The Key"
 msgstr ""

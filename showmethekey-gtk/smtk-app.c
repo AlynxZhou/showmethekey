@@ -55,7 +55,7 @@ static void smtk_app_init(SmtkApp *app)
 	app->win = NULL;
 
 	g_set_application_name(_("Show Me The Key"));
-	gtk_window_set_default_icon_name("showmethekey");
+	gtk_window_set_default_icon_name("one.alynx.showmethekey");
 
 	const GOptionEntry options[] = {
 		{ "version", 'v', 0, G_OPTION_ARG_NONE, NULL,
@@ -133,6 +133,9 @@ static void smtk_app_class_init(SmtkAppClass *app_class)
 
 SmtkApp *smtk_app_new(void)
 {
+	// See <https://honk.sigxcpu.org/con/GTK__and_the_application_id.html>.
+	// This is needed for GTK 3.
+	g_set_prgname("one.alynx.showmethekey");
 	return g_object_new(SMTK_TYPE_APP, "application-id",
 			    "one.alynx.showmethekey", NULL);
 }

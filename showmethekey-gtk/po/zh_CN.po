@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-28 17:10+0800\n"
+"POT-Creation-Date: 2022-06-28 18:41+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -147,7 +147,3 @@ msgstr "退出（_Q）"
 #: showmethekey-gtk/smtk-keys-win.c:145
 msgid "Clickable Area"
 msgstr "可点击区域"
-
-#: showmethekey-gtk/smtk-keys-win.c:305
-msgid "Floating Window - Show Me The Key"
-msgstr "悬浮窗口 - 让我看键"

@@ -233,8 +233,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	win->emitter =
-		smtk_keys_emitter_new(win->show_mouse, win->mode, win->timeout, &win->error);
+	win->emitter = smtk_keys_emitter_new(win->show_mouse, win->mode,
+					     win->timeout, &win->error);
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
@@ -298,13 +298,17 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 }
 
 GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
-			     guint64 width, guint64 height, gint timeout, GError **error)
+			     guint64 width, guint64 height, gint timeout,
+			     GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
+		// Don't translate floating window's title, maybe users have
+		// window rules for it.
 		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title",
-		_("Floating Window - Show Me The Key"), "icon-name",
-		"showmethekey", "width-request", width, "height-request",
-		height, "can-focus", FALSE, "focus-on-click", FALSE,
+		"Floating Window - Show Me The Key", "icon-name",
+		"one.alynx.showmethekey", "width-request", width,
+		"height-request", height, "can-focus", FALSE, "focus-on-click",
+		FALSE,
 		// This window is able to be focused, so this prevent that when
 		// you start it and press Enter, and focus is on the app window,
 		// and it closes.
@@ -317,7 +321,8 @@ GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
 		"resizable", FALSE,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", TRUE, "skip-taskbar-hint", TRUE,
-		"mode", mode, "show-mouse", show_mouse, "timeout", timeout, NULL);
+		"mode", mode, "show-mouse", show_mouse, "timeout", timeout,
+		NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
