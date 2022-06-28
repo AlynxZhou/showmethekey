@@ -33,6 +33,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.6.0" date="2022-06-28">
+      <description>
+        <p>Updated to use Meson's bindir option instead of hard-code bin directory.</p>
+        <p>Added support for custom pkexec path.</p>
+        <p>Updated polkit policy to stop asking password for wheel group.</p>
+        <p>Updated to follow Freedesktop specifications.</p>
+      </description>
+    </release>
     <release version="1.5.0" date="2021-11-01">
       <description>
         <p>Added text timeout feature.</p>
