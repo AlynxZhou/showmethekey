@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-27 18:10+0800\n"
+"POT-Creation-Date: 2022-06-28 17:10+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:335
+#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:336
 #: showmethekey-gtk/smtk-app-win.ui:52 showmethekey-gtk/smtk-app-win.ui:58
 msgid "Show Me The Key"
 msgstr ""
@@ -34,7 +34,7 @@ msgid ""
 "superuser permission to read input events, and Wayland does not allow "
 "running graphics program with superuser permission, so it uses polkit to run "
 "a backend with superuser permission. This program does not handle or store "
-"your password.\n"
+"your password. Users in `wheel` group can skip password authentication.\n"
 "\n"
 "2. After you toggle the switch to show the floating window, you need to drag "
 "it manually to anywhere you want, because Wayland does not allow window to "
@@ -61,15 +61,15 @@ msgid ""
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:334
+#: showmethekey-gtk/smtk-app-win.c:335
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:334
+#: showmethekey-gtk/smtk-app-win.c:335
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:336
+#: showmethekey-gtk/smtk-app-win.c:337
 msgid "Show keys you typed on screen."
 msgstr ""
 

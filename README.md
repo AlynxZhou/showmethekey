@@ -88,6 +88,8 @@ For detailed usage please run usage dialog from app menu!
 
 You need to toggle the switch to start it manually and need to input admin password to polkit authentication agent's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
 
+Users in `wheel` group can skip password authentication.
+
 ## Special Notice for Wayland Session Users
 
 There is no official Wayland protocol allowing toplevel clients to set their own position and layer, only users can change those things. But don't worry, users are always allowed to do those things by themselves if their compositors support it.
