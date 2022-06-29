@@ -33,7 +33,13 @@
   </screenshots>
 
   <releases>
-    <release version="1.6.0" date="2022-06-28">
+    <release version="1.6.2" date="2022-06-29">
+      <description>
+        <p>Updated to stop translating floating window's title.</p>
+        <p>Fixed some code.</p>
+      </description>
+    </release>
+    <release version="1.6.1" date="2022-06-28">
       <description>
         <p>Updated to update icon cache on install.</p>
       </description>
