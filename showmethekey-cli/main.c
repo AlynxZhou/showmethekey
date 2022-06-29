@@ -11,7 +11,9 @@
 #include <getopt.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#if __has_include(<sys/sysmacros.h>)
 #include <sys/sysmacros.h>
+#endif
 
 #include <libudev.h>
 #include <libinput.h>
