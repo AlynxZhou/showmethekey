@@ -5,6 +5,7 @@ gtk_sources = files(
   'smtk-app.c',
   'smtk-app-win.c',
   'smtk-keys-win.c',
+  'smtk-keys-area.c',
   'smtk-keys-emitter.c',
   'smtk-keys-mapper.c',
   'smtk-event.c'
@@ -14,8 +15,9 @@ gtk_headers = files(
   'smtk.h',
   'smtk-app.h',
   'smtk-app-win.h',
-  'smtk-keys-emitter.h',
   'smtk-keys-win.h',
+  'smtk-keys-area.h',
+  'smtk-keys-emitter.h',
   'smtk-keys-mapper.h',
   'smtk-event.h'
 )

@@ -108,7 +108,7 @@ static void smtk_app_startup(GApplication *g_app)
 
 // See <https://developer.gnome.org/gio/stable/GApplication.html#GApplication-handle-local-options>.
 static int smtk_app_handle_local_options(GApplication *application,
-					  GVariantDict *options)
+					 GVariantDict *options)
 {
 	if (g_variant_dict_contains(options, "version")) {
 		g_print(PROJECT_VERSION "\n");

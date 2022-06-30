@@ -5,6 +5,5 @@
     <file preprocess="xml-stripblanks">smtk-app-win-menu.ui</file>
     <file>smtk-keys-win.css</file>
     <file>smtk-keys-win-header-bar.css</file>
-    <file>smtk-keys-win-keys-label.css</file>
   </gresource>
 </gresources>

@@ -277,7 +277,8 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "-> \"Usage\"."));
 	gtk_window_set_modal(GTK_WINDOW(dialog), true);
 	gtk_window_present(GTK_WINDOW(dialog));
-	g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_window_destroy), dialog);
+	g_signal_connect_swapped(dialog, "response",
+				 G_CALLBACK(gtk_window_destroy), dialog);
 }
 
 void smtk_app_win_show_about_dialog(SmtkAppWin *win)

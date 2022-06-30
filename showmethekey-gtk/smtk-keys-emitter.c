@@ -17,14 +17,6 @@ struct _SmtkKeysEmitter {
 	GThread *poller;
 	bool polling;
 
-	GThread *timer_thread;
-	bool timer_running;
-	GTimer *timer;
-	int timeout;
-
-	GPtrArray *keys_array;
-	GMutex keys_mutex;
-
 	SmtkKeyMode mode;
 	bool show_mouse;
 	bool waiting;
@@ -32,11 +24,11 @@ struct _SmtkKeysEmitter {
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
-enum { SIG_UPDATE_LABEL, SIG_ERROR_CLI_EXIT, N_SIGNALS };
+enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -70,7 +62,8 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	g_object_unref(emitter);
 }
 
-static void smtk_keys_emitter_set_property(GObject *object, unsigned int property_id,
+static void smtk_keys_emitter_set_property(GObject *object,
+					   unsigned int property_id,
 					   const GValue *value,
 					   GParamSpec *pspec)
 {
@@ -83,9 +76,6 @@ static void smtk_keys_emitter_set_property(GObject *object, unsigned int propert
 	case PROP_SHOW_MOUSE:
 		emitter->show_mouse = g_value_get_boolean(value);
 		break;
-	case PROP_TIMEOUT:
-		emitter->timeout = g_value_get_int(value);
-		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -93,7 +83,8 @@ static void smtk_keys_emitter_set_property(GObject *object, unsigned int propert
 	}
 }
 
-static void smtk_keys_emitter_get_property(GObject *object, unsigned int property_id,
+static void smtk_keys_emitter_get_property(GObject *object,
+					   unsigned int property_id,
 					   GValue *value, GParamSpec *pspec)
 {
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
@@ -105,9 +96,6 @@ static void smtk_keys_emitter_get_property(GObject *object, unsigned int propert
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
 		break;
-	case PROP_TIMEOUT:
-		g_value_set_int(value, emitter->timeout);
-		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -115,30 +103,32 @@ static void smtk_keys_emitter_get_property(GObject *object, unsigned int propert
 	}
 }
 
+struct idle_data {
+	SmtkKeysEmitter *emitter;
+	char *key;
+};
+
 static void idle_destroy_function(gpointer user_data)
 {
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	struct idle_data *idle_data = user_data;
+	SmtkKeysEmitter *emitter = idle_data->emitter;
 	g_object_unref(emitter);
+	g_free(idle_data);
 }
 
 // true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
 static int idle_function(gpointer user_data)
 {
 	// Here we back to UI thread.
-	// Looks like we may have many idle_function() run at the same time.
-	// So we cannot use a common label_text in emitter.
-	// Instead we only join them here.
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
-	// Need to use sans, monospace cannot be smaller.
-	char *label_text = g_strjoinv(
-		"<span font_family=\"sans\" size=\"smaller\"> </span>",
-		(char **)emitter->keys_array->pdata);
-	g_signal_emit_by_name(emitter, "update-label", label_text);
-	g_free(label_text);
+	struct idle_data *idle_data = user_data;
+	SmtkKeysEmitter *emitter = idle_data->emitter;
+
+	g_signal_emit_by_name(emitter, "key", idle_data->key);
+
 	return 0;
 }
 
-static void trigger_idle_function(SmtkKeysEmitter *emitter)
+static void trigger_idle_function(SmtkKeysEmitter *emitter, const char key[])
 {
 	// UI can only be modified in UI thread,
 	// and we are not in UI thread here.
@@ -151,9 +141,16 @@ static void trigger_idle_function(SmtkKeysEmitter *emitter)
 	// instead of UI thread.
 	// `g_idle_add()` is not suitable because we
 	// have a high priority.
-	g_timeout_add_full(G_PRIORITY_DEFAULT, 0,
-			   idle_function,
-			   g_object_ref(emitter),
+	// We dup the key and use malloc because we will enter another thread,
+	// so the poller thread may already continue and calls free for key.
+	struct idle_data *idle_data = g_malloc(sizeof(*idle_data));
+	if (!idle_data) {
+		g_warning("Alloc idle_data failed.\n");
+		return;
+	}
+	idle_data->emitter = g_object_ref(emitter);
+	idle_data->key = g_strdup(key);
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, idle_function, idle_data,
 			   idle_destroy_function);
 }
 
@@ -211,55 +208,12 @@ static gpointer poller_function(gpointer user_data)
 			// Don't save key if hiding.
 			if (smtk_event_get_event_state(event) ==
 				    SMTK_EVENT_STATE_PRESSED &&
-			    !emitter->waiting) {
-				// We don't free inserted text here,
-				// GPtrArray will free them.
-				char *escaped = g_markup_escape_text(key, -1);
-				char *marked = g_strconcat("<u>", escaped,
-							    "</u>", NULL);
-				g_free(escaped);
-
-				g_mutex_lock(&emitter->keys_mutex);
-				g_ptr_array_insert(emitter->keys_array,
-						   emitter->keys_array->len - 1,
-						   marked);
-				if (emitter->keys_array->len - 1 > MAX_KEYS)
-					// We set free function for GPtrArray,
-					// So it will free automatically.
-					g_ptr_array_remove_range(
-						emitter->keys_array, 0,
-						emitter->keys_array->len - 1 -
-							MAX_KEYS);
-				g_timer_start(emitter->timer);
-				g_mutex_unlock(&emitter->keys_mutex);
-
-				trigger_idle_function(emitter);
-			}
+			    !emitter->waiting)
+				trigger_idle_function(emitter, key);
 			g_free(key);
 		}
-		g_object_unref(event);
+		g_clear_object(&event);
 		g_free(line);
-	}
-	return NULL;
-}
-
-static gpointer timer_function(gpointer user_data) {
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
-	while (emitter->timer_running) {
-		g_mutex_lock(&emitter->keys_mutex);
-		int elapsed = g_timer_elapsed(emitter->timer, NULL) * 1000.0;
-		g_mutex_unlock(&emitter->keys_mutex);
-
-		if (emitter->timeout > 0 && elapsed > emitter->timeout) {
-			g_mutex_lock(&emitter->keys_mutex);
-			g_ptr_array_remove_range(emitter->keys_array, 0, emitter->keys_array->len - 1);
-			g_timer_start(emitter->timer);
-			g_mutex_unlock(&emitter->keys_mutex);
-
-			trigger_idle_function(emitter);
-		}
-
-		g_usleep(1000L);
 	}
 	return NULL;
 }
@@ -270,32 +224,12 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	emitter->cli = NULL;
 	emitter->cli_out = NULL;
 	emitter->poller = NULL;
-	emitter->keys_array = NULL;
 	emitter->error = NULL;
 
 	emitter->mapper = smtk_keys_mapper_new(&emitter->error);
 	// emitter->error is already set, just return.
 	if (emitter->mapper == NULL)
 		return;
-	// g_strjoinv() accepts a NULL terminated char pointer array,
-	// so we use a GPtrArray to store char pointer.
-	emitter->keys_array = g_ptr_array_new_full(MAX_KEYS + 1, g_free);
-	g_mutex_init(&emitter->keys_mutex);
-	// Append a NULL first and always insert elements before it.
-	// So we can directly use the GPtrArray for g_strjoinv().
-	g_ptr_array_add(emitter->keys_array, NULL);
-}
-
-static void smtk_keys_emitter_finalize(GObject *object)
-{
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
-
-	if (emitter->keys_array != NULL) {
-		g_ptr_array_free(emitter->keys_array, true);
-		emitter->keys_array = NULL;
-	}
-
-	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->finalize(object);
 }
 
 static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
@@ -305,12 +239,10 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	object_class->set_property = smtk_keys_emitter_set_property;
 	object_class->get_property = smtk_keys_emitter_get_property;
 
-	object_class->finalize = smtk_keys_emitter_finalize;
-
-	obj_signals[SIG_UPDATE_LABEL] = g_signal_new(
-		"update-label", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
-		NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1,
-		G_TYPE_STRING);
+	obj_signals[SIG_KEY] = g_signal_new("key", SMTK_TYPE_KEYS_EMITTER,
+					    G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+					    g_cclosure_marshal_VOID__STRING,
+					    G_TYPE_NONE, 1, G_TYPE_STRING);
 	obj_signals[SIG_ERROR_CLI_EXIT] = g_signal_new(
 		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
@@ -322,20 +254,16 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
-	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
-		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode, int timeout,
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode,
 				       GError **error)
 {
 	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode",
 						mode, "show-mouse", show_mouse,
-						"timeout", timeout,
 						NULL);
 
 	if (emitter->error != NULL) {
@@ -384,13 +312,6 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	// emitter->error is already set, just return.
 	if (emitter->poller == NULL)
 		return;
-
-	emitter->timer_running = true;
-	emitter->timer = g_timer_new();
-
-	emitter->timer_thread = g_thread_try_new("timer", timer_function, emitter, error);
-	if (emitter->timer_thread == NULL)
-		return;
 }
 
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
@@ -426,12 +347,6 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		g_thread_join(emitter->poller);
 		// g_thread_unref(emitter->poller);
 		emitter->poller = NULL;
-	}
-
-	if (emitter->timer_thread != NULL) {
-		emitter->timer_running = false;
-		g_thread_join(emitter->timer_thread);
-		emitter->timer_thread = NULL;
 	}
 
 	if (emitter->mapper != NULL) {

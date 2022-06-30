@@ -247,7 +247,7 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
 				     event_state == SMTK_EVENT_STATE_PRESSED ?
 					     XKB_KEY_DOWN :
-					     XKB_KEY_UP);
+						   XKB_KEY_UP);
 	}
 	return g_strdup(smtk_event_get_key_name(event));
 }
@@ -270,7 +270,7 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
 				     event_state == SMTK_EVENT_STATE_PRESSED ?
 					     XKB_KEY_DOWN :
-					     XKB_KEY_UP);
+						   XKB_KEY_UP);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			mapper->xkb_state, xkb_key_code);
 		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);

@@ -1,19 +1,16 @@
-#include "cairo.h"
-#include "pango/pango-font.h"
-#include "pango/pango-layout.h"
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
 #include "smtk.h"
 #include "smtk-keys-win.h"
+#include "smtk-keys-area.h"
 #include "smtk-keys-emitter.h"
 
 struct _SmtkKeysWin {
 	GtkWindow parent_instance;
 	GtkWidget *header_bar;
 	GtkWidget *handle;
-	GtkWidget *keys_label;
-	PangoFontDescription *keys_font;
+	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
 	bool show_mouse;
@@ -26,7 +23,8 @@ enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
-static void smtk_keys_win_set_property(GObject *object, unsigned int property_id,
+static void smtk_keys_win_set_property(GObject *object,
+				       unsigned int property_id,
 				       const GValue *value, GParamSpec *pspec)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
@@ -48,8 +46,9 @@ static void smtk_keys_win_set_property(GObject *object, unsigned int property_id
 	}
 }
 
-static void smtk_keys_win_get_property(GObject *object, unsigned int property_id,
-				       GValue *value, GParamSpec *pspec)
+static void smtk_keys_win_get_property(GObject *object,
+				       unsigned int property_id, GValue *value,
+				       GParamSpec *pspec)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
@@ -78,38 +77,32 @@ static void smtk_keys_win_emitter_on_error_cli_exit(SmtkKeysWin *win,
 	gtk_window_destroy(GTK_WINDOW(win));
 }
 
-static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
-						  char *label_text,
-						  SmtkKeysEmitter *emitter)
+static void smtk_keys_win_emitter_on_key(SmtkKeysWin *win, char key[])
 {
-	gtk_label_set_markup(GTK_LABEL(win->keys_label), label_text);
-	// It seems that we cannot free argument in callback.
-	// Looks like GValue will automatically free this for us.
-	// And this is not the same as the outside one.
-	// g_free(label_text);
+	// It seems that GObject closure will free string argument.
+	// See <http://garfileo.is-programmer.com/2011/3/25/gobject-signal-extra-1.25576.html>.
+	// void (*callback)(gpointer instance, const gchar *arg1, gpointer user_data)
+	smtk_keys_area_add_key(SMTK_KEYS_AREA(win->area), g_strdup(key));
 }
 
-static void smtk_keys_win_size_allocate(GtkWidget *widget, int width, int height, int baseline)
+static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
+					int height, int baseline)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(widget);
 
 	// We handle our magic after GTK done its internal layout compute.
 	// We only read but not adjust allocation so this is safe.
-	GTK_WIDGET_CLASS(smtk_keys_win_parent_class)->size_allocate(widget, width, height, baseline);
+	GTK_WIDGET_CLASS(smtk_keys_win_parent_class)
+		->size_allocate(widget, width, height, baseline);
 
 	g_debug("Size: %dx%d\n", width, height);
-
-	// I am not sure why the avaliable height * PANGO_SCALE is too big,
-	// just make it smaller, also too big will have less chars.
-	pango_font_description_set_size(win->keys_font, height * 0.3 * PANGO_SCALE);
-	// GtkLabel maybe re-create layout, so we have to update this everytime.
-	PangoLayout *layout = gtk_label_get_layout(GTK_LABEL(win->keys_label));
-	pango_layout_set_font_description(layout, win->keys_font);
 
 	// Widget's allocation is only usable after realize.
 	GtkAllocation handle_allocation;
 	gtk_widget_get_allocation(win->handle, &handle_allocation);
-	g_debug("Clickable Area: x: %d, y: %d, w: %d, h: %d\n", handle_allocation.x, handle_allocation.y, handle_allocation.width, handle_allocation.height);
+	g_debug("Clickable Area: x: %d, y: %d, w: %d, h: %d\n",
+		handle_allocation.x, handle_allocation.y,
+		handle_allocation.width, handle_allocation.height);
 	cairo_region_t *clickable_region =
 		cairo_region_create_rectangle(&handle_allocation);
 	GtkNative *native = gtk_widget_get_native(widget);
@@ -129,34 +122,14 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
-	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(win->header_bar), false);
+	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(win->header_bar),
+					      false);
 	// Disable subtitle to get a compact header bar.
 	// gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
 	win->handle = gtk_label_new(_("Clickable Area"));
 	gtk_header_bar_set_title_widget(GTK_HEADER_BAR(win->header_bar),
 					win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
-
-	// TODO: Maybe it's better to use Cairo/Pango/GtkBox to do some custom
-	// widget drawing, it's easier to fit container and looks better.
-	// CSS is used to make a transparent titlebar,
-	// because it's above window.
-	win->keys_label = gtk_label_new(NULL);
-	// If there are too much keys, we hide older keys.
-	gtk_label_set_ellipsize(GTK_LABEL(win->keys_label),
-				PANGO_ELLIPSIZE_START);
-	// Center is better for user.
-	gtk_label_set_justify(GTK_LABEL(win->keys_label), GTK_JUSTIFY_CENTER);
-	// This prevent label from resizing window. But it is confusing,
-	// it does not limit the label to only 1 char, which is I want.
-	// See <https://developer.gnome.org/gtk3/stable/GtkLabel.html#label-text-layout>.
-	gtk_label_set_max_width_chars(GTK_LABEL(win->keys_label), 1);
-	gtk_label_set_use_markup(GTK_LABEL(win->keys_label), true);
-	// By default label's font description is NULL which means inherited.
-	// We give it a special one.
-	win->keys_font = pango_font_description_new();
-	pango_font_description_set_family(win->keys_font, "monospace");
-	gtk_window_set_child(GTK_WINDOW(win), win->keys_label);
 
 	// GTK4 dropped those API, so we need to implement
 	// those when upgrading GTK4 by ourselves via WM hints.
@@ -189,19 +162,6 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 		header_bar_style_context,
 		GTK_STYLE_PROVIDER(header_bar_css_provider),
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-	// It turns out that GtkStyleContext cannot affect child GtkWidgets,
-	// so we have to create independent CSS for keys label.
-	GtkCssProvider *keys_label_css_provider = gtk_css_provider_new();
-	gtk_css_provider_load_from_resource(
-		keys_label_css_provider,
-		"/one/alynx/showmethekey/smtk-keys-win-keys-label.css");
-	GtkStyleContext *keys_label_style_context =
-		gtk_widget_get_style_context(win->keys_label);
-	gtk_style_context_add_provider(
-		keys_label_style_context,
-		GTK_STYLE_PROVIDER(keys_label_css_provider),
-		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 }
 
 static void smtk_keys_win_constructed(GObject *object)
@@ -209,8 +169,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	win->emitter = smtk_keys_emitter_new(win->show_mouse, win->mode,
-					     win->timeout, &win->error);
+	win->emitter =
+		smtk_keys_emitter_new(win->show_mouse, win->mode, &win->error);
 	// win->error is set so just return.
 	if (win->emitter == NULL)
 		return;
@@ -218,14 +178,16 @@ static void smtk_keys_win_constructed(GObject *object)
 		win->emitter, "error-cli-exit",
 		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win,
 		G_CONNECT_SWAPPED);
-	g_signal_connect_object(
-		win->emitter, "update-label",
-		G_CALLBACK(smtk_keys_win_emitter_on_update_label), win,
-		G_CONNECT_SWAPPED);
+	g_signal_connect_object(win->emitter, "key",
+				G_CALLBACK(smtk_keys_win_emitter_on_key), win,
+				G_CONNECT_SWAPPED);
 
 	smtk_keys_emitter_start_async(win->emitter, &win->error);
 	if (win->error != NULL)
 		return;
+
+	win->area = smtk_keys_area_new(win->timeout);
+	gtk_window_set_child(GTK_WINDOW(win), win->area);
 
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
 }
@@ -233,8 +195,6 @@ static void smtk_keys_win_constructed(GObject *object)
 static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
-
-	g_clear_pointer(&win->keys_font, pango_font_description_free);
 
 	if (win->emitter != NULL) {
 		smtk_keys_emitter_stop_async(win->emitter);
@@ -276,9 +236,9 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse, SmtkKeyMode mode,
-			     int width, int height, int timeout,
-			     GError **error)
+GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse,
+			     SmtkKeyMode mode, int width, int height,
+			     int timeout, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -286,9 +246,8 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse, SmtkKeyMode mo
 		SMTK_TYPE_KEYS_WIN, "visible", true, "title",
 		"Floating Window - Show Me The Key", "icon-name",
 		"one.alynx.showmethekey", "can-focus", false, "focus-on-click",
-		false,
-		"vexpand", false, "vexpand-set", true,
-		"hexpand", false, "hexpand-set", true,
+		false, "vexpand", false, "vexpand-set", true, "hexpand", false,
+		"hexpand-set", true,
 		// We cannot focus on this window, and it has no border,
 		// so user resize is meaningless for it.
 		"resizable", false,
@@ -328,4 +287,3 @@ void smtk_keys_win_show(SmtkKeysWin *win)
 	gtk_widget_show(GTK_WIDGET(win));
 	smtk_keys_emitter_resume(win->emitter);
 }
-

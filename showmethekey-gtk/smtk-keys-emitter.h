@@ -1,6 +1,7 @@
 #ifndef __SMTK_KEYS_EMITTER__
 #define __SMTK_KEYS_EMITTER__
 
+#include <stdbool.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS
@@ -18,7 +19,7 @@ typedef enum {
 } SmtkKeyMode;
 // clang-format on
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode, int timeout,
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode,
 				       GError **error);
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error);
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter);
