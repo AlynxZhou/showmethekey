@@ -10,8 +10,6 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pthread.h>
-#include <sys/stat.h>
-#include <sys/sysmacros.h>
 
 #include <libudev.h>
 #include <libinput.h>
@@ -52,10 +50,6 @@ static void *handle_input(void *user_data)
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
-	fprintf(stderr, "%s\n", path);
-	struct stat st;
-	stat(path, &st);
-	fprintf(stderr, "%u:%u\n", major(st.st_rdev), minor(st.st_rdev));
 	int fd = open(path, flags);
 	if (fd < 0)
 		fprintf(stderr, "Failed to open %s because of %s.\n", path,
