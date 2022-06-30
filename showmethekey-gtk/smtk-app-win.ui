@@ -1,100 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <!--
-    Don't indent translatable properties because we will translate it,
-    and don't want space.
-  -->
+  <requires lib="gtk" version="4.0" />
   <object class="GtkImage" id="menu_image">
-    <property name="visible">true</property>
     <property name="icon_name">open-menu-symbolic</property>
   </object>
-  <!--
-    We could build popover menu here directly, but it seems GTK tutorial
-    prefer building menu from GMenuModel.
-  -->
-  <!-- <object class="GtkPopoverMenu" id="menu">
-    <property name="can-focus">false</property>
-    <child>
-      <object class="GtkBox">
-        <property name="visible">true</property>
-        <property name="can_focus">false</property>
-        <property name="margin">12</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkModelButton">
-            <property name="visible">true</property>
-            <property name="can_focus">false</property>
-            <property name="text" translatable="yes">_Usage</property>
-            <property name="action-name">app.usage</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkSeparator">
-            <property name="visible">true</property>
-            <property name="margin-top">6</property>
-            <property name="margin-bottom">6</property>
-          </object>
-        </child>
-        <child>
-          <object class="GtkModelButton">
-            <property name="visible">true</property>
-            <property name="can_focus">false</property>
-            <property name="text" translatable="yes">_Quit</property>
-            <property name="action-name">app.quit</property>
-          </object>
-        </child>
-      </object>
-    </child>
-  </object> -->
   <template class="SmtkAppWin" parent="GtkApplicationWindow">
-    <property name="visible">true</property>
     <property name="icon-name">one.alynx.showmethekey</property>
     <property name="title" translatable="yes">Show Me The Key</property>
-    <!-- <property name="default-width">800</property> -->
-    <!-- <property name="default-height">600</property> -->
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header">
-        <property name="visible">true</property>
-        <property name="title" translatable="yes">Show Me The Key</property>
-        <property name="show-close-button">true</property>
-        <child>
+        <property name="title-widget">
+          <object class="GtkLabel">
+            <property name="label" translatable="yes">Show Me The Key</property>
+            <property name="single-line-mode">true</property>
+            <style>
+              <class name="title"/>
+            </style>
+          </object>
+        </property>
+        <property name="show-title-buttons">true</property>
+        <child type="start">
           <object class="GtkSwitch" id="keys_win_switch">
-            <property name="visible">true</property>
             <property name="hexpand">false</property>
             <property name="halign">center</property>
-            <!--
-              If you want a widget to grab default focus,
-              you need to set this manually.
-            -->
-            <property name="can-default">true</property>
             <signal
               name="notify::active"
               handler="smtk_app_win_on_keys_win_switch_active"
               object="SmtkAppWin"
               swapped="yes" />
           </object>
-          <packing>
-            <property name="pack_type">start</property>
-          </packing>
         </child>
-        <child>
+        <child type="end">
           <object class="GtkMenuButton" id="menu_button">
-            <property name="visible">true</property>
-            <property name="use-popover">true</property>
-            <property name="image">menu_image</property>
             <property name="tooltip-text" translatable="yes">Menu</property>
-            <!-- Will bind GMenuModel in code. -->
-            <!-- <property name="popover">menu</property> -->
+            <property name="icon-name">open-menu-symbolic</property>
+            <accessibility>
+              <property name="label" translatable="yes">Primary menu</property>
+            </accessibility>
           </object>
-          <packing>
-            <property name="pack_type">end</property>
-          </packing>
         </child>
       </object>
     </child>
     <child>
       <object class="GtkBox">
-        <property name="visible">true</property>
         <property name="orientation">vertical</property>
         <property name="margin-top">10</property>
         <property name="margin-start">10</property>
@@ -103,13 +51,11 @@
         <property name="spacing">10</property>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
                 <property name="use-underline">true</property>
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Temporary _Hide</property>
                 <property name="mnemonic-widget">hide_switch</property>
                 <property name="hexpand">true</property>
@@ -118,7 +64,6 @@
             </child>
             <child>
               <object class="GtkSwitch" id="hide_switch">
-                <property name="visible">true</property>
                 <property name="hexpand">false</property>
                 <property name="halign">end</property>
                 <property name="sensitive">false</property>
@@ -133,13 +78,11 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
                 <property name="use-underline">true</property>
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Show _Mouse Button</property>
                 <property name="mnemonic-widget">mouse_switch</property>
                 <property name="hexpand">true</property>
@@ -148,7 +91,6 @@
             </child>
             <child>
               <object class="GtkSwitch" id="mouse_switch">
-                <property name="visible">true</property>
                 <property name="hexpand">false</property>
                 <property name="halign">end</property>
                 <property name="active">true</property>
@@ -158,12 +100,10 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Display Mode</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
@@ -171,7 +111,6 @@
             </child>
             <child>
               <object class="GtkComboBoxText" id="mode_selector">
-                <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">end</property>
                 <!-- Must keep the same sequence with SmtkKeyMode. -->
@@ -186,12 +125,10 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Width (px)</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
@@ -199,7 +136,6 @@
             </child>
             <child>
               <object class="GtkSpinButton" id="width_entry">
-                <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">end</property>
                 <!-- Keep 0 digit after dot because we are using it as int. -->
@@ -211,11 +147,9 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <child>
               <object class="GtkLabel">
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Height (px)</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
@@ -223,7 +157,6 @@
             </child>
             <child>
               <object class="GtkSpinButton" id="height_entry">
-                <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">end</property>
                 <!-- Keep 0 digit after dot because we are using it as int. -->
@@ -235,11 +168,9 @@
         </child>
         <child>
           <object class="GtkBox">
-            <property name="visible">true</property>
             <property name="orientation">horizontal</property>
             <child>
               <object class="GtkLabel">
-                <property name="visible">true</property>
                 <property name="label" translatable="yes">Timeout (ms)</property>
                 <property name="hexpand">true</property>
                 <property name="halign">start</property>
@@ -247,7 +178,6 @@
             </child>
             <child>
               <object class="GtkSpinButton" id="timeout_entry">
-                <property name="visible">true</property>
                 <property name="hexpand">true</property>
                 <property name="halign">end</property>
                 <!-- Keep 0 digit after dot because we are using it as int. -->

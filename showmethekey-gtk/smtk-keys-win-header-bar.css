@@ -4,7 +4,9 @@ window.smtk-keys-win headerbar.titlebar {
   /* In some theme (e.g. Adwaita) it set a background image. */
   background-image: none;
   /* Use this to get a compact header bar when subtitle is disabled. */
-  min-height: 0px;
+  /* Not sure why GTK4's actual input region is smaller than allocation, so */
+  /* don't use this to make it bigger. */
+  /* min-height: 0px; */
   box-shadow: none;
   border: none;
 }

@@ -63,7 +63,7 @@ Please help package showmethekey to your distribution!
 - udev (or systemd)
 - libinput
 - glib2
-- gtk3
+- gtk4
 - json-glib
 - cairo
 - pango

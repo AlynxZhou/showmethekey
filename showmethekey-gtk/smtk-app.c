@@ -43,9 +43,7 @@ static void quit_action(GSimpleAction *action, GVariant *parameter,
 {
 	SmtkApp *app = SMTK_APP(user_data);
 
-	// Destroy window manually so we can told CLI backend to stop.
-	if (app->win != NULL)
-		gtk_widget_destroy(app->win);
+	g_clear_pointer((GtkWindow **)&app->win, gtk_window_destroy);
 
 	g_application_quit(G_APPLICATION(app));
 }
@@ -109,7 +107,7 @@ static void smtk_app_startup(GApplication *g_app)
 }
 
 // See <https://developer.gnome.org/gio/stable/GApplication.html#GApplication-handle-local-options>.
-static gint smtk_app_handle_local_options(GApplication *application,
+static int smtk_app_handle_local_options(GApplication *application,
 					  GVariantDict *options)
 {
 	if (g_variant_dict_contains(options, "version")) {
@@ -133,9 +131,6 @@ static void smtk_app_class_init(SmtkAppClass *app_class)
 
 SmtkApp *smtk_app_new(void)
 {
-	// See <https://honk.sigxcpu.org/con/GTK__and_the_application_id.html>.
-	// This is needed for GTK 3.
-	g_set_prgname("one.alynx.showmethekey");
 	return g_object_new(SMTK_TYPE_APP, "application-id",
 			    "one.alynx.showmethekey", NULL);
 }

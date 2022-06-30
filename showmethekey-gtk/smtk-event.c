@@ -5,13 +5,13 @@
 
 struct _SmtkEvent {
 	GObject parent_instance;
-	gchar *source;
+	char *source;
 	SmtkEventType event_type;
 	SmtkEventState event_state;
-	gchar *device_name;
-	gchar *key_name;
-	guint32 key_code;
-	guint32 time_stamp;
+	char *device_name;
+	char *key_name;
+	unsigned int key_code;
+	unsigned int time_stamp;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkEvent, smtk_event, G_TYPE_OBJECT)
@@ -25,7 +25,7 @@ enum { PROP_0, PROP_SOURCE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
-static void smtk_event_set_property(GObject *object, guint property_id,
+static void smtk_event_set_property(GObject *object, unsigned int property_id,
 				    const GValue *value, GParamSpec *pspec)
 {
 	SmtkEvent *event = SMTK_EVENT(object);
@@ -43,7 +43,7 @@ static void smtk_event_set_property(GObject *object, guint property_id,
 	}
 }
 
-static void smtk_event_get_property(GObject *object, guint property_id,
+static void smtk_event_get_property(GObject *object, unsigned int property_id,
 				    GValue *value, GParamSpec *pspec)
 {
 	SmtkEvent *event = SMTK_EVENT(object);
@@ -149,7 +149,7 @@ static void smtk_event_class_init(SmtkEventClass *event_class)
 					  obj_properties);
 }
 
-SmtkEvent *smtk_event_new(gchar *source, GError **error)
+SmtkEvent *smtk_event_new(char *source, GError **error)
 {
 	SmtkEvent *event =
 		g_object_new(SMTK_TYPE_EVENT, "source", source, NULL);
@@ -177,21 +177,21 @@ SmtkEventState smtk_event_get_event_state(SmtkEvent *event)
 	return event->event_state;
 }
 
-const gchar *smtk_event_get_device_name(SmtkEvent *event)
+const char *smtk_event_get_device_name(SmtkEvent *event)
 {
 	g_return_val_if_fail(event != NULL, NULL);
 
 	return event->device_name;
 }
 
-const gchar *smtk_event_get_key_name(SmtkEvent *event)
+const char *smtk_event_get_key_name(SmtkEvent *event)
 {
 	g_return_val_if_fail(event != NULL, NULL);
 
 	return event->key_name;
 }
 
-guint32 smtk_event_get_key_code(SmtkEvent *event)
+unsigned int smtk_event_get_key_code(SmtkEvent *event)
 {
 	// 0 is KEY_RESERVED for evdev.
 	g_return_val_if_fail(event != NULL, 0);
@@ -199,7 +199,7 @@ guint32 smtk_event_get_key_code(SmtkEvent *event)
 	return event->key_code;
 }
 
-guint32 smtk_event_get_time_stamp(SmtkEvent *event)
+unsigned int smtk_event_get_time_stamp(SmtkEvent *event)
 {
 	g_return_val_if_fail(event != NULL, 0);
 

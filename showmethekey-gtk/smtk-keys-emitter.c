@@ -15,26 +15,26 @@ struct _SmtkKeysEmitter {
 	GDataInputStream *cli_out;
 
 	GThread *poller;
-	gboolean polling;
+	bool polling;
 
 	GThread *timer_thread;
-	gboolean timer_running;
+	bool timer_running;
 	GTimer *timer;
-	gint timeout;
+	int timeout;
 
 	GPtrArray *keys_array;
 	GMutex keys_mutex;
 
 	SmtkKeyMode mode;
-	gboolean show_mouse;
-	gboolean waiting;
+	bool show_mouse;
+	bool waiting;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
 enum { SIG_UPDATE_LABEL, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
-static guint obj_signals[N_SIGNALS] = { 0 };
+static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
 enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
 
@@ -59,7 +59,7 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	if (emitter->cli != NULL &&
 	    g_subprocess_get_exit_status(emitter->cli) != 0) {
 		// Better to close thread here to prevent a lot of error.
-		emitter->polling = FALSE;
+		emitter->polling = false;
 		if (emitter->poller != NULL) {
 			g_debug("Stop poller because cli exitted.");
 			g_thread_join(emitter->poller);
@@ -70,7 +70,7 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	g_object_unref(emitter);
 }
 
-static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
+static void smtk_keys_emitter_set_property(GObject *object, unsigned int property_id,
 					   const GValue *value,
 					   GParamSpec *pspec)
 {
@@ -93,7 +93,7 @@ static void smtk_keys_emitter_set_property(GObject *object, guint property_id,
 	}
 }
 
-static void smtk_keys_emitter_get_property(GObject *object, guint property_id,
+static void smtk_keys_emitter_get_property(GObject *object, unsigned int property_id,
 					   GValue *value, GParamSpec *pspec)
 {
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
@@ -121,7 +121,8 @@ static void idle_destroy_function(gpointer user_data)
 	g_object_unref(emitter);
 }
 
-static gboolean idle_function(gpointer user_data)
+// true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
+static int idle_function(gpointer user_data)
 {
 	// Here we back to UI thread.
 	// Looks like we may have many idle_function() run at the same time.
@@ -129,12 +130,12 @@ static gboolean idle_function(gpointer user_data)
 	// Instead we only join them here.
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
 	// Need to use sans, monospace cannot be smaller.
-	gchar *label_text = g_strjoinv(
+	char *label_text = g_strjoinv(
 		"<span font_family=\"sans\" size=\"smaller\"> </span>",
-		(gchar **)emitter->keys_array->pdata);
+		(char **)emitter->keys_array->pdata);
 	g_signal_emit_by_name(emitter, "update-label", label_text);
 	g_free(label_text);
-	return FALSE;
+	return 0;
 }
 
 static void trigger_idle_function(SmtkKeysEmitter *emitter)
@@ -191,7 +192,7 @@ static gpointer poller_function(gpointer user_data)
 			continue;
 		}
 
-		gchar *key = NULL;
+		char *key = NULL;
 		// Always get key with SmtkKeysMapper, it will update XKB state.
 		switch (emitter->mode) {
 		case SMTK_KEY_MODE_COMPOSED:
@@ -213,8 +214,8 @@ static gpointer poller_function(gpointer user_data)
 			    !emitter->waiting) {
 				// We don't free inserted text here,
 				// GPtrArray will free them.
-				gchar *escaped = g_markup_escape_text(key, -1);
-				gchar *marked = g_strconcat("<u>", escaped,
+				char *escaped = g_markup_escape_text(key, -1);
+				char *marked = g_strconcat("<u>", escaped,
 							    "</u>", NULL);
 				g_free(escaped);
 
@@ -246,7 +247,7 @@ static gpointer timer_function(gpointer user_data) {
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
 	while (emitter->timer_running) {
 		g_mutex_lock(&emitter->keys_mutex);
-		gint elapsed = g_timer_elapsed(emitter->timer, NULL) * 1000.0;
+		int elapsed = g_timer_elapsed(emitter->timer, NULL) * 1000.0;
 		g_mutex_unlock(&emitter->keys_mutex);
 
 		if (emitter->timeout > 0 && elapsed > emitter->timeout) {
@@ -290,7 +291,7 @@ static void smtk_keys_emitter_finalize(GObject *object)
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
 
 	if (emitter->keys_array != NULL) {
-		g_ptr_array_free(emitter->keys_array, TRUE);
+		g_ptr_array_free(emitter->keys_array, true);
 		emitter->keys_array = NULL;
 	}
 
@@ -319,7 +320,7 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
-		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
+		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
@@ -329,7 +330,7 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(gboolean show_mouse, SmtkKeyMode mode, gint timeout,
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode, int timeout,
 				       GError **error)
 {
 	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode",
@@ -377,14 +378,14 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	emitter->cli_out = g_data_input_stream_new(
 		g_subprocess_get_stdout_pipe(emitter->cli));
 
-	emitter->polling = TRUE;
+	emitter->polling = true;
 	emitter->poller =
 		g_thread_try_new("poller", poller_function, emitter, error);
 	// emitter->error is already set, just return.
 	if (emitter->poller == NULL)
 		return;
 
-	emitter->timer_running = TRUE;
+	emitter->timer_running = true;
 	emitter->timer = g_timer_new();
 
 	emitter->timer_thread = g_thread_try_new("timer", timer_function, emitter, error);
@@ -418,7 +419,7 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 	}
 
 	if (emitter->poller != NULL) {
-		emitter->polling = FALSE;
+		emitter->polling = false;
 		// This will wait until thread exited.
 		// It will call g_thread_unref() internal
 		// so we don't need to do it.
@@ -428,7 +429,7 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 	}
 
 	if (emitter->timer_thread != NULL) {
-		emitter->timer_running = FALSE;
+		emitter->timer_running = false;
 		g_thread_join(emitter->timer_thread);
 		emitter->timer_thread = NULL;
 	}
@@ -443,12 +444,12 @@ void smtk_keys_emitter_pause(SmtkKeysEmitter *emitter)
 {
 	g_return_if_fail(emitter != NULL);
 
-	emitter->waiting = TRUE;
+	emitter->waiting = true;
 }
 
 void smtk_keys_emitter_resume(SmtkKeysEmitter *emitter)
 {
 	g_return_if_fail(emitter != NULL);
 
-	emitter->waiting = FALSE;
+	emitter->waiting = false;
 }

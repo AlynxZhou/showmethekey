@@ -1,3 +1,6 @@
+#include "cairo.h"
+#include "pango/pango-font.h"
+#include "pango/pango-layout.h"
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
@@ -10,10 +13,11 @@ struct _SmtkKeysWin {
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *keys_label;
+	PangoFontDescription *keys_font;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
-	gboolean show_mouse;
-	gint timeout;
+	bool show_mouse;
+	int timeout;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
@@ -22,7 +26,7 @@ enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
-static void smtk_keys_win_set_property(GObject *object, guint property_id,
+static void smtk_keys_win_set_property(GObject *object, unsigned int property_id,
 				       const GValue *value, GParamSpec *pspec)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
@@ -44,7 +48,7 @@ static void smtk_keys_win_set_property(GObject *object, guint property_id,
 	}
 }
 
-static void smtk_keys_win_get_property(GObject *object, guint property_id,
+static void smtk_keys_win_get_property(GObject *object, unsigned int property_id,
 				       GValue *value, GParamSpec *pspec)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
@@ -69,9 +73,9 @@ static void smtk_keys_win_get_property(GObject *object, guint property_id,
 static void smtk_keys_win_emitter_on_error_cli_exit(SmtkKeysWin *win,
 						    SmtkKeysEmitter *emitter)
 {
-	// It seems calling g_object_unref() on gtk_widget is not enough?
-	// We need to call gtk_widget_destroy().
-	gtk_widget_destroy(GTK_WIDGET(win));
+	// It seems calling g_object_unref() on GtkWindow is not enough?
+	// We need to call gtk_window_destroy().
+	gtk_window_destroy(GTK_WINDOW(win));
 }
 
 static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
@@ -85,71 +89,56 @@ static void smtk_keys_win_emitter_on_update_label(SmtkKeysWin *win,
 	// g_free(label_text);
 }
 
-static void smtk_keys_win_handle_on_size_allocate(SmtkKeysWin *win,
-						  GdkRectangle *allocation,
-						  GtkWidget *header_bar)
+static void smtk_keys_win_size_allocate(GtkWidget *widget, int width, int height, int baseline)
 {
-	// Widget's allocation is only usable after realize.
-	// However, the first allocation we get in realize might be not correct.
-	// So we have to connect to header_bar's size-allocation signal and
-	// update input shape with it.
-	cairo_region_t *clickable_region =
-		cairo_region_create_rectangle(allocation);
-	// GtkNative *native = gtk_widget_get_native(GTK_WIDGET(win));
-	// if (native != NULL) {
-	// GdkSurface *surface = gtk_native_get_surface(native);
-	// gdk_surface_set_input_region(surface, NULL);
-	// }
-	gtk_widget_input_shape_combine_region(GTK_WIDGET(win),
-					      clickable_region);
-	cairo_region_destroy(clickable_region);
-}
+	SmtkKeysWin *win = SMTK_KEYS_WIN(widget);
 
-static void smtk_keys_win_on_size_allocate(SmtkKeysWin *win,
-					   GdkRectangle *allocation,
-					   gpointer user_data)
-{
-	PangoLayout *layout = gtk_label_get_layout(GTK_LABEL(win->keys_label));
+	// We handle our magic after GTK done its internal layout compute.
+	// We only read but not adjust allocation so this is safe.
+	GTK_WIDGET_CLASS(smtk_keys_win_parent_class)->size_allocate(widget, width, height, baseline);
 
-	PangoFontDescription *font = pango_font_description_new();
-	pango_font_description_set_family(font, "monospace");
+	g_debug("Size: %dx%d\n", width, height);
+
 	// I am not sure why the avaliable height * PANGO_SCALE is too big,
 	// just make it smaller, also too big will have less chars.
-	pango_font_description_set_size(font,
-					allocation->height * 0.3 * PANGO_SCALE);
+	pango_font_description_set_size(win->keys_font, height * 0.3 * PANGO_SCALE);
+	// GtkLabel maybe re-create layout, so we have to update this everytime.
+	PangoLayout *layout = gtk_label_get_layout(GTK_LABEL(win->keys_label));
+	pango_layout_set_font_description(layout, win->keys_font);
 
-	pango_layout_set_font_description(layout, font);
-	pango_font_description_free(font);
-}
-
-static gboolean smtk_keys_win_on_draw(SmtkKeysWin *win, cairo_t *cr,
-				      gpointer user_data)
-{
-	cairo_set_source_rgba(cr, 0, 0, 0, 0.5);
-	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-	cairo_paint(cr);
-	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-	return FALSE;
+	// Widget's allocation is only usable after realize.
+	GtkAllocation handle_allocation;
+	gtk_widget_get_allocation(win->handle, &handle_allocation);
+	g_debug("Clickable Area: x: %d, y: %d, w: %d, h: %d\n", handle_allocation.x, handle_allocation.y, handle_allocation.width, handle_allocation.height);
+	cairo_region_t *clickable_region =
+		cairo_region_create_rectangle(&handle_allocation);
+	GtkNative *native = gtk_widget_get_native(widget);
+	if (native != NULL) {
+		GdkSurface *surface = gtk_native_get_surface(native);
+		gdk_surface_set_input_region(surface, clickable_region);
+	}
+	cairo_region_destroy(clickable_region);
 }
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
+	// TODO: Is this still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
+	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(win->header_bar), false);
 	// Disable subtitle to get a compact header bar.
-	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), FALSE);
+	// gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
 	win->handle = gtk_label_new(_("Clickable Area"));
-	gtk_header_bar_set_custom_title(GTK_HEADER_BAR(win->header_bar),
+	gtk_header_bar_set_title_widget(GTK_HEADER_BAR(win->header_bar),
 					win->handle);
-	gtk_widget_show(win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
-	// We need to mark widget as visible manually in GTK3.
-	gtk_widget_show(win->header_bar);
 
+	// TODO: Maybe it's better to use Cairo/Pango/GtkBox to do some custom
+	// widget drawing, it's easier to fit container and looks better.
 	// CSS is used to make a transparent titlebar,
 	// because it's above window.
 	win->keys_label = gtk_label_new(NULL);
@@ -162,31 +151,18 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// it does not limit the label to only 1 char, which is I want.
 	// See <https://developer.gnome.org/gtk3/stable/GtkLabel.html#label-text-layout>.
 	gtk_label_set_max_width_chars(GTK_LABEL(win->keys_label), 1);
-	gtk_label_set_use_markup(GTK_LABEL(win->keys_label), TRUE);
-	// We should update label size on window's `size-allocation` signal.
-	gtk_container_add(GTK_CONTAINER(win), win->keys_label);
-	gtk_widget_show(win->keys_label);
-
-	g_signal_connect(win, "draw", G_CALLBACK(smtk_keys_win_on_draw), NULL);
-	g_signal_connect_object(
-		win->handle, "size-allocate",
-		G_CALLBACK(smtk_keys_win_handle_on_size_allocate), win,
-		G_CONNECT_SWAPPED);
-	g_signal_connect(win, "size-allocate",
-			 G_CALLBACK(smtk_keys_win_on_size_allocate), NULL);
+	gtk_label_set_use_markup(GTK_LABEL(win->keys_label), true);
+	// By default label's font description is NULL which means inherited.
+	// We give it a special one.
+	win->keys_font = pango_font_description_new();
+	pango_font_description_set_family(win->keys_font, "monospace");
+	gtk_window_set_child(GTK_WINDOW(win), win->keys_label);
 
 	// GTK4 dropped those API, so we need to implement
 	// those when upgrading GTK4 by ourselves via WM hints.
-	gtk_window_set_keep_above(GTK_WINDOW(win), TRUE);
-	gtk_window_stick(GTK_WINDOW(win));
-
-	// We can not make a half transparent window with CSS,
-	// and need to set visual and do custom draw.
-	// GTK4 dropped this and we may update it.
-	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(win));
-	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-	if (visual != NULL)
-		gtk_widget_set_visual(GTK_WIDGET(win), visual);
+	// See <https://discourse.gnome.org/t/setting-x11-properties-in-gtk4/9985/3>.
+	// gtk_window_set_keep_above(GTK_WINDOW(win), true);
+	// gtk_window_stick(GTK_WINDOW(win));
 
 	// We don't want to paint the app shadow and decoration,
 	// so just use a custom CSS to disable decoration outside the window.
@@ -258,9 +234,7 @@ static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	// It seems that GTK3's gtk_widget_destroy() will automatically drop
-	// reference to children, while GTK4's gtk_window_destroy() not,
-	// so we will add children unparent code here in future.
+	g_clear_pointer(&win->keys_font, pango_font_description_free);
 
 	if (win->emitter != NULL) {
 		smtk_keys_emitter_stop_async(win->emitter);
@@ -274,6 +248,7 @@ static void smtk_keys_win_dispose(GObject *object)
 static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(win_class);
+	GtkWidgetClass *widget_class = GTK_WIDGET_CLASS(win_class);
 
 	object_class->set_property = smtk_keys_win_set_property;
 	object_class->get_property = smtk_keys_win_get_property;
@@ -282,12 +257,16 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 
 	object_class->dispose = smtk_keys_win_dispose;
 
+	// In GTK4 size allocate is not a signal but a virtual method, but I
+	// really need it.
+	widget_class->size_allocate = smtk_keys_win_size_allocate;
+
 	obj_properties[PROP_MODE] =
 		g_param_spec_enum("mode", "Mode", "Key Mode",
 				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
-		"show-mouse", "Show Mouse", "Show Mouse Button", TRUE,
+		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
@@ -297,30 +276,24 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
-			     guint64 width, guint64 height, gint timeout,
+GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse, SmtkKeyMode mode,
+			     int width, int height, int timeout,
 			     GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
 		// window rules for it.
-		SMTK_TYPE_KEYS_WIN, "visible", TRUE, "title",
+		SMTK_TYPE_KEYS_WIN, "visible", true, "title",
 		"Floating Window - Show Me The Key", "icon-name",
-		"one.alynx.showmethekey", "width-request", width,
-		"height-request", height, "can-focus", FALSE, "focus-on-click",
-		FALSE,
-		// This window is able to be focused, so this prevent that when
-		// you start it and press Enter, and focus is on the app window,
-		// and it closes.
-		"focus-on-map", TRUE, "accept-focus", TRUE,
-		// Must be paintable for a transparent window.
-		"app-paintable", TRUE, "vexpand", FALSE, "vexpand-set", TRUE,
-		"hexpand", FALSE, "hexpand-set", TRUE,
+		"one.alynx.showmethekey", "can-focus", false, "focus-on-click",
+		false,
+		"vexpand", false, "vexpand-set", true,
+		"hexpand", false, "hexpand-set", true,
 		// We cannot focus on this window, and it has no border,
 		// so user resize is meaningless for it.
-		"resizable", FALSE,
+		"resizable", false,
 		// Wayland does not support this, it's ok.
-		// "skip-pager-hint", TRUE, "skip-taskbar-hint", TRUE,
+		// "skip-pager-hint", true, "skip-taskbar-hint", true,
 		"mode", mode, "show-mouse", show_mouse, "timeout", timeout,
 		NULL);
 
@@ -329,9 +302,12 @@ GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
 		// GtkWidget is GInitiallyUnowned,
 		// so we need to sink the floating first.
 		g_object_ref_sink(win);
-		gtk_widget_destroy(GTK_WIDGET(win));
+		gtk_window_destroy(GTK_WINDOW(win));
 		return NULL;
 	}
+
+	gtk_window_set_default_size(GTK_WINDOW(win), width, height);
+	gtk_window_set_transient_for(GTK_WINDOW(win), GTK_WINDOW(parent));
 
 	// GTK always return GtkWidget, so do I.
 	return GTK_WIDGET(win);
@@ -352,3 +328,4 @@ void smtk_keys_win_show(SmtkKeysWin *win)
 	gtk_widget_show(GTK_WIDGET(win));
 	smtk_keys_emitter_resume(win->emitter);
 }
+

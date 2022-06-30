@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 
+#include "smtk-app-win.h"
 #include "smtk-keys-emitter.h"
 
 G_BEGIN_DECLS
@@ -10,8 +11,8 @@ G_BEGIN_DECLS
 #define SMTK_TYPE_KEYS_WIN smtk_keys_win_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeysWin, smtk_keys_win, SMTK, KEYS_WIN, GtkWindow)
 
-GtkWidget *smtk_keys_win_new(gboolean show_mouse, SmtkKeyMode mode,
-			     guint64 width, guint64 height, gint timeout, GError **error);
+GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse, SmtkKeyMode mode,
+			     int width, int height, int timeout, GError **error);
 void smtk_keys_win_hide(SmtkKeysWin *win);
 void smtk_keys_win_show(SmtkKeysWin *win);
 

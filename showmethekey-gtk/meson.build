@@ -22,7 +22,7 @@ gtk_headers = files(
 
 gtk_dependencies = []
 gtk_include_directories = []
-gtk = dependency('gtk+-3.0', required: true)
+gtk = dependency('gtk4', required: true)
 glib = dependency('glib-2.0', required: true)
 json_glib = dependency('json-glib-1.0', required: true)
 gio = dependency('gio-2.0', required: true)
