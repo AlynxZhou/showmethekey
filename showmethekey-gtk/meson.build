@@ -25,15 +25,14 @@ gtk_headers = files(
 gtk_dependencies = []
 gtk_include_directories = []
 gtk = dependency('gtk4', required: true)
+x11 = dependency('x11')
 glib = dependency('glib-2.0', required: true)
 json_glib = dependency('json-glib-1.0', required: true)
 gio = dependency('gio-2.0', required: true)
 cairo = dependency('cairo', required: true)
 pango = dependency('pango', required: true)
 xkbcommon = dependency('xkbcommon', required: true)
-# x11 = dependency('x11', required: true)
-# xext = dependency('xext', required: true)
-gtk_dependencies += [gtk, glib, json_glib, gio, cairo, pango, xkbcommon]
+gtk_dependencies += [gtk, x11, glib, json_glib, gio, cairo, pango, xkbcommon]
 # For config.h.
 gtk_include_directories += include_directories('../')
 

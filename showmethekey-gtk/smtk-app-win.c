@@ -81,7 +81,7 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(win, show_mouse, mode,
+			win->keys_win = smtk_keys_win_new(show_mouse, mode,
 							  width, height,
 							  timeout, &error);
 			if (win->keys_win == NULL) {

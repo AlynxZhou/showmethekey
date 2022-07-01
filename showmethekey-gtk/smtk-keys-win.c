@@ -1,5 +1,8 @@
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
+#ifdef GDK_WINDOWING_X11
+#	include <gdk/x11/gdkx.h>
+#endif
 
 #include "smtk.h"
 #include "smtk-keys-win.h"
@@ -85,6 +88,106 @@ static void smtk_keys_win_emitter_on_key(SmtkKeysWin *win, char key[])
 	smtk_keys_area_add_key(SMTK_KEYS_AREA(win->area), g_strdup(key));
 }
 
+#ifdef GDK_WINDOWING_X11
+// See <https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gdk/x11/gdksurface-x11.c#L2310-2337>.
+static void gdk_x11_surface_wmspec_change_state(GdkSurface *surface, bool add,
+						const char *state)
+{
+	GdkDisplay *display = gdk_surface_get_display(surface);
+	Display *xdisplay = gdk_x11_display_get_xdisplay(display);
+	XClientMessageEvent xclient;
+
+#	define _NET_WM_STATE_REMOVE 0
+#	define _NET_WM_STATE_ADD 1
+#	define _NET_WM_STATE_TOGGLE 2
+
+	memset(&xclient, 0, sizeof(xclient));
+	xclient.type = ClientMessage;
+	xclient.window = gdk_x11_surface_get_xid(surface);
+	xclient.display = xdisplay;
+	xclient.message_type =
+		gdk_x11_get_xatom_by_name_for_display(display, "_NET_WM_STATE");
+	xclient.format = 32;
+	xclient.data.l[0] = add ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+	xclient.data.l[1] =
+		gdk_x11_get_xatom_by_name_for_display(display, state);
+	xclient.data.l[2] = None;
+	// Source indication.
+	xclient.data.l[3] = 1;
+	xclient.data.l[4] = 0;
+
+	XSendEvent(xdisplay, gdk_x11_display_get_xrootwindow(display), False,
+		   SubstructureRedirectMask | SubstructureNotifyMask,
+		   (XEvent *)&xclient);
+}
+
+// See <https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/x11/gdkwindow-x11.c#L4122-4168>.
+static void gdk_x11_surface_wmspec_change_desktop(GdkSurface *surface,
+						  long desktop)
+{
+	GdkDisplay *display = gdk_surface_get_display(surface);
+	Display *xdisplay = gdk_x11_display_get_xdisplay(display);
+	XClientMessageEvent xclient;
+
+	memset(&xclient, 0, sizeof(xclient));
+	xclient.type = ClientMessage;
+	xclient.window = gdk_x11_surface_get_xid(surface);
+	xclient.display = xdisplay;
+	xclient.message_type = gdk_x11_get_xatom_by_name_for_display(
+		display, "_NET_WM_DESKTOP");
+	xclient.format = 32;
+	xclient.data.l[0] = desktop;
+	// Source indication.
+	xclient.data.l[1] = 0;
+	xclient.data.l[2] = 0;
+	xclient.data.l[3] = 0;
+	xclient.data.l[4] = 0;
+
+	XSendEvent(xdisplay, gdk_x11_display_get_xrootwindow(display), False,
+		   SubstructureRedirectMask | SubstructureNotifyMask,
+		   (XEvent *)&xclient);
+}
+#endif
+
+static void smtk_keys_win_on_map(SmtkKeysWin *win, gpointer user_data)
+{
+	// GTK4 dropped those API, so we need to implement those by ourselves
+	// via X11 WMSpec.
+	// See <https://discourse.gnome.org/t/setting-x11-properties-in-gtk4/9985/3>.
+	// gtk_window_set_keep_above(GTK_WINDOW(win), true);
+	// gtk_window_stick(GTK_WINDOW(win));
+#ifdef GDK_WINDOWING_X11
+	GtkNative *native = gtk_widget_get_native(GTK_WIDGET(win));
+	if (native != NULL) {
+		GdkSurface *surface = gtk_native_get_surface(native);
+		GdkDisplay *display = gdk_surface_get_display(surface);
+		if (GDK_IS_X11_DISPLAY(display)) {
+			// Always on top.
+			// See <https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/x11/gdkwindow-x11.c#L4383-4407>.
+			// Need to remove _NET_WM_STATE_BELOW first.
+			gdk_x11_surface_wmspec_change_state(
+				surface, false, "_NET_WM_STATE_BELOW");
+			gdk_x11_surface_wmspec_change_state(
+				surface, true, "_NET_WM_STATE_ABOVE");
+
+			// Always on visible workspaces.
+			// See <https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gdk/x11/gdkwindow-x11.c#L4122-4168>.
+			// _NET_WM_STATE_STICKY only means WM should keep the
+			// window's position fixed, even when scrolling virtual
+			// desktops.
+			gdk_x11_surface_wmspec_change_state(
+				surface, true, "_NET_WM_STATE_STICKY");
+			// See <https://specifications.freedesktop.org/wm-spec/wm-spec-1.4.html#idm45703946940912>.
+			// Setting desktop to 0xFFFFFFFF means shows on all
+			// desktops.
+			// See <https://specifications.freedesktop.org/wm-spec/wm-spec-1.4.html#idm45703946960064>.
+			gdk_x11_surface_wmspec_change_desktop(surface,
+							      0xFFFFFFFF);
+		}
+	}
+#endif
+}
+
 static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 					int height, int baseline)
 {
@@ -131,11 +234,9 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 					win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
 
-	// GTK4 dropped those API, so we need to implement
-	// those when upgrading GTK4 by ourselves via WM hints.
-	// See <https://discourse.gnome.org/t/setting-x11-properties-in-gtk4/9985/3>.
-	// gtk_window_set_keep_above(GTK_WINDOW(win), true);
-	// gtk_window_stick(GTK_WINDOW(win));
+	// Don't know why but realize does not work.
+	g_signal_connect(GTK_WIDGET(win), "map",
+			 G_CALLBACK(smtk_keys_win_on_map), NULL);
 
 	// We don't want to paint the app shadow and decoration,
 	// so just use a custom CSS to disable decoration outside the window.
@@ -236,9 +337,8 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse,
-			     SmtkKeyMode mode, int width, int height,
-			     int timeout, GError **error)
+GtkWidget *smtk_keys_win_new(bool show_mouse, SmtkKeyMode mode, int width,
+			     int height, int timeout, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -266,7 +366,8 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse,
 	}
 
 	gtk_window_set_default_size(GTK_WINDOW(win), width, height);
-	gtk_window_set_transient_for(GTK_WINDOW(win), GTK_WINDOW(parent));
+	// Setting transient will block showing on all desktop so don't use it.
+	// gtk_window_set_transient_for(GTK_WINDOW(win), GTK_WINDOW(parent));
 
 	// GTK always return GtkWidget, so do I.
 	return GTK_WIDGET(win);

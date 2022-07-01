@@ -11,9 +11,8 @@ G_BEGIN_DECLS
 #define SMTK_TYPE_KEYS_WIN smtk_keys_win_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeysWin, smtk_keys_win, SMTK, KEYS_WIN, GtkWindow)
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *parent, bool show_mouse,
-			     SmtkKeyMode mode, int width, int height,
-			     int timeout, GError **error);
+GtkWidget *smtk_keys_win_new(bool show_mouse, SmtkKeyMode mode, int width,
+			     int height, int timeout, GError **error);
 void smtk_keys_win_hide(SmtkKeysWin *win);
 void smtk_keys_win_show(SmtkKeysWin *win);
 

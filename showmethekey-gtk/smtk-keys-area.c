@@ -118,6 +118,8 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 	// 2: reference point is topleft.x - ink.x, topleft.y - ink.y.
 	// Note that ink.height is not always font_size, so we cannot use
 	// key_padding for vertically center.
+	// TODO: Center place is still not looks good, maybe I need some
+	// baseline placement but not too high.
 	cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
 		      border_y + (border_height - ink.height) / 2.0 - ink.y);
 	pango_cairo_show_layout(area->cr, area->layout);
