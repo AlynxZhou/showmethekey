@@ -1,7 +1,9 @@
 /* Disable window shadow. */
-window.smtk-keys-win decoration {
+window.smtk-keys-win {
   margin: 0;
   box-shadow: none;
+  border-radius: 0;
+  outline: none;
 }
 /* Half transparent window. */
 window.background {

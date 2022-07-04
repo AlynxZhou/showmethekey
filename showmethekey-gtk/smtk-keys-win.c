@@ -14,6 +14,9 @@ struct _SmtkKeysWin {
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *area;
+	GtkCssProvider *basic_css_provider;
+	GtkCssProvider *window_css_provider;
+	GtkCssProvider *header_bar_css_provider;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
 	bool show_mouse;
@@ -234,35 +237,55 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 					win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
 
-	// Don't know why but realize does not work.
-	g_signal_connect(GTK_WIDGET(win), "map",
-			 G_CALLBACK(smtk_keys_win_on_map), NULL);
+	// SmtkKeysWin is not a normal window, we use custom CSS and code to
+	// make it a semi-transparent window, but some strange theme will break
+	// our code (for example, Colloid), instead of writing workaround for
+	// countless third-party themes, just using basic theme is reasonable.
+	// We don't change GtkSettings:gtk-theme-name, because it will affect
+	// all widgets of this program.
+	win->basic_css_provider = gtk_css_provider_new();
+	gtk_css_provider_load_named(win->basic_css_provider, "gtk", "dark");
 
 	// We don't want to paint the app shadow and decoration,
 	// so just use a custom CSS to disable decoration outside the window.
-	GtkCssProvider *window_css_provider = gtk_css_provider_new();
+	win->window_css_provider = gtk_css_provider_new();
 	gtk_css_provider_load_from_resource(
-		window_css_provider,
+		win->window_css_provider,
 		"/one/alynx/showmethekey/smtk-keys-win.css");
 	GtkStyleContext *window_style_context =
 		gtk_widget_get_style_context(GTK_WIDGET(win));
 	gtk_style_context_add_class(window_style_context, "smtk-keys-win");
 	gtk_style_context_add_provider(window_style_context,
-				       GTK_STYLE_PROVIDER(window_css_provider),
+				       GTK_STYLE_PROVIDER(win->window_css_provider),
 				       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	// Override custom theme by setting provider in settings priority.
+	// Only this priority works, it seems that I cannot set theme priority.
+	gtk_style_context_add_provider(window_style_context,
+				       GTK_STYLE_PROVIDER(win->basic_css_provider),
+				       GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
 
 	// It turns out that GtkStyleContext cannot affect child GtkWidgets,
 	// so we have to create independent CSS for headerbar.
-	GtkCssProvider *header_bar_css_provider = gtk_css_provider_new();
+	win->header_bar_css_provider = gtk_css_provider_new();
 	gtk_css_provider_load_from_resource(
-		header_bar_css_provider,
+		win->header_bar_css_provider,
 		"/one/alynx/showmethekey/smtk-keys-win-header-bar.css");
 	GtkStyleContext *header_bar_style_context =
 		gtk_widget_get_style_context(win->header_bar);
+	gtk_style_context_add_class(header_bar_style_context, "header-bar");
 	gtk_style_context_add_provider(
 		header_bar_style_context,
-		GTK_STYLE_PROVIDER(header_bar_css_provider),
+		GTK_STYLE_PROVIDER(win->header_bar_css_provider),
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	// Override custom theme by setting provider in settings priority.
+	// Only this priority works, it seems that I cannot set theme priority.
+	gtk_style_context_add_provider(header_bar_style_context,
+				       GTK_STYLE_PROVIDER(win->basic_css_provider),
+				       GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
+
+	// Don't know why but realize does not work.
+	g_signal_connect(GTK_WIDGET(win), "map",
+			 G_CALLBACK(smtk_keys_win_on_map), NULL);
 }
 
 static void smtk_keys_win_constructed(GObject *object)
@@ -296,6 +319,10 @@ static void smtk_keys_win_constructed(GObject *object)
 static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	g_clear_object(&win->basic_css_provider);
+	g_clear_object(&win->window_css_provider);
+	g_clear_object(&win->header_bar_css_provider);
 
 	if (win->emitter != NULL) {
 		smtk_keys_emitter_stop_async(win->emitter);
