@@ -33,6 +33,12 @@
   </screenshots>
 
   <releases>
+    <release version="1.7.0" date="2022-07-04">
+      <description>
+        <p>Updated to GTK4.</p>
+        <p>Updated to use custom drawing area instead of label for keys.</p>
+      </description>
+    </release>
     <release version="1.6.3" date="2022-06-30">
       <description>
         <p>Updated to remove unused code.</p>
