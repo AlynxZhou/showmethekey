@@ -178,8 +178,11 @@ static void smtk_app_win_dispose(GObject *object)
 
 	g_clear_pointer(&win->settings, g_object_unref);
 
-	// Manually destroy keys_win, so CLI backend will be told to stop.
-	g_clear_pointer((GtkWindow **)&win->keys_win, gtk_window_destroy);
+	// Manually destroy keys_win, so CLI backend will be told to stop.、
+	if (win->keys_win != NULL) {
+		gtk_window_destroy(GTK_WINDOW(win->keys_win));
+		win->keys_win = NULL;
+	}
 
 	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(object);
 }

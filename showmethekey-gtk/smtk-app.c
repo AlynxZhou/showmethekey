@@ -43,7 +43,10 @@ static void quit_action(GSimpleAction *action, GVariant *parameter,
 {
 	SmtkApp *app = SMTK_APP(user_data);
 
-	g_clear_pointer((GtkWindow **)&app->win, gtk_window_destroy);
+	if (app->win != NULL) {
+		gtk_window_destroy(GTK_WINDOW(app->win));
+		app->win = NULL;
+	}
 
 	g_application_quit(G_APPLICATION(app));
 }
