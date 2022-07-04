@@ -21,6 +21,7 @@ struct _SmtkKeysWin {
 	SmtkKeyMode mode;
 	bool show_mouse;
 	int timeout;
+	bool paused;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
@@ -78,13 +79,14 @@ static void smtk_keys_win_get_property(GObject *object,
 static void smtk_keys_win_emitter_on_error_cli_exit(SmtkKeysWin *win,
 						    SmtkKeysEmitter *emitter)
 {
-	// It seems calling g_object_unref() on GtkWindow is not enough?
-	// We need to call gtk_window_destroy().
 	gtk_window_destroy(GTK_WINDOW(win));
 }
 
 static void smtk_keys_win_emitter_on_key(SmtkKeysWin *win, char key[])
 {
+	if (win->paused)
+		return;
+
 	// It seems that GObject closure will free string argument.
 	// See <http://garfileo.is-programmer.com/2011/3/25/gobject-signal-extra-1.25576.html>.
 	// void (*callback)(gpointer instance, const gchar *arg1, gpointer user_data)
@@ -221,10 +223,11 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
-	// TODO: Is this still true for GTK4?
+	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
+	win->paused = false;
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
@@ -255,14 +258,16 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	GtkStyleContext *window_style_context =
 		gtk_widget_get_style_context(GTK_WIDGET(win));
 	gtk_style_context_add_class(window_style_context, "smtk-keys-win");
-	gtk_style_context_add_provider(window_style_context,
-				       GTK_STYLE_PROVIDER(win->window_css_provider),
-				       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	gtk_style_context_add_provider(
+		window_style_context,
+		GTK_STYLE_PROVIDER(win->window_css_provider),
+		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	// Override custom theme by setting provider in settings priority.
 	// Only this priority works, it seems that I cannot set theme priority.
-	gtk_style_context_add_provider(window_style_context,
-				       GTK_STYLE_PROVIDER(win->basic_css_provider),
-				       GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
+	gtk_style_context_add_provider(
+		window_style_context,
+		GTK_STYLE_PROVIDER(win->basic_css_provider),
+		GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
 
 	// It turns out that GtkStyleContext cannot affect child GtkWidgets,
 	// so we have to create independent CSS for headerbar.
@@ -279,9 +284,10 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	// Override custom theme by setting provider in settings priority.
 	// Only this priority works, it seems that I cannot set theme priority.
-	gtk_style_context_add_provider(header_bar_style_context,
-				       GTK_STYLE_PROVIDER(win->basic_css_provider),
-				       GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
+	gtk_style_context_add_provider(
+		header_bar_style_context,
+		GTK_STYLE_PROVIDER(win->basic_css_provider),
+		GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
 
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
@@ -349,16 +355,15 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
 
-	obj_properties[PROP_MODE] =
-		g_param_spec_enum("mode", "Mode", "Key Mode",
-				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
-				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_MODE] = g_param_spec_enum(
+		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
+		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
@@ -400,18 +405,46 @@ GtkWidget *smtk_keys_win_new(bool show_mouse, SmtkKeyMode mode, int width,
 	return GTK_WIDGET(win);
 }
 
-void smtk_keys_win_hide(SmtkKeysWin *win)
+void smtk_keys_win_pause(SmtkKeysWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	smtk_keys_emitter_pause(win->emitter);
-	gtk_widget_hide(GTK_WIDGET(win));
+	win->paused = true;
 }
 
-void smtk_keys_win_show(SmtkKeysWin *win)
+void smtk_keys_win_resume(SmtkKeysWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	gtk_widget_show(GTK_WIDGET(win));
-	smtk_keys_emitter_resume(win->emitter);
+	win->paused = false;
+}
+
+void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse)
+{
+	g_return_if_fail(win != NULL);
+
+	// Pass property to emitter.
+	smtk_keys_emitter_set_show_mouse(win->emitter, show_mouse);
+	// Sync self property.
+	g_object_set(win, "show-mouse", show_mouse, NULL);
+}
+
+void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode)
+{
+	g_return_if_fail(win != NULL);
+
+	// Pass property to emitter.
+	smtk_keys_emitter_set_mode(win->emitter, mode);
+	// Sync self property.
+	g_object_set(win, "mode", mode, NULL);
+}
+
+void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout)
+{
+	g_return_if_fail(win != NULL);
+
+	// Pass property to area.
+	smtk_keys_area_set_timeout(SMTK_KEYS_AREA(win->area), timeout);
+	// Sync self property.
+	g_object_set(win, "timeout", timeout, NULL);
 }

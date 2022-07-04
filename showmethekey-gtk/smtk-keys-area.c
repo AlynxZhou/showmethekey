@@ -196,6 +196,7 @@ static gpointer timer_function(gpointer user_data)
 		g_mutex_unlock(&area->keys_mutex);
 
 		if (area->timeout > 0 && elapsed > area->timeout) {
+			g_debug("Timer triggered, clear keys.");
 			g_mutex_lock(&area->keys_mutex);
 			if (area->keys != NULL)
 				g_slist_free_full(g_steal_pointer(&area->keys),
@@ -261,8 +262,7 @@ static void smtk_keys_area_finalize(GObject *object)
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
-	if (area->keys != NULL)
-		g_slist_free_full(g_steal_pointer(&area->keys), g_free);
+	g_clear_slist(&area->keys, g_free);
 
 	G_OBJECT_CLASS(smtk_keys_area_parent_class)->finalize(object);
 }
@@ -279,7 +279,7 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 
 	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
@@ -290,6 +290,13 @@ GtkWidget *smtk_keys_area_new(int timeout)
 	SmtkKeysArea *area =
 		g_object_new(SMTK_TYPE_KEYS_AREA, "timeout", timeout, NULL);
 	return GTK_WIDGET(area);
+}
+
+void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)
+{
+	g_return_if_fail(area != NULL);
+
+	g_object_set(area, "timeout", timeout, NULL);
 }
 
 void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])

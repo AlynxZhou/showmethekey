@@ -191,27 +191,12 @@ static void smtk_keys_mapper_dispose(GObject *object)
 {
 	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
 
-	if (mapper->xkb_state != NULL) {
-		xkb_state_unref(mapper->xkb_state);
-		mapper->xkb_state = NULL;
-	}
-	if (mapper->xkb_keymap != NULL) {
-		xkb_keymap_unref(mapper->xkb_keymap);
-		mapper->xkb_keymap = NULL;
-	}
-	if (mapper->xkb_context != NULL) {
-		xkb_context_unref(mapper->xkb_context);
-		mapper->xkb_context = NULL;
-	}
+	g_clear_pointer(&mapper->xkb_state, xkb_state_unref);
+	g_clear_pointer(&mapper->xkb_keymap, xkb_keymap_unref);
+	g_clear_pointer(&mapper->xkb_context, xkb_context_unref);
 
-	if (mapper->xkb_mod_names != NULL) {
-		g_hash_table_destroy(mapper->xkb_mod_names);
-		mapper->xkb_mod_names = NULL;
-	}
-	if (mapper->xkb_replace_names != NULL) {
-		g_hash_table_destroy(mapper->xkb_replace_names);
-		mapper->xkb_replace_names = NULL;
-	}
+	g_clear_pointer(&mapper->xkb_mod_names, g_hash_table_destroy);
+	g_clear_pointer(&mapper->xkb_replace_names, g_hash_table_destroy);
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->dispose(object);
 }

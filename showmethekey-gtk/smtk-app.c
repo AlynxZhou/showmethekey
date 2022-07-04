@@ -11,13 +11,22 @@ struct _SmtkApp {
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, GTK_TYPE_APPLICATION)
 
-static void hide_action(GSimpleAction *action, GVariant *parameter,
-			gpointer user_data)
+static void pause_action(GSimpleAction *action, GVariant *parameter,
+			 gpointer user_data)
 {
 	SmtkApp *app = SMTK_APP(user_data);
 
 	if (app->win != NULL)
-		smtk_app_win_toggle_hide_switch(SMTK_APP_WIN(app->win));
+		smtk_app_win_toggle_pause_switch(SMTK_APP_WIN(app->win));
+}
+
+static void mouse_action(GSimpleAction *action, GVariant *parameter,
+			 gpointer user_data)
+{
+	SmtkApp *app = SMTK_APP(user_data);
+
+	if (app->win != NULL)
+		smtk_app_win_toggle_mouse_switch(SMTK_APP_WIN(app->win));
 }
 
 static void usage_action(GSimpleAction *action, GVariant *parameter,
@@ -72,6 +81,7 @@ static void smtk_app_activate(GApplication *g_app)
 	// Application is already single instance.
 	// We use this to prevent mutliply windows.
 	SmtkApp *app = SMTK_APP(g_app);
+
 	if (app->win == NULL) {
 		app->win = smtk_app_win_new(SMTK_APP(app));
 		gtk_window_present(GTK_WINDOW(app->win));
@@ -84,21 +94,25 @@ static void smtk_app_startup(GApplication *g_app)
 
 	// Because application is not a construct property of GtkWindow,
 	// we have to setup accels here.
-	GActionEntry actions[] = { { "hide", hide_action, NULL, NULL, NULL },
+	GActionEntry actions[] = { { "pause", pause_action, NULL, NULL, NULL },
+				   { "mouse", mouse_action, NULL, NULL, NULL },
 				   { "usage", usage_action, NULL, NULL, NULL },
 				   { "about", about_action, NULL, NULL, NULL },
 				   { "quit", quit_action, NULL, NULL, NULL } };
 	g_action_map_add_action_entries(G_ACTION_MAP(app), actions,
 					G_N_ELEMENTS(actions), app);
-	const char *hide_accels[] = { "<Ctrl>H", NULL };
+	const char *pause_accels[] = { "<Ctrl>P", NULL };
+	const char *mouse_accels[] = { "<Ctrl>M", NULL };
 	const char *usage_accels[] = { "<Ctrl>U", NULL };
 	const char *about_accels[] = { "<Ctrl>A", NULL };
 	const char *quit_accels[] = { "<Ctrl>Q", NULL };
 	// See Description of
 	// <https://developer.gnome.org/gio/stable/GActionMap.html>
 	// about "app." here.
-	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.hide",
-					      hide_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.pause",
+					      pause_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.mouse",
+					      mouse_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.usage",
 					      usage_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.about",

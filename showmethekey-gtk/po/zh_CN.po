@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-30 15:45+0800\n"
+"POT-Creation-Date: 2022-07-04 18:56+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,16 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:57 showmethekey-gtk/smtk-app-win.c:316
+#: showmethekey-gtk/smtk-app.c:67 showmethekey-gtk/smtk-app-win.c:370
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:14
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:62
+#: showmethekey-gtk/smtk-app.c:72
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:242
+#: showmethekey-gtk/smtk-app-win.c:295
 msgid ""
 "Usage:\n"
 "\n"
@@ -54,9 +54,8 @@ msgid ""
 "showmethekey#special-notice-for-wayland-session-users\">README</a> to see if "
 "there are configurations for your compositor.\n"
 "\n"
-"4. If you want to temporary pause it (for example you need to insert "
-"password), you can use the \"Temporary Hide\" switch, it will not record "
-"your keys while hiding.\n"
+"4. If you want to pause it (for example you need to insert password), you "
+"can use the \"Pause\" switch, it will not record your keys when paused.\n"
 "\n"
 "5. Set Timeout to 0 if you want to keep all keys.\n"
 "\n"
@@ -83,22 +82,22 @@ msgstr ""
 "notice-for-wayland-session-users\">README</a> 文件来查看是否有针对您的混成器"
 "的配置方法。\n"
 "\n"
-"4. 如果您想要临时暂停该程序（比如你需要输入密码），您可以使用“临时隐藏”开关，"
-"在隐藏状态下它不会记录您的按键。\n"
+"4. 如果您想要暂停该程序（比如你需要输入密码），您可以使用“暂停”开关，"
+"在暂停状态下它不会记录您的按键。\n"
 "\n"
 "5. 如果想保留所有的按键记录，请将超时设为 0。\n"
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:315
+#: showmethekey-gtk/smtk-app-win.c:369
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:315
+#: showmethekey-gtk/smtk-app-win.c:369
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:317
+#: showmethekey-gtk/smtk-app-win.c:371
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -108,39 +107,39 @@ msgstr "菜单"
 
 #: showmethekey-gtk/smtk-app-win.ui:38
 msgid "Primary menu"
-msgstr ""
+msgstr "主菜单"
 
 #: showmethekey-gtk/smtk-app-win.ui:59
-msgid "Temporary _Hide"
-msgstr "临时隐藏（_H）"
+msgid "_Pause"
+msgstr "暂停（_P）"
 
-#: showmethekey-gtk/smtk-app-win.ui:86
+#: showmethekey-gtk/smtk-app-win.ui:87
 msgid "Show _Mouse Button"
 msgstr "显示鼠标按钮（_M）"
 
-#: showmethekey-gtk/smtk-app-win.ui:107
+#: showmethekey-gtk/smtk-app-win.ui:113
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:119
+#: showmethekey-gtk/smtk-app-win.ui:125
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:120
+#: showmethekey-gtk/smtk-app-win.ui:126
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:132
+#: showmethekey-gtk/smtk-app-win.ui:142
+msgid "Timeout (ms)"
+msgstr "超时（毫秒）"
+
+#: showmethekey-gtk/smtk-app-win.ui:169
 msgid "Width (px)"
 msgstr "宽度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:153
+#: showmethekey-gtk/smtk-app-win.ui:190
 msgid "Height (px)"
 msgstr "高度（像素）"
-
-#: showmethekey-gtk/smtk-app-win.ui:174
-msgid "Timeout (ms)"
-msgstr "超时（毫秒）"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:7
 msgid "_Usage"
@@ -156,6 +155,6 @@ msgstr "退出（_Q）"
 
 #. Disable subtitle to get a compact header bar.
 #. gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
-#: showmethekey-gtk/smtk-keys-win.c:135
+#: showmethekey-gtk/smtk-keys-win.c:238
 msgid "Clickable Area"
 msgstr "可点击区域"

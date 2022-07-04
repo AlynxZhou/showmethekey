@@ -23,8 +23,9 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode,
 				       GError **error);
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error);
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter);
-void smtk_keys_emitter_pause(SmtkKeysEmitter *emitter);
-void smtk_keys_emitter_resume(SmtkKeysEmitter *emitter);
+void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter,
+				      bool show_mouse);
+void smtk_keys_emitter_set_mode(SmtkKeysEmitter *emitter, SmtkKeyMode mode);
 
 G_END_DECLS
 

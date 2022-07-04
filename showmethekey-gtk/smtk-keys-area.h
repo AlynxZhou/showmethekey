@@ -12,6 +12,7 @@ G_DECLARE_FINAL_TYPE(SmtkKeysArea, smtk_keys_area, SMTK, KEYS_AREA,
 		     GtkDrawingArea)
 
 GtkWidget *smtk_keys_area_new(int timeout);
+void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout);
 void smtk_keys_area_add_key(SmtkKeysArea *area, char *key);
 
 G_END_DECLS

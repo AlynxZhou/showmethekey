@@ -12,7 +12,7 @@ struct _SmtkAppWin {
 	GSettings *settings;
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
-	GtkWidget *hide_switch;
+	GtkWidget *pause_switch;
 	GtkWidget *mouse_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
@@ -24,22 +24,16 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
-	gtk_widget_set_sensitive(win->hide_switch, false);
-	gtk_widget_set_sensitive(win->mouse_switch, true);
-	gtk_widget_set_sensitive(win->mode_selector, true);
+	gtk_widget_set_sensitive(win->pause_switch, false);
 	gtk_widget_set_sensitive(win->width_entry, true);
 	gtk_widget_set_sensitive(win->height_entry, true);
-	gtk_widget_set_sensitive(win->timeout_entry, true);
 }
 
 static void smtk_app_win_disable(SmtkAppWin *win)
 {
-	gtk_widget_set_sensitive(win->hide_switch, true);
-	gtk_widget_set_sensitive(win->mouse_switch, false);
-	gtk_widget_set_sensitive(win->mode_selector, false);
+	gtk_widget_set_sensitive(win->pause_switch, true);
 	gtk_widget_set_sensitive(win->width_entry, false);
 	gtk_widget_set_sensitive(win->height_entry, false);
-	gtk_widget_set_sensitive(win->timeout_entry, false);
 }
 
 static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
@@ -48,8 +42,9 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 {
 	if (win->keys_win != NULL) {
 		win->keys_win = NULL;
+
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), false);
-		gtk_switch_set_active(GTK_SWITCH(win->hide_switch), false);
+		gtk_switch_set_active(GTK_SWITCH(win->pause_switch), false);
 		smtk_app_win_enable(win);
 	}
 }
@@ -71,13 +66,14 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
 			if (strcmp(mode_id, "raw") == 0)
 				mode = SMTK_KEY_MODE_RAW;
+			int timeout = gtk_spin_button_get_value_as_int(
+				GTK_SPIN_BUTTON(win->timeout_entry));
+			g_debug("Timeout: %d.", timeout);
 			int width = gtk_spin_button_get_value_as_int(
 				GTK_SPIN_BUTTON(win->width_entry));
 			width = width <= 0 ? 1500 : width;
 			int height = gtk_spin_button_get_value_as_int(
 				GTK_SPIN_BUTTON(win->height_entry));
-			int timeout = gtk_spin_button_get_value_as_int(
-				GTK_SPIN_BUTTON(win->timeout_entry));
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
@@ -106,9 +102,9 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 	}
 }
 
-static void smtk_app_win_on_hide_switch_active(SmtkAppWin *win,
-					       GParamSpec *prop,
-					       GtkSwitch *hide_switch)
+static void smtk_app_win_on_pause_switch_active(SmtkAppWin *win,
+						GParamSpec *prop,
+						GtkSwitch *pause_switch)
 {
 	// This only works when keys_win is open.
 	// We don't disable or turn off it here,
@@ -116,10 +112,55 @@ static void smtk_app_win_on_hide_switch_active(SmtkAppWin *win,
 	if (win->keys_win == NULL)
 		return;
 
-	if (gtk_switch_get_active(GTK_SWITCH(win->hide_switch)))
-		smtk_keys_win_hide(SMTK_KEYS_WIN(win->keys_win));
+	if (gtk_switch_get_active(GTK_SWITCH(win->pause_switch)))
+		smtk_keys_win_pause(SMTK_KEYS_WIN(win->keys_win));
 	else
-		smtk_keys_win_show(SMTK_KEYS_WIN(win->keys_win));
+		smtk_keys_win_resume(SMTK_KEYS_WIN(win->keys_win));
+}
+
+static void smtk_app_win_on_mouse_switch_active(SmtkAppWin *win,
+						GParamSpec *prop,
+						GtkSwitch *mouse_switch)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_show_mouse(
+		SMTK_KEYS_WIN(win->keys_win),
+		gtk_switch_get_active(GTK_SWITCH(win->mouse_switch)));
+}
+
+static void smtk_app_win_on_mode_selector_active(SmtkAppWin *win,
+						 GParamSpec *prop,
+						 GtkComboBoxText *mode_selector)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	const char *mode_id =
+		gtk_combo_box_get_active_id(GTK_COMBO_BOX(win->mode_selector));
+	g_debug("Mode: %s.", mode_id);
+	SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
+	if (strcmp(mode_id, "raw") == 0)
+		mode = SMTK_KEY_MODE_RAW;
+
+	smtk_keys_win_set_mode(SMTK_KEYS_WIN(win->keys_win), mode);
+}
+
+static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,
+					  GtkSpinButton *timeout_entry)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	int timeout = gtk_spin_button_get_value_as_int(
+		GTK_SPIN_BUTTON(win->timeout_entry));
+	g_debug("Timeout: %d.", timeout);
+
+	smtk_keys_win_set_timeout(SMTK_KEYS_WIN(win->keys_win), timeout);
 }
 
 static void smtk_app_win_init(SmtkAppWin *win)
@@ -138,6 +179,10 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	gtk_window_set_focus(GTK_WINDOW(win), NULL);
 	gtk_window_set_default_widget(GTK_WINDOW(win), win->keys_win_switch);
 
+	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->timeout_entry), 0,
+				  30000);
+	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->timeout_entry), 100,
+				       1000);
 	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->width_entry), 0,
 				  INT_MAX);
 	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->width_entry), 100,
@@ -146,11 +191,6 @@ static void smtk_app_win_init(SmtkAppWin *win)
 				  INT_MAX);
 	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->height_entry), 100,
 				       500);
-
-	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->timeout_entry), 0,
-				  30000);
-	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->timeout_entry), 100,
-				       1000);
 
 	win->settings = g_settings_new("one.alynx.showmethekey");
 	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
@@ -176,7 +216,7 @@ static void smtk_app_win_dispose(GObject *object)
 {
 	SmtkAppWin *win = SMTK_APP_WIN(object);
 
-	g_clear_pointer(&win->settings, g_object_unref);
+	g_clear_object(&win->settings);
 
 	// Manually destroy keys_win, so CLI backend will be told to stop.、
 	if (win->keys_win != NULL) {
@@ -201,7 +241,7 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, menu_button);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, hide_switch);
+					     SmtkAppWin, pause_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mouse_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
@@ -217,7 +257,15 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 		smtk_app_win_on_keys_win_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
-		smtk_app_win_on_hide_switch_active);
+		smtk_app_win_on_pause_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_mouse_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_mode_selector_active);
+	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
+						smtk_app_win_on_timeout_value);
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)
@@ -225,14 +273,24 @@ GtkWidget *smtk_app_win_new(SmtkApp *app)
 	return g_object_new(SMTK_TYPE_APP_WIN, "application", app, NULL);
 }
 
-void smtk_app_win_toggle_hide_switch(SmtkAppWin *win)
+void smtk_app_win_toggle_pause_switch(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	if (gtk_widget_get_sensitive(win->hide_switch))
+	if (gtk_widget_get_sensitive(win->pause_switch))
 		gtk_switch_set_active(
-			GTK_SWITCH(win->hide_switch),
-			!gtk_switch_get_active(GTK_SWITCH(win->hide_switch)));
+			GTK_SWITCH(win->pause_switch),
+			!gtk_switch_get_active(GTK_SWITCH(win->pause_switch)));
+}
+
+void smtk_app_win_toggle_mouse_switch(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	if (gtk_widget_get_sensitive(win->mouse_switch))
+		gtk_switch_set_active(
+			GTK_SWITCH(win->mouse_switch),
+			!gtk_switch_get_active(GTK_SWITCH(win->mouse_switch)));
 }
 
 void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
@@ -272,9 +330,9 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "href=\"https://github.com/AlynxZhou/showmethekey#special-"
 		  "notice-for-wayland-session-users\">README</a> to see if "
 		  "there are configurations for your compositor.\n\n"
-		  "4. If you want to temporary pause it (for example you need "
-		  "to insert password), you can use the \"Temporary Hide\" "
-		  "switch, it will not record your keys while hiding.\n\n"
+		  "4. If you want to pause it (for example you need to insert "
+		  "password), you can use the \"Pause\" switch, it will not "
+		  "record your keys when paused.\n\n"
 		  "5. Set Timeout to 0 if you want to keep all keys.\n\n"
 		  "You can open this dialog again via menu icon on title bar "
 		  "-> \"Usage\"."));

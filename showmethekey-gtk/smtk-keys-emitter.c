@@ -19,7 +19,6 @@ struct _SmtkKeysEmitter {
 
 	SmtkKeyMode mode;
 	bool show_mouse;
-	bool waiting;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
@@ -184,7 +183,7 @@ static gpointer poller_function(gpointer user_data)
 		if (!emitter->show_mouse &&
 		    smtk_event_get_event_type(event) ==
 			    SMTK_EVENT_TYPE_POINTER_BUTTON) {
-			g_object_unref(event);
+			g_clear_object(&event);
 			g_free(line);
 			continue;
 		}
@@ -205,10 +204,8 @@ static gpointer poller_function(gpointer user_data)
 			break;
 		}
 		if (key != NULL) {
-			// Don't save key if hiding.
 			if (smtk_event_get_event_state(event) ==
-				    SMTK_EVENT_STATE_PRESSED &&
-			    !emitter->waiting)
+			    SMTK_EVENT_STATE_PRESSED)
 				trigger_idle_function(emitter, key);
 			g_free(key);
 		}
@@ -247,13 +244,12 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-	obj_properties[PROP_MODE] =
-		g_param_spec_enum("mode", "Mode", "Key Mode",
-				  SMTK_TYPE_KEY_MODE, SMTK_KEY_MODE_COMPOSED,
-				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+	obj_properties[PROP_MODE] = g_param_spec_enum(
+		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
+		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPERTIES,
 					  obj_properties);
@@ -349,22 +345,19 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		emitter->poller = NULL;
 	}
 
-	if (emitter->mapper != NULL) {
-		g_object_unref(emitter->mapper);
-		emitter->mapper = NULL;
-	}
+	g_clear_object(&emitter->mapper);
 }
 
-void smtk_keys_emitter_pause(SmtkKeysEmitter *emitter)
+void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter, bool show_mouse)
 {
 	g_return_if_fail(emitter != NULL);
 
-	emitter->waiting = true;
+	g_object_set(emitter, "show-mouse", show_mouse, NULL);
 }
 
-void smtk_keys_emitter_resume(SmtkKeysEmitter *emitter)
+void smtk_keys_emitter_set_mode(SmtkKeysEmitter *emitter, SmtkKeyMode mode)
 {
 	g_return_if_fail(emitter != NULL);
 
-	emitter->waiting = false;
+	g_object_set(emitter, "mode", mode, NULL);
 }
