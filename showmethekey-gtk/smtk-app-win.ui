@@ -137,6 +137,7 @@
         <child>
           <object class="GtkBox">
             <property name="orientation">horizontal</property>
+            <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
                 <property name="label" translatable="yes">Timeout (ms)</property>
@@ -185,6 +186,7 @@
         <child>
           <object class="GtkBox">
             <property name="orientation">horizontal</property>
+            <property name="spacing">10</property>
             <child>
               <object class="GtkLabel">
                 <property name="label" translatable="yes">Height (px)</property>
