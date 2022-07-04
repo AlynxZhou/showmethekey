@@ -33,6 +33,11 @@
   </screenshots>
 
   <releases>
+    <release version="1.7.3" date="2022-07-04">
+      <description>
+        <p>Updated UI.</p>
+      </description>
+    </release>
     <release version="1.7.2" date="2022-07-04">
       <description>
         <p>Updated debug output.</p>
