@@ -33,6 +33,13 @@
   </screenshots>
 
   <releases>
+    <release version="1.7.2" date="2022-07-04">
+      <description>
+        <p>Updated debug output.</p>
+        <p>Updated to only use GTK basic theme for SmtkKeysWin.</p>
+        <p>Updated app settings handling to allow changing while working.</p>
+      </description>
+    </release>
     <release version="1.7.1" date="2022-07-04">
       <description>
         <p>Updated to fix some build warnings.</p>
