@@ -198,12 +198,12 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 	GTK_WIDGET_CLASS(smtk_keys_win_parent_class)
 		->size_allocate(widget, width, height, baseline);
 
-	g_debug("Size: %dx%d\n", width, height);
+	g_debug("Allocated size: %dx%d.", width, height);
 
 	// Widget's allocation is only usable after realize.
 	GtkAllocation handle_allocation;
 	gtk_widget_get_allocation(win->handle, &handle_allocation);
-	g_debug("Clickable Area: x: %d, y: %d, w: %d, h: %d\n",
+	g_debug("Clickable area: x: %d, y: %d, w: %d, h: %d.",
 		handle_allocation.x, handle_allocation.y,
 		handle_allocation.width, handle_allocation.height);
 	cairo_region_t *clickable_region =

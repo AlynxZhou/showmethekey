@@ -15,6 +15,7 @@
 #include "smtk-app.h"
 #include "smtk-app-win.h"
 #include "smtk-keys-win.h"
+#include "smtk-keys-area.h"
 #include "smtk-keys-emitter.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-event.h"

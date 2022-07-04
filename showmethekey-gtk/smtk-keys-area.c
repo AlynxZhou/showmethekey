@@ -1,3 +1,6 @@
+#include <gtk/gtk.h>
+
+#include "smtk.h"
 #include "smtk-keys-area.h"
 
 struct _SmtkKeysArea {
@@ -65,7 +68,7 @@ static void smtk_keys_area_get_property(GObject *object,
 
 static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 {
-	g_debug("Drawing key: %s\n", key);
+	g_debug("Drawing key: %s.", key);
 
 	cairo_set_source_rgba(area->cr, 1.0, 1.0, 1.0, 1.0);
 
@@ -293,7 +296,7 @@ void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])
 {
 	g_return_if_fail(area != NULL);
 
-	g_debug("Adding key: %s\n", key);
+	g_debug("Adding key: %s.", key);
 	g_mutex_lock(&area->keys_mutex);
 	area->keys = g_slist_prepend(area->keys, key);
 	g_timer_start(area->timer);
