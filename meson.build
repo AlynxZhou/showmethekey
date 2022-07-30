@@ -85,7 +85,7 @@ if meson.version().version_compare('>= 0.57.0')
     skip_if_destdir: true
   )
   meson.add_install_script(
-    'gtk-update-icon-cache',
+    'gtk4-update-icon-cache',
     '-f',
     '-t',
     get_option('prefix') / get_option('datadir') / 'icons' / 'hicolor',
