@@ -14,6 +14,6 @@ if not os.environ.get("DESTDIR"):
     print(" ".join(argv))
     subprocess.call(argv)
 
-    argv = ["gtk-update-icon-cache", "-f", "-t", icon_dir]
+    argv = ["gtk4-update-icon-cache", "-f", "-t", icon_dir]
     print(" ".join(argv))
     subprocess.call(argv)
