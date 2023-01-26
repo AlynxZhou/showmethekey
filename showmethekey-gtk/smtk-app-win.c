@@ -13,6 +13,7 @@ struct _SmtkAppWin {
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
 	GtkWidget *pause_switch;
+	GtkWidget *shift_switch;
 	GtkWidget *mouse_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
@@ -58,7 +59,9 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 {
 	if (gtk_switch_get_active(GTK_SWITCH(win->keys_win_switch))) {
 		if (win->keys_win == NULL) {
-			bool show_mouse = gtk_switch_get_active(
+			const bool show_shift = gtk_switch_get_active(
+				GTK_SWITCH(win->shift_switch));
+			const bool show_mouse = gtk_switch_get_active(
 				GTK_SWITCH(win->mouse_switch));
 			const char *mode_id = gtk_combo_box_get_active_id(
 				GTK_COMBO_BOX(win->mode_selector));
@@ -77,7 +80,8 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
 			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(show_mouse, mode,
+			win->keys_win = smtk_keys_win_new(show_shift,
+							  show_mouse, mode,
 							  width, height,
 							  timeout, &error);
 			if (win->keys_win == NULL) {
@@ -116,6 +120,19 @@ static void smtk_app_win_on_pause_switch_active(SmtkAppWin *win,
 		smtk_keys_win_pause(SMTK_KEYS_WIN(win->keys_win));
 	else
 		smtk_keys_win_resume(SMTK_KEYS_WIN(win->keys_win));
+}
+
+static void smtk_app_win_on_shift_switch_active(SmtkAppWin *win,
+						GParamSpec *prop,
+						GtkSwitch *shift_switch)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_show_shift(
+		SMTK_KEYS_WIN(win->keys_win),
+		gtk_switch_get_active(GTK_SWITCH(win->shift_switch)));
 }
 
 static void smtk_app_win_on_mouse_switch_active(SmtkAppWin *win,
@@ -193,6 +210,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 				       500);
 
 	win->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(win->settings, "show-shift", win->shift_switch,
+			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
 	// Though gschema's enum has a int value property,
@@ -243,6 +262,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, pause_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, shift_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mouse_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mode_selector);
@@ -258,6 +279,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_pause_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_shift_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_mouse_switch_active);

@@ -19,6 +19,7 @@ struct _SmtkKeysWin {
 	GtkCssProvider *header_bar_css_provider;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
+	bool show_shift;
 	bool show_mouse;
 	int timeout;
 	bool paused;
@@ -26,7 +27,14 @@ struct _SmtkKeysWin {
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, PROP_TIMEOUT, N_PROPERTIES };
+enum {
+	PROP_0,
+	PROP_MODE,
+	PROP_SHOW_SHIFT,
+	PROP_SHOW_MOUSE,
+	PROP_TIMEOUT,
+	N_PROPERTIES
+};
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -39,6 +47,9 @@ static void smtk_keys_win_set_property(GObject *object,
 	switch (property_id) {
 	case PROP_MODE:
 		win->mode = g_value_get_enum(value);
+		break;
+	case PROP_SHOW_SHIFT:
+		win->show_shift = g_value_get_boolean(value);
 		break;
 	case PROP_SHOW_MOUSE:
 		win->show_mouse = g_value_get_boolean(value);
@@ -62,6 +73,9 @@ static void smtk_keys_win_get_property(GObject *object,
 	switch (property_id) {
 	case PROP_MODE:
 		g_value_set_enum(value, win->mode);
+		break;
+	case PROP_SHOW_SHIFT:
+		g_value_set_boolean(value, win->show_shift);
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, win->show_mouse);
@@ -299,11 +313,11 @@ static void smtk_keys_win_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	win->emitter =
-		smtk_keys_emitter_new(win->show_mouse, win->mode, &win->error);
-	// win->error is set so just return.
+	win->emitter = smtk_keys_emitter_new(win->show_shift, win->show_mouse,
+					     win->mode, &win->error);
+	// `win->error` is set so just return.
 	if (win->emitter == NULL)
-		return;
+		goto out;
 	g_signal_connect_object(
 		win->emitter, "error-cli-exit",
 		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win,
@@ -314,11 +328,12 @@ static void smtk_keys_win_constructed(GObject *object)
 
 	smtk_keys_emitter_start_async(win->emitter, &win->error);
 	if (win->error != NULL)
-		return;
+		goto out;
 
 	win->area = smtk_keys_area_new(win->timeout);
 	gtk_window_set_child(GTK_WINDOW(win), win->area);
 
+out:
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
 }
 
@@ -358,6 +373,9 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	obj_properties[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
 		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_properties[PROP_SHOW_SHIFT] = g_param_spec_boolean(
+		"show-shift", "Show Shift", "Show Shift Separately", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -369,8 +387,8 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 					  obj_properties);
 }
 
-GtkWidget *smtk_keys_win_new(bool show_mouse, SmtkKeyMode mode, int width,
-			     int height, int timeout, GError **error)
+GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
+			     int width, int height, int timeout, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -385,8 +403,8 @@ GtkWidget *smtk_keys_win_new(bool show_mouse, SmtkKeyMode mode, int width,
 		"resizable", false,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
-		"mode", mode, "show-mouse", show_mouse, "timeout", timeout,
-		NULL);
+		"mode", mode, "show-shift", show_shift, "show-mouse",
+		show_mouse, "timeout", timeout, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
@@ -417,6 +435,16 @@ void smtk_keys_win_resume(SmtkKeysWin *win)
 	g_return_if_fail(win != NULL);
 
 	win->paused = false;
+}
+
+void smtk_keys_win_set_show_shift(SmtkKeysWin *win, bool show_shift)
+{
+	g_return_if_fail(win != NULL);
+
+	// Pass property to emitter.
+	smtk_keys_emitter_set_show_shift(win->emitter, show_shift);
+	// Sync self property.
+	g_object_set(win, "show-shift", show_shift, NULL);
 }
 
 void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse)

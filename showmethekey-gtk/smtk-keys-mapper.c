@@ -9,6 +9,7 @@
 
 struct _SmtkKeysMapper {
 	GObject parent_instance;
+	bool show_shift;
 	struct xkb_context *xkb_context;
 	struct xkb_keymap *xkb_keymap;
 	struct xkb_state *xkb_state;
@@ -18,10 +19,49 @@ struct _SmtkKeysMapper {
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
+enum { PROP_0, PROP_SHOW_SHIFT, N_PROPERTIES };
+
+static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+
 // Prevent clang-format from adding space between minus.
 // clang-format off
 G_DEFINE_QUARK(smtk-keys-mapper-error-quark, smtk_keys_mapper_error)
 // clang-format on
+
+static void smtk_keys_mapper_set_property(GObject *object,
+					  unsigned int property_id,
+					  const GValue *value,
+					  GParamSpec *pspec)
+{
+	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+
+	switch (property_id) {
+	case PROP_SHOW_SHIFT:
+		mapper->show_shift = g_value_get_boolean(value);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
+
+static void smtk_keys_mapper_get_property(GObject *object,
+					  unsigned int property_id,
+					  GValue *value, GParamSpec *pspec)
+{
+	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+
+	switch (property_id) {
+	case PROP_SHOW_SHIFT:
+		g_value_set_boolean(value, mapper->show_shift);
+		break;
+	default:
+		/* We don't have any other property... */
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		break;
+	}
+}
 
 static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 {
@@ -203,12 +243,25 @@ static void smtk_keys_mapper_dispose(GObject *object)
 
 static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 {
-	G_OBJECT_CLASS(mapper_class)->dispose = smtk_keys_mapper_dispose;
+	GObjectClass *object_class = G_OBJECT_CLASS(mapper_class);
+
+	object_class->set_property = smtk_keys_mapper_set_property;
+	object_class->get_property = smtk_keys_mapper_get_property;
+
+	object_class->dispose = smtk_keys_mapper_dispose;
+
+	obj_properties[PROP_SHOW_SHIFT] = g_param_spec_boolean(
+		"show-shift", "Show Shift", "Show Shift Separately", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+
+	g_object_class_install_properties(object_class, N_PROPERTIES,
+					  obj_properties);
 }
 
-SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
+SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, GError **error)
 {
-	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
+	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER,
+					      "show-shift", show_shift, NULL);
 
 	if (mapper->error != NULL) {
 		g_propagate_error(error, mapper->error);
@@ -232,7 +285,7 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
 				     event_state == SMTK_EVENT_STATE_PRESSED ?
 					     XKB_KEY_DOWN :
-						   XKB_KEY_UP);
+					     XKB_KEY_UP);
 	}
 	return g_strdup(smtk_event_get_key_name(event));
 }
@@ -255,7 +308,7 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
 				     event_state == SMTK_EVENT_STATE_PRESSED ?
 					     XKB_KEY_DOWN :
-						   XKB_KEY_UP);
+					     XKB_KEY_UP);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			mapper->xkb_state, xkb_key_code);
 		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
@@ -294,18 +347,27 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
 	    strcmp(main_key, "Meta") != 0)
 		g_string_append(buffer, "Alt+");
-	// Shift is a little bit complex,
-	// it can be consumed by capitalization transformation,
-	// so we check it here. This prevents text like Shift+! but allows
-	// text like Shift+PrintScreen.
 	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
-	    !xkb_state_mod_index_is_consumed(
-		    mapper->xkb_state, xkb_key_code,
-		    xkb_keymap_mod_get_index(mapper->xkb_keymap,
-					     XKB_MOD_NAME_SHIFT)))
-		g_string_append(buffer, "Shift+");
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		// Shift is a little bit complex, it can be consumed by
+		// capitalization transformation, so we check it here. This
+		// prevents text like Shift+! but allows text like
+		// Shift+PrintScreen. However, if user sets `show_shift`, always
+		// append it even consumed.
+		if (mapper->show_shift ||
+		    !xkb_state_mod_index_is_consumed(
+			    mapper->xkb_state, xkb_key_code,
+			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
+						     XKB_MOD_NAME_SHIFT)))
+			g_string_append(buffer, "Shift+");
 	g_string_append(buffer, main_key);
 	g_free(main_key);
 	return g_string_free(buffer, FALSE);
+}
+
+void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift)
+{
+	g_return_if_fail(mapper != NULL);
+
+	g_object_set(mapper, "show-shift", show_shift, NULL);
 }

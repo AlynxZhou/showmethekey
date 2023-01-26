@@ -1,6 +1,7 @@
 #ifndef __SMTK_KEYS_MAPPER_H__
 #define __SMTK_KEYS_MAPPER_H__
 
+#include <stdbool.h>
 #include <glib-object.h>
 
 #include "smtk-event.h"
@@ -19,9 +20,10 @@ typedef enum {
 	SMTK_KEYS_MAPPER_ERROR_UNKNOWN
 } SmtkKeysMapperError;
 
-SmtkKeysMapper *smtk_keys_mapper_new(GError **error);
+SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, GError **error);
 char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event);
 char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event);
+void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift);
 
 G_END_DECLS
 

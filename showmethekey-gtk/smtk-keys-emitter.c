@@ -18,6 +18,7 @@ struct _SmtkKeysEmitter {
 	bool polling;
 
 	SmtkKeyMode mode;
+	bool show_shift;
 	bool show_mouse;
 	GError *error;
 };
@@ -27,7 +28,7 @@ enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_MOUSE, N_PROPERTIES };
+enum { PROP_0, PROP_MODE, PROP_SHOW_SHIFT, PROP_SHOW_MOUSE, N_PROPERTIES };
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
 
@@ -72,6 +73,9 @@ static void smtk_keys_emitter_set_property(GObject *object,
 	case PROP_MODE:
 		emitter->mode = g_value_get_enum(value);
 		break;
+	case PROP_SHOW_SHIFT:
+		emitter->show_shift = g_value_get_boolean(value);
+		break;
 	case PROP_SHOW_MOUSE:
 		emitter->show_mouse = g_value_get_boolean(value);
 		break;
@@ -91,6 +95,9 @@ static void smtk_keys_emitter_get_property(GObject *object,
 	switch (property_id) {
 	case PROP_MODE:
 		g_value_set_enum(value, emitter->mode);
+		break;
+	case PROP_SHOW_SHIFT:
+		g_value_set_boolean(value, emitter->show_shift);
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
@@ -222,11 +229,21 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	emitter->cli_out = NULL;
 	emitter->poller = NULL;
 	emitter->error = NULL;
+}
 
-	emitter->mapper = smtk_keys_mapper_new(&emitter->error);
-	// emitter->error is already set, just return.
+static void smtk_keys_emitter_constructed(GObject *object)
+{
+	// Seems we can only get constructor properties here.
+	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+
+	emitter->mapper =
+		smtk_keys_mapper_new(emitter->show_shift, &emitter->error);
+	// `emitter->error` is already set, just return.
 	if (emitter->mapper == NULL)
-		return;
+		goto out;
+
+out:
+	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->constructed(object);
 }
 
 static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
@@ -235,6 +252,8 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 
 	object_class->set_property = smtk_keys_emitter_set_property;
 	object_class->get_property = smtk_keys_emitter_get_property;
+
+	object_class->constructed = smtk_keys_emitter_constructed;
 
 	obj_signals[SIG_KEY] = g_signal_new("key", SMTK_TYPE_KEYS_EMITTER,
 					    G_SIGNAL_RUN_LAST, 0, NULL, NULL,
@@ -247,6 +266,9 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_properties[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
 		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_properties[PROP_SHOW_SHIFT] = g_param_spec_boolean(
+		"show-shift", "Show Shift", "Show Shift Separately", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -255,12 +277,12 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 					  obj_properties);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode,
-				       GError **error)
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
+				       SmtkKeyMode mode, GError **error)
 {
 	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode",
-						mode, "show-mouse", show_mouse,
-						NULL);
+						mode, "show-shift", show_shift,
+						"show-mouse", show_mouse, NULL);
 
 	if (emitter->error != NULL) {
 		g_propagate_error(error, emitter->error);
@@ -346,6 +368,16 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 	}
 
 	g_clear_object(&emitter->mapper);
+}
+
+void smtk_keys_emitter_set_show_shift(SmtkKeysEmitter *emitter, bool show_shift)
+{
+	g_return_if_fail(emitter != NULL);
+
+	// Pass property to mapper.
+	smtk_keys_mapper_set_show_shift(emitter->mapper, show_shift);
+	// Sync self property.
+	g_object_set(emitter, "show-shift", show_shift, NULL);
 }
 
 void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter, bool show_mouse)

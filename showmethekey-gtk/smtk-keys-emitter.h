@@ -19,10 +19,12 @@ typedef enum {
 } SmtkKeyMode;
 // clang-format on
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_mouse, SmtkKeyMode mode,
-				       GError **error);
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
+				       SmtkKeyMode mode, GError **error);
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error);
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter);
+void smtk_keys_emitter_set_show_shift(SmtkKeysEmitter *emitter,
+				      bool show_shift);
 void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter,
 				      bool show_mouse);
 void smtk_keys_emitter_set_mode(SmtkKeysEmitter *emitter, SmtkKeyMode mode);

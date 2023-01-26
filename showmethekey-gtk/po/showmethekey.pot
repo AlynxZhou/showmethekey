@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-04 18:56+0800\n"
+"POT-Creation-Date: 2023-01-26 16:42+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:67 showmethekey-gtk/smtk-app-win.c:370
+#: showmethekey-gtk/smtk-app.c:67 showmethekey-gtk/smtk-app-win.c:402
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:14
 msgid "Show Me The Key"
 msgstr ""
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:295
+#: showmethekey-gtk/smtk-app-win.c:327
 msgid ""
 "Usage:\n"
 "\n"
@@ -63,15 +63,15 @@ msgid ""
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:369
+#: showmethekey-gtk/smtk-app-win.c:401
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:369
+#: showmethekey-gtk/smtk-app-win.c:401
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:371
+#: showmethekey-gtk/smtk-app-win.c:403
 msgid "Show keys you typed on screen."
 msgstr ""
 
@@ -88,30 +88,34 @@ msgid "_Pause"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:87
+msgid "Show _Shift Separately"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:114
 msgid "Show _Mouse Button"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:113
+#: showmethekey-gtk/smtk-app-win.ui:140
 msgid "Display Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:125
+#: showmethekey-gtk/smtk-app-win.ui:152
 msgid "Composed"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:126
+#: showmethekey-gtk/smtk-app-win.ui:153
 msgid "Raw"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:142
+#: showmethekey-gtk/smtk-app-win.ui:170
 msgid "Timeout (ms)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:169
+#: showmethekey-gtk/smtk-app-win.ui:197
 msgid "Width (px)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:190
+#: showmethekey-gtk/smtk-app-win.ui:219
 msgid "Height (px)"
 msgstr ""
 
@@ -129,6 +133,6 @@ msgstr ""
 
 #. Disable subtitle to get a compact header bar.
 #. gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
-#: showmethekey-gtk/smtk-keys-win.c:238
+#: showmethekey-gtk/smtk-keys-win.c:245
 msgid "Clickable Area"
 msgstr ""
