@@ -307,6 +307,16 @@ void smtk_app_win_toggle_pause_switch(SmtkAppWin *win)
 			!gtk_switch_get_active(GTK_SWITCH(win->pause_switch)));
 }
 
+void smtk_app_win_toggle_shift_switch(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	if (gtk_widget_get_sensitive(win->shift_switch))
+		gtk_switch_set_active(
+			GTK_SWITCH(win->shift_switch),
+			!gtk_switch_get_active(GTK_SWITCH(win->shift_switch)));
+}
+
 void smtk_app_win_toggle_mouse_switch(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
