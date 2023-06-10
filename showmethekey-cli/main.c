@@ -16,6 +16,8 @@
 #include <libevdev/libevdev.h>
 
 #include "config.h"
+#include "util.h"
+#include "util.c"
 
 #define MAX_BUFFER_LENGTH 512
 
@@ -74,7 +76,6 @@ static int print_key_event(struct libinput_event *event)
 		libinput_event_get_keyboard_event(event);
 
 	enum libinput_event_type event_type = libinput_event_get_type(event);
-	const char *device_name = libinput_device_get_name(device);
 	uint32_t time_stamp = libinput_event_keyboard_get_time(keyboard);
 	uint32_t key_code = libinput_event_keyboard_get_key(keyboard);
 	const char *key_name = libevdev_event_code_get_name(EV_KEY, key_code);
@@ -84,6 +85,11 @@ static int print_key_event(struct libinput_event *event)
 	const char *state_name = state_code == LIBINPUT_KEY_STATE_PRESSED ?
 					 "PRESSED" :
 					       "RELEASED";
+
+	const char *device_name = libinput_device_get_name(device);
+	char escaped_device_name[MAX_BUFFER_LENGTH];
+	escape_string(device_name, escaped_device_name,
+		      sizeof(escaped_device_name));
 
 	return printf("{"
 		      "\"event_name\": \"KEYBOARD_KEY\", "
@@ -95,8 +101,8 @@ static int print_key_event(struct libinput_event *event)
 		      "\"state_name\": \"%s\", "
 		      "\"state_code\": %d"
 		      "}\n",
-		      event_type, device_name, time_stamp, key_name, key_code,
-		      state_name, state_code);
+		      event_type, escaped_device_name, time_stamp, key_name,
+		      key_code, state_name, state_code);
 }
 
 static int print_button_event(struct libinput_event *event)
