@@ -237,11 +237,16 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
+	GdkDisplay *display = gdk_display_get_default();
+
 	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
 	win->paused = false;
+
+	// Add a class so we change style of the keys window only.
+	gtk_widget_add_css_class(GTK_WIDGET(win), "smtk-keys-win");
 
 	// Allow user to choose position by drag this.
 	win->header_bar = gtk_header_bar_new();
@@ -254,54 +259,18 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 					win->handle);
 	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
 
-	// SmtkKeysWin is not a normal window, we use custom CSS and code to
-	// make it a semi-transparent window, but some strange theme will break
-	// our code (for example, Colloid), instead of writing workaround for
-	// countless third-party themes, just using basic theme is reasonable.
-	// We don't change GtkSettings:gtk-theme-name, because it will affect
-	// all widgets of this program.
-	win->basic_css_provider = gtk_css_provider_new();
-	gtk_css_provider_load_named(win->basic_css_provider, "gtk", "dark");
-
 	// We don't want to paint the app shadow and decoration,
 	// so just use a custom CSS to disable decoration outside the window.
 	win->window_css_provider = gtk_css_provider_new();
 	gtk_css_provider_load_from_resource(
 		win->window_css_provider,
 		"/one/alynx/showmethekey/smtk-keys-win.css");
-	GtkStyleContext *window_style_context =
-		gtk_widget_get_style_context(GTK_WIDGET(win));
-	gtk_style_context_add_class(window_style_context, "smtk-keys-win");
-	gtk_style_context_add_provider(
-		window_style_context,
-		GTK_STYLE_PROVIDER(win->window_css_provider),
-		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	// Override custom theme by setting provider in settings priority.
-	// Only this priority works, it seems that I cannot set theme priority.
-	gtk_style_context_add_provider(
-		window_style_context,
-		GTK_STYLE_PROVIDER(win->basic_css_provider),
-		GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
 
-	// It turns out that GtkStyleContext cannot affect child GtkWidgets,
-	// so we have to create independent CSS for headerbar.
-	win->header_bar_css_provider = gtk_css_provider_new();
-	gtk_css_provider_load_from_resource(
-		win->header_bar_css_provider,
-		"/one/alynx/showmethekey/smtk-keys-win-header-bar.css");
-	GtkStyleContext *header_bar_style_context =
-		gtk_widget_get_style_context(win->header_bar);
-	gtk_style_context_add_class(header_bar_style_context, "header-bar");
-	gtk_style_context_add_provider(
-		header_bar_style_context,
-		GTK_STYLE_PROVIDER(win->header_bar_css_provider),
-		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	// Override custom theme by setting provider in settings priority.
-	// Only this priority works, it seems that I cannot set theme priority.
-	gtk_style_context_add_provider(
-		header_bar_style_context,
-		GTK_STYLE_PROVIDER(win->basic_css_provider),
-		GTK_STYLE_PROVIDER_PRIORITY_SETTINGS);
+	if (display != NULL) {
+		gtk_style_context_add_provider_for_display(
+			display, GTK_STYLE_PROVIDER(win->window_css_provider),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	}
 
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",

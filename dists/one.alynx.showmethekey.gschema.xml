@@ -5,8 +5,8 @@
     and the same name with mode_selector.
   -->
   <enum id="one.alynx.showmethekey.mode">
-    <value nick="composed" value="0" />
-    <value nick="raw" value="1" />
+    <value nick="Composed" value="0" />
+    <value nick="Raw" value="1" />
   </enum>
   <schema path="/one/alynx/showmethekey/" id="one.alynx.showmethekey">
     <key name="first-time" type="b">
@@ -28,7 +28,7 @@
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>
       <!-- We need to add quote manually here for type `s`. -->
-      <default>"composed"</default>
+      <default>"Composed"</default>
     </key>
     <!-- GtkSpinButton only support double, not int. -->
     <key type="d" name="width">

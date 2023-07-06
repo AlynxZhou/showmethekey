@@ -143,18 +143,22 @@
               </object>
             </child>
             <child>
-              <object class="GtkComboBoxText" id="mode_selector">
+              <object class="GtkDropDown" id="mode_selector">
                 <property name="hexpand">true</property>
                 <property name="halign">end</property>
                 <!-- Must keep the same sequence with SmtkKeyMode. -->
-                <property name="active-id">composed</property>
-                <items>
-                  <item translatable="yes" id="composed">Composed</item>
-                  <item translatable="yes" id="raw">Raw</item>
-                </items>
+                <property name="selected">0</property>
+                <property name="model">
+                  <object class="GtkStringList">
+                    <items>
+                      <item translatable="yes">Composed</item>
+                      <item translatable="yes">Raw</item>
+                    </items>
+                  </object>
+                </property>
                 <signal
-                  name="notify::active-id"
-                  handler="smtk_app_win_on_mode_selector_active"
+                  name="notify::selected-item"
+                  handler="smtk_app_win_on_mode_selector_selected_item"
                   object="SmtkAppWin"
                   swapped="yes" />
               </object>

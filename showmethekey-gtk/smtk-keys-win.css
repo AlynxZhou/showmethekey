@@ -6,6 +6,19 @@ window.smtk-keys-win {
   outline: none;
 }
 /* Half transparent window. */
-window.background {
+window.smtk-keys-win.background {
   background: rgba(0, 0, 0, 0.5);
+}
+
+/* Create a transparent header bar. */
+window.smtk-keys-win headerbar {
+  background-color: rgba(0, 0, 0, 0);
+  /* In some theme (e.g. Adwaita) it set a background image. */
+  background-image: none;
+  /* Use this to get a compact header bar when subtitle is disabled. */
+  /* Not sure why GTK4's actual input region is smaller than allocation, so */
+  /* don't use this to make it bigger. */
+  /* min-height: 0px; */
+  box-shadow: none;
+  border: none;
 }
