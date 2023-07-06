@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-26 16:42+0800\n"
+"POT-Creation-Date: 2023-07-06 21:35+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,19 +16,21 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:67 showmethekey-gtk/smtk-app-win.c:402
-#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:14
+#: showmethekey-gtk/smtk-app.c:77 showmethekey-gtk/smtk-app-win.c:421
+#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:72
+#: showmethekey-gtk/smtk-app.c:82
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:327
+#: showmethekey-gtk/smtk-app-win.c:343
+msgid "Usage"
+msgstr "使用说明（_U）"
+
+#: showmethekey-gtk/smtk-app-win.c:344
 msgid ""
-"Usage:\n"
-"\n"
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
 "running graphics program with superuser permission, so it uses polkit to run "
@@ -61,8 +63,6 @@ msgid ""
 "\n"
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
-"使用说明：\n"
-"\n"
 "1. 请在打开开关之后输入管理员密码，因为读取输入事件需要超级用户权限，并且 "
 "Wayland 不允许图形程序以超级用户权限运行，所以这个程序使用 polkit 来运行一个"
 "具有超级用户权限的后端。这个程序并不处理或储存您的密码。wheel 组的用户可以跳"
@@ -89,15 +89,19 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:401
+#: showmethekey-gtk/smtk-app-win.c:382
+msgid "Close"
+msgstr "关闭"
+
+#: showmethekey-gtk/smtk-app-win.c:419
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:401
+#: showmethekey-gtk/smtk-app-win.c:420
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:403
+#: showmethekey-gtk/smtk-app-win.c:422
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -109,41 +113,71 @@ msgstr "菜单"
 msgid "Primary menu"
 msgstr "主菜单"
 
-#: showmethekey-gtk/smtk-app-win.ui:59
+#: showmethekey-gtk/smtk-app-win.ui:63
 msgid "_Pause"
 msgstr "暂停（_P）"
 
-#: showmethekey-gtk/smtk-app-win.ui:87
+#: showmethekey-gtk/smtk-app-win.ui:64
+msgid "Temporary hide input like password."
+msgstr "临时隐藏输入，比如密码。"
+
+#: showmethekey-gtk/smtk-app-win.ui:83
 msgid "Show _Shift Separately"
 msgstr "单独显示 Shift（_S）"
 
-#: showmethekey-gtk/smtk-app-win.ui:114
+#: showmethekey-gtk/smtk-app-win.ui:84
+msgid "Show Ctrl+Shfit+A or Ctrl+A."
+msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
+
+#: showmethekey-gtk/smtk-app-win.ui:102
 msgid "Show _Mouse Button"
 msgstr "显示鼠标按钮（_M）"
 
-#: showmethekey-gtk/smtk-app-win.ui:140
+#: showmethekey-gtk/smtk-app-win.ui:103
+msgid "Mouse buttons can be very annoying."
+msgstr "鼠标按钮有时候会太占地方。"
+
+#: showmethekey-gtk/smtk-app-win.ui:120
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:152
+#: showmethekey-gtk/smtk-app-win.ui:121
+msgid "Raw is Linux kernel's scancode and maybe not so useful."
+msgstr "按键名是 Linux 内核的扫描码，可能不会特别有用。"
+
+#: showmethekey-gtk/smtk-app-win.ui:127
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:153
+#: showmethekey-gtk/smtk-app-win.ui:128
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:170
+#: showmethekey-gtk/smtk-app-win.ui:142
 msgid "Timeout (ms)"
 msgstr "超时（毫秒）"
 
-#: showmethekey-gtk/smtk-app-win.ui:197
+#: showmethekey-gtk/smtk-app-win.ui:143
+msgid ""
+"Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
+"keys."
+msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:163
 msgid "Width (px)"
 msgstr "宽度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:219
+#: showmethekey-gtk/smtk-app-win.ui:164
+msgid "Width of keys window."
+msgstr "按键窗口的宽度。"
+
+#: showmethekey-gtk/smtk-app-win.ui:179
 msgid "Height (px)"
 msgstr "高度（像素）"
+
+#: showmethekey-gtk/smtk-app-win.ui:180
+msgid "Height of keys window."
+msgstr "按键窗口的高度。"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:7
 msgid "_Usage"
@@ -157,8 +191,6 @@ msgstr "关于让我看键（_A）"
 msgid "_Quit"
 msgstr "退出（_Q）"
 
-#. Disable subtitle to get a compact header bar.
-#. gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
-#: showmethekey-gtk/smtk-keys-win.c:245
+#: showmethekey-gtk/smtk-keys-win.c:272
 msgid "Clickable Area"
 msgstr "可点击区域"

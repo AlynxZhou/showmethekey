@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <adwaita.h>
 #include <glib/gi18n.h>
 
 #include "smtk.h"
@@ -6,10 +7,10 @@
 #include "smtk-app-win.h"
 
 struct _SmtkApp {
-	GtkApplication parent_instance;
+	AdwApplication parent_instance;
 	GtkWidget *win;
 };
-G_DEFINE_TYPE(SmtkApp, smtk_app, GTK_TYPE_APPLICATION)
+G_DEFINE_TYPE(SmtkApp, smtk_app, ADW_TYPE_APPLICATION)
 
 static void pause_action(GSimpleAction *action, GVariant *parameter,
 			 gpointer user_data)

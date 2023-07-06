@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
-  <!--
-    Must keep the same sequence with SmtkKeyMode
-    and the same name with mode_selector.
-  -->
-  <enum id="one.alynx.showmethekey.mode">
-    <value nick="Composed" value="0" />
-    <value nick="Raw" value="1" />
-  </enum>
   <schema path="/one/alynx/showmethekey/" id="one.alynx.showmethekey">
     <key name="first-time" type="b">
       <summary>First Time Launch or Not</summary>
@@ -24,11 +16,10 @@
       <description>Show mouse button and keyboard key or only keyboard key.</description>
       <default>true</default>
     </key>
-    <key enum="one.alynx.showmethekey.mode" name="mode">
+    <key type="d" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>
-      <!-- We need to add quote manually here for type `s`. -->
-      <default>"Composed"</default>
+      <default>0</default>
     </key>
     <!-- GtkSpinButton only support double, not int. -->
     <key type="d" name="width">

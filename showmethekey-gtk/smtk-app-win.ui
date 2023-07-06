@@ -4,239 +4,198 @@
   <object class="GtkImage" id="menu_image">
     <property name="icon_name">open-menu-symbolic</property>
   </object>
-  <template class="SmtkAppWin" parent="GtkApplicationWindow">
+  <template class="SmtkAppWin" parent="AdwApplicationWindow">
     <property name="icon-name">one.alynx.showmethekey</property>
     <property name="title" translatable="yes">Show Me The Key</property>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="header">
-        <property name="title-widget">
-          <object class="GtkLabel">
-            <property name="label" translatable="yes">Show Me The Key</property>
-            <property name="single-line-mode">true</property>
-            <style>
-              <class name="title"/>
-            </style>
-          </object>
-        </property>
-        <property name="show-title-buttons">true</property>
-        <child type="start">
-          <object class="GtkSwitch" id="keys_win_switch">
-            <property name="hexpand">false</property>
-            <property name="halign">center</property>
-            <signal
-              name="notify::active"
-              handler="smtk_app_win_on_keys_win_switch_active"
-              object="SmtkAppWin"
-              swapped="yes" />
-          </object>
-        </child>
-        <child type="end">
-          <object class="GtkMenuButton" id="menu_button">
-            <property name="tooltip-text" translatable="yes">Menu</property>
-            <property name="icon-name">open-menu-symbolic</property>
-            <accessibility>
-              <property name="label" translatable="yes">Primary menu</property>
-            </accessibility>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
+    <property name="content">
       <object class="GtkBox">
         <property name="orientation">vertical</property>
-        <property name="margin-top">10</property>
-        <property name="margin-start">10</property>
-        <property name="margin-bottom">10</property>
-        <property name="margin-end">10</property>
-        <property name="spacing">10</property>
         <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="use-underline">true</property>
-                <property name="label" translatable="yes">_Pause</property>
-                <property name="mnemonic-widget">pause_switch</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
+          <object class="AdwHeaderBar" id="header">
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <property name="title" translatable="yes">Show Me The Key</property>
+              </object>
+            </property>
+            <property name="show-start-title-buttons">false</property>
+            <property name="show-end-title-buttons">true</property>
+            <child type="start">
+              <object class="GtkSwitch" id="keys_win_switch">
+                <property name="hexpand">false</property>
+                <property name="halign">center</property>
+                <signal
+                    name="notify::active"
+                    handler="smtk_app_win_on_keys_win_switch_active"
+                    object="SmtkAppWin"
+                    swapped="yes" />
               </object>
             </child>
-            <child>
-              <object class="GtkSwitch" id="pause_switch">
-                <property name="hexpand">false</property>
-                <property name="halign">end</property>
-                <property name="sensitive">false</property>
-                <property name="active">false</property>
-                <signal
-                  name="notify::active"
-                  handler="smtk_app_win_on_pause_switch_active"
-                  object="SmtkAppWin"
-                  swapped="yes" />
+            <child type="end">
+              <object class="GtkMenuButton" id="menu_button">
+                <property name="tooltip-text" translatable="yes">Menu</property>
+                <property name="icon-name">open-menu-symbolic</property>
+                <accessibility>
+                  <property name="label" translatable="yes">Primary menu</property>
+                </accessibility>
               </object>
             </child>
           </object>
         </child>
         <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="use-underline">true</property>
-                <property name="label" translatable="yes">Show _Shift Separately</property>
-                <property name="mnemonic-widget">shift_switch</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="shift_switch">
-                <property name="hexpand">false</property>
-                <property name="halign">end</property>
-                <property name="active">true</property>
-                <signal
-                  name="notify::active"
-                  handler="smtk_app_win_on_shift_switch_active"
-                  object="SmtkAppWin"
-                  swapped="yes" />
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="use-underline">true</property>
-                <property name="label" translatable="yes">Show _Mouse Button</property>
-                <property name="mnemonic-widget">mouse_switch</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSwitch" id="mouse_switch">
-                <property name="hexpand">false</property>
-                <property name="halign">end</property>
-                <property name="active">true</property>
-                <signal
-                  name="notify::active"
-                  handler="smtk_app_win_on_mouse_switch_active"
-                  object="SmtkAppWin"
-                  swapped="yes" />
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="label" translatable="yes">Display Mode</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkDropDown" id="mode_selector">
-                <property name="hexpand">true</property>
-                <property name="halign">end</property>
-                <!-- Must keep the same sequence with SmtkKeyMode. -->
-                <property name="selected">0</property>
-                <property name="model">
-                  <object class="GtkStringList">
-                    <items>
-                      <item translatable="yes">Composed</item>
-                      <item translatable="yes">Raw</item>
-                    </items>
+          <object class="AdwClamp">
+            <property name="child">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="margin-top">10</property>
+                <property name="margin-start">10</property>
+                <property name="margin-bottom">10</property>
+                <property name="margin-end">10</property>
+                <property name="spacing">10</property>
+                <child>
+                  <object class="GtkListBox">
+                    <property name="selection-mode">none</property>
+                    <style>
+                      <class name="boxed-list"/>
+                    </style>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">_Pause</property>
+                        <property name="subtitle" translatable="yes">Temporary hide input like password.</property>
+                        <property name="activatable-widget">pause_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="pause_switch">
+                            <property name="valign">center</property>
+                            <property name="sensitive">false</property>
+                            <property name="active">false</property>
+                            <signal
+                                name="notify::active"
+                                handler="smtk_app_win_on_pause_switch_active"
+                                object="SmtkAppWin"
+                                swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Show _Shift Separately</property>
+                        <property name="subtitle" translatable="yes">Show Ctrl+Shfit+A or Ctrl+A.</property>
+                        <property name="activatable-widget">shift_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="shift_switch">
+                            <property name="valign">center</property>
+                            <property name="active">true</property>
+                            <signal
+                                name="notify::active"
+                                handler="smtk_app_win_on_shift_switch_active"
+                                object="SmtkAppWin"
+                                swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Show _Mouse Button</property>
+                        <property name="subtitle" translatable="yes">Mouse buttons can be very annoying.</property>
+                        <property name="activatable-widget">mouse_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="mouse_switch">
+                            <property name="valign">center</property>
+                            <property name="active">true</property>
+                            <signal
+                                name="notify::active"
+                                handler="smtk_app_win_on_mouse_switch_active"
+                                object="SmtkAppWin"
+                                swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwComboRow" id="mode_selector">
+                        <property name="title" translatable="yes">Display Mode</property>
+                        <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode and maybe not so useful.</property>
+                        <!-- Must keep the same sequence with SmtkKeyMode. -->
+                        <property name="selected">0</property>
+                        <property name="model">
+                          <object class="GtkStringList">
+                            <items>
+                              <item translatable="yes">Composed</item>
+                              <item translatable="yes">Raw</item>
+                            </items>
+                          </object>
+                        </property>
+                        <signal
+                            name="notify::selected"
+                            handler="smtk_app_win_on_mode_selector_selected"
+                            object="SmtkAppWin"
+                            swapped="yes" />
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Timeout (ms)</property>
+                        <property name="subtitle" translatable="yes">Clear keys if no new key after how many miliscconds. Set to 0 to keep all keys.</property>
+                        <property name="activatable-widget">timeout_entry</property>
+                        <child>
+                          <object class="GtkSpinButton" id="timeout_entry">
+                            <property name="valign">center</property>
+                            <!-- Keep 0 digit after dot because we are using it as int. -->
+                            <property name="digits">0</property>
+                            <property name="text">0</property>
+                            <signal
+                                name="notify::value"
+                                handler="smtk_app_win_on_timeout_value"
+                                object="SmtkAppWin"
+                                swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Width (px)</property>
+                        <property name="subtitle" translatable="yes">Width of keys window.</property>
+                        <property name="activatable-widget">width_entry</property>
+                        <child>
+                          <object class="GtkSpinButton" id="width_entry">
+                            <property name="valign">center</property>
+                            <!-- Keep 0 digit after dot because we are using it as int. -->
+                            <property name="digits">0</property>
+                            <property name="text">1500</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Height (px)</property>
+                        <property name="subtitle" translatable="yes">Height of keys window.</property>
+                        <property name="activatable-widget">height_entry</property>
+                        <child>
+                          <object class="GtkSpinButton" id="height_entry">
+                            <property name="valign">center</property>
+                            <!-- Keep 0 digit after dot because we are using it as int. -->
+                            <property name="digits">0</property>
+                            <property name="text">200</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
-                </property>
-                <signal
-                  name="notify::selected-item"
-                  handler="smtk_app_win_on_mode_selector_selected_item"
-                  object="SmtkAppWin"
-                  swapped="yes" />
+                </child>
               </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="label" translatable="yes">Timeout (ms)</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSpinButton" id="timeout_entry">
-                <property name="hexpand">true</property>
-                <property name="halign">end</property>
-                <!-- Keep 0 digit after dot because we are using it as int. -->
-                <property name="digits">0</property>
-                <property name="text">0</property>
-                <signal
-                  name="notify::value"
-                  handler="smtk_app_win_on_timeout_value"
-                  object="SmtkAppWin"
-                  swapped="yes" />
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="label" translatable="yes">Width (px)</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSpinButton" id="width_entry">
-                <property name="hexpand">true</property>
-                <property name="halign">end</property>
-                <!-- Keep 0 digit after dot because we are using it as int. -->
-                <property name="digits">0</property>
-                <property name="text">1500</property>
-              </object>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">10</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="label" translatable="yes">Height (px)</property>
-                <property name="hexpand">true</property>
-                <property name="halign">start</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkSpinButton" id="height_entry">
-                <property name="hexpand">true</property>
-                <property name="halign">end</property>
-                <!-- Keep 0 digit after dot because we are using it as int. -->
-                <property name="digits">0</property>
-                <property name="text">200</property>
-              </object>
-            </child>
+            </property>
           </object>
         </child>
       </object>
-    </child>
+    </property>
   </template>
 </interface>

@@ -16,9 +16,14 @@ window.smtk-keys-win headerbar {
   /* In some theme (e.g. Adwaita) it set a background image. */
   background-image: none;
   /* Use this to get a compact header bar when subtitle is disabled. */
-  /* Not sure why GTK4's actual input region is smaller than allocation, so */
+  /* Not sure why GTK 4's actual input region is smaller than allocation, so */
   /* don't use this to make it bigger. */
   /* min-height: 0px; */
   box-shadow: none;
   border: none;
+}
+
+/* Don't change color when toggle dark mode, we are always dark. */
+window.smtk-keys-win headerbar windowhandle box windowtitle {
+    color: rgba(255, 255, 255, 0.7);
 }

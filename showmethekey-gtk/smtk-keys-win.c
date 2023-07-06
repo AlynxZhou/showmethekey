@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <adwaita.h>
 #include <glib/gi18n.h>
 #ifdef GDK_WINDOWING_X11
 #	include <gdk/x11/gdkx.h>
@@ -10,7 +11,8 @@
 #include "smtk-keys-emitter.h"
 
 struct _SmtkKeysWin {
-	GtkWindow parent_instance;
+	AdwWindow parent_instance;
+	GtkWidget *box;
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *area;
@@ -25,7 +27,7 @@ struct _SmtkKeysWin {
 	bool paused;
 	GError *error;
 };
-G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, GTK_TYPE_WINDOW)
+G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_WINDOW)
 
 enum {
 	PROP_0,
@@ -237,40 +239,16 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
-	GdkDisplay *display = gdk_display_get_default();
-
 	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
 	win->paused = false;
 
-	// Add a class so we change style of the keys window only.
+	// AdwApplication will automatically load `style.css` under resource
+	// base path, so we don't need to load it manually, just add a class so
+	// we change style of the keys window only.
 	gtk_widget_add_css_class(GTK_WIDGET(win), "smtk-keys-win");
-
-	// Allow user to choose position by drag this.
-	win->header_bar = gtk_header_bar_new();
-	gtk_header_bar_set_show_title_buttons(GTK_HEADER_BAR(win->header_bar),
-					      false);
-	// Disable subtitle to get a compact header bar.
-	// gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(win->header_bar), false);
-	win->handle = gtk_label_new(_("Clickable Area"));
-	gtk_header_bar_set_title_widget(GTK_HEADER_BAR(win->header_bar),
-					win->handle);
-	gtk_window_set_titlebar(GTK_WINDOW(win), win->header_bar);
-
-	// We don't want to paint the app shadow and decoration,
-	// so just use a custom CSS to disable decoration outside the window.
-	win->window_css_provider = gtk_css_provider_new();
-	gtk_css_provider_load_from_resource(
-		win->window_css_provider,
-		"/one/alynx/showmethekey/smtk-keys-win.css");
-
-	if (display != NULL) {
-		gtk_style_context_add_provider_for_display(
-			display, GTK_STYLE_PROVIDER(win->window_css_provider),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	}
 
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
@@ -281,6 +259,20 @@ static void smtk_keys_win_constructed(GObject *object)
 {
 	// Seems we can only get constructor properties here.
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	win->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	adw_window_set_content(ADW_WINDOW(win), win->box);
+
+	// Allow user to choose position by drag this.
+	win->header_bar = adw_header_bar_new();
+	adw_header_bar_set_show_start_title_buttons(
+		ADW_HEADER_BAR(win->header_bar), false);
+	adw_header_bar_set_show_end_title_buttons(
+		ADW_HEADER_BAR(win->header_bar), false);
+	win->handle = adw_window_title_new(_("Clickable Area"), NULL);
+	adw_header_bar_set_title_widget(ADW_HEADER_BAR(win->header_bar),
+					win->handle);
+	gtk_box_append(GTK_BOX(win->box), win->header_bar);
 
 	win->emitter = smtk_keys_emitter_new(win->show_shift, win->show_mouse,
 					     win->mode, &win->error);
@@ -300,7 +292,7 @@ static void smtk_keys_win_constructed(GObject *object)
 		goto out;
 
 	win->area = smtk_keys_area_new(win->timeout);
-	gtk_window_set_child(GTK_WINDOW(win), win->area);
+	gtk_box_append(GTK_BOX(win->box), win->area);
 
 out:
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);

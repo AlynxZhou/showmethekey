@@ -1,4 +1,5 @@
 #include <gtk/gtk.h>
+#include <adwaita.h>
 #include <glib/gi18n.h>
 
 #include "smtk.h"
@@ -8,7 +9,7 @@
 #include "smtk-keys-emitter.h"
 
 struct _SmtkAppWin {
-	GtkApplicationWindow parent_instance;
+	AdwApplicationWindow parent_instance;
 	GSettings *settings;
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
@@ -21,7 +22,7 @@ struct _SmtkAppWin {
 	GtkWidget *timeout_entry;
 	GtkWidget *keys_win;
 };
-G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, GTK_TYPE_APPLICATION_WINDOW)
+G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
@@ -68,12 +69,11 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 			// We actually get a GObject from GtkDropDown, for
 			// GtkStringList as a model, the type of item is
 			// GtkStringObject.
-			const char *mode_string = gtk_string_object_get_string(
-				gtk_drop_down_get_selected_item(
-					GTK_DROP_DOWN(win->mode_selector)));
-			g_debug("Mode: %s.", mode_string);
+			int mode_id = adw_combo_row_get_selected(
+				ADW_COMBO_ROW(win->mode_selector));
+			g_debug("Mode: %d.", mode_id);
 			SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
-			if (strcmp(mode_string, "Raw") == 0)
+			if (mode_id == 1)
 				mode = SMTK_KEY_MODE_RAW;
 			int timeout = gtk_spin_button_get_value_as_int(
 				GTK_SPIN_BUTTON(win->timeout_entry));
@@ -154,9 +154,9 @@ static void smtk_app_win_on_mouse_switch_active(SmtkAppWin *win,
 		gtk_switch_get_active(GTK_SWITCH(win->mouse_switch)));
 }
 
-static void
-smtk_app_win_on_mode_selector_selected_item(SmtkAppWin *win, GParamSpec *prop,
-					    GtkDropDown *mode_selector)
+static void smtk_app_win_on_mode_selector_selected(SmtkAppWin *win,
+						   GParamSpec *prop,
+						   AdwComboRow *mode_selector)
 {
 	// This only works when keys_win is open.
 	if (win->keys_win == NULL)
@@ -166,12 +166,11 @@ smtk_app_win_on_mode_selector_selected_item(SmtkAppWin *win, GParamSpec *prop,
 	//
 	// We actually get a GObject from GtkDropDown, for GtkStringList as a
 	// model, the type of item is GtkStringObject.
-	const char *mode_string =
-		gtk_string_object_get_string(gtk_drop_down_get_selected_item(
-			GTK_DROP_DOWN(win->mode_selector)));
-	g_debug("Mode: %s.", mode_string);
+	int mode_id =
+		adw_combo_row_get_selected(ADW_COMBO_ROW(win->mode_selector));
+	g_debug("Mode: %d.", mode_id);
 	SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
-	if (strcmp(mode_string, "Raw") == 0)
+	if (mode_id == 1)
 		mode = SMTK_KEY_MODE_RAW;
 
 	smtk_keys_win_set_mode(SMTK_KEYS_WIN(win->keys_win), mode);
@@ -189,16 +188,6 @@ static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,
 	g_debug("Timeout: %d.", timeout);
 
 	smtk_keys_win_set_timeout(SMTK_KEYS_WIN(win->keys_win), timeout);
-}
-
-static GVariant *
-smtk_app_win_mode_selector_bind_set(const GValue *value,
-				    const GVariantType *expected_type,
-				    gpointer user_data)
-{
-	const char *mode = gtk_string_object_get_string(
-		GTK_STRING_OBJECT(g_value_get_object(value)));
-	return g_variant_new_string(mode);
 }
 
 static void smtk_app_win_init(SmtkAppWin *win)
@@ -235,10 +224,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind_with_mapping(win->settings, "mode", win->mode_selector,
-				     "selected-item", G_SETTINGS_BIND_SET, NULL,
-				     smtk_app_win_mode_selector_bind_set, NULL,
-				     NULL);
+	g_settings_bind(win->settings, "mode", win->mode_selector, "selected",
+			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "width", win->width_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "height", win->height_entry, "value",
@@ -308,7 +295,7 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 		smtk_app_win_on_mouse_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
-		smtk_app_win_on_mode_selector_selected_item);
+		smtk_app_win_on_mode_selector_selected);
 	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
 						smtk_app_win_on_timeout_value);
 }
@@ -352,9 +339,9 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	GtkAlertDialog *dialog = gtk_alert_dialog_new(
-		_("Usage:\n\n"
-		  "1. Please input admin password after toggling the switch, "
+	GtkWidget *dialog = adw_message_dialog_new(
+		GTK_WINDOW(win), _("Usage"),
+		_("1. Please input admin password after toggling the switch, "
 		  "because it needs superuser permission to read input events, "
 		  "and Wayland does not allow running graphics program with "
 		  "superuser permission, so it uses polkit to run a backend "
@@ -389,17 +376,20 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "5. Set Timeout to 0 if you want to keep all keys.\n\n"
 		  "You can open this dialog again via menu icon on title bar "
 		  "-> \"Usage\"."));
-	gtk_alert_dialog_set_modal(dialog, true);
-	gtk_alert_dialog_show(dialog, GTK_WINDOW(win));
+	adw_message_dialog_set_body_use_markup(ADW_MESSAGE_DIALOG(dialog),
+					       true);
+	adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(dialog), "close",
+					_("Close"));
 	g_signal_connect_swapped(dialog, "response",
 				 G_CALLBACK(gtk_window_destroy), dialog);
+	gtk_window_present(GTK_WINDOW(dialog));
 }
 
 void smtk_app_win_show_about_dialog(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	const char *authors[] = { "Alynx Zhou", "LGiki", NULL };
+	const char *developers[] = { "Alynx Zhou", "LGiki", NULL };
 
 	const char *artists[] = { "Freepik", NULL };
 
@@ -424,14 +414,15 @@ void smtk_app_win_show_about_dialog(SmtkAppWin *win)
 		"governing permissions and\n"
 		"limitations under the License.";
 
-	gtk_show_about_dialog(
-		GTK_WINDOW(win), "authors", authors, "artists", artists,
-		"documenters", documenters, "translator-credits",
-		_("translator-credits"), "title", _("About Show Me The Key"),
-		"program-name", _("Show Me The Key"), "comments",
-		_("Show keys you typed on screen."), "copyright",
-		"Copyright © 2021-2022 Alynx Zhou", "license", license,
-		"logo-icon-name", "one.alynx.showmethekey", "website",
-		"https://showmethekey.alynx.one/", "website-label",
-		"showmethekey.alynx.one", "version", PROJECT_VERSION, NULL);
+	adw_show_about_window(GTK_WINDOW(win), "developers", developers,
+			      "artists", artists, "documenters", documenters,
+			      "translator-credits", _("translator-credits"),
+			      "title", _("About Show Me The Key"),
+			      "application-name", _("Show Me The Key"),
+			      "comments", _("Show keys you typed on screen."),
+			      "copyright", "Copyright © 2021-2022 Alynx Zhou",
+			      "license", license, "application-icon",
+			      "one.alynx.showmethekey", "website",
+			      "https://showmethekey.alynx.one/", "version",
+			      PROJECT_VERSION, NULL);
 }

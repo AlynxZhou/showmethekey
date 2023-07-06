@@ -287,8 +287,9 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 
 GtkWidget *smtk_keys_area_new(int timeout)
 {
-	SmtkKeysArea *area =
-		g_object_new(SMTK_TYPE_KEYS_AREA, "timeout", timeout, NULL);
+	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "timeout",
+					  timeout, "vexpand", true, "hexpand",
+					  true, NULL);
 	return GTK_WIDGET(area);
 }
 
