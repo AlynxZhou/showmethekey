@@ -69,12 +69,10 @@ static const struct libinput_interface interface = {
 
 static int print_key_event(struct libinput_event *event)
 {
-	struct libinput_device *device = libinput_event_get_device(event);
 	struct libinput_event_keyboard *keyboard =
 		libinput_event_get_keyboard_event(event);
 
 	enum libinput_event_type event_type = libinput_event_get_type(event);
-	const char *device_name = libinput_device_get_name(device);
 	uint32_t time_stamp = libinput_event_keyboard_get_time(keyboard);
 	uint32_t key_code = libinput_event_keyboard_get_key(keyboard);
 	const char *key_name = libevdev_event_code_get_name(EV_KEY, key_code);
@@ -88,25 +86,22 @@ static int print_key_event(struct libinput_event *event)
 	return printf("{"
 		      "\"event_name\": \"KEYBOARD_KEY\", "
 		      "\"event_type\": %d, "
-		      "\"device_name\": \"%s\", "
 		      "\"time_stamp\": %d, "
 		      "\"key_name\": \"%s\", "
 		      "\"key_code\": %d, "
 		      "\"state_name\": \"%s\", "
 		      "\"state_code\": %d"
 		      "}\n",
-		      event_type, device_name, time_stamp, key_name, key_code,
-		      state_name, state_code);
+		      event_type, time_stamp, key_name, key_code, state_name,
+		      state_code);
 }
 
 static int print_button_event(struct libinput_event *event)
 {
-	struct libinput_device *device = libinput_event_get_device(event);
 	struct libinput_event_pointer *pointer =
 		libinput_event_get_pointer_event(event);
 
 	enum libinput_event_type event_type = libinput_event_get_type(event);
-	const char *device_name = libinput_device_get_name(device);
 	uint32_t time_stamp = libinput_event_pointer_get_time(pointer);
 	uint32_t button_code = libinput_event_pointer_get_button(pointer);
 	const char *button_name =
@@ -119,15 +114,14 @@ static int print_button_event(struct libinput_event *event)
 	return printf("{"
 		      "\"event_name\": \"POINTER_BUTTON\", "
 		      "\"event_type\": %d, "
-		      "\"device_name\": \"%s\", "
 		      "\"time_stamp\": %d, "
 		      "\"key_name\": \"%s\", "
 		      "\"key_code\": %d, "
 		      "\"state_name\": \"%s\", "
 		      "\"state_code\": %d"
 		      "}\n",
-		      event_type, device_name, time_stamp, button_name,
-		      button_code, state_name, state_code);
+		      event_type, time_stamp, button_name, button_code,
+		      state_name, state_code);
 }
 
 static int handle_events(struct libinput *libinput)

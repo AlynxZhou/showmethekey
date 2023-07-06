@@ -119,7 +119,7 @@ This program, instead, reads key events via libinput directly, and then put it o
 
 This part exists because of Wayland's security policy, which means you cannot run a GUI program with `sudo` (see <https://wiki.archlinux.org/index.php/Running_GUI_applications_as_root#Wayland>). It's suggested to split your program into a GUI frontend and a CLI backend that do privileged operations, and this is the backend, a custom re-write of <https://gitlab.freedesktop.org/libinput/libinput/-/blob/master/tools/libinput-debug-events.c>, based on [libinput](https://www.freedesktop.org/wiki/Software/libinput/), [libudev](https://www.freedesktop.org/software/systemd/man/libudev.html) and [libevdev](https://www.freedesktop.org/wiki/Software/libevdev/).
 
-It generates JSON in lines like `{"event_name": "KEYBOARD_KEY", "event_type": 300, "device_name": "USB Keyboard USB Keyboard", "time_stamp": 39869802, "key_name": "KEY_C", "key_code": 46, "state_name": "PRESSED", "state_code": 1}`.
+It generates JSON in lines like `{"event_name": "KEYBOARD_KEY", "event_type": 300, "time_stamp": 39869802, "key_name": "KEY_C", "key_code": 46, "state_name": "PRESSED", "state_code": 1}`.
 
 ## GTK
 

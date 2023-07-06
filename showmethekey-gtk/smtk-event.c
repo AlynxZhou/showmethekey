@@ -8,7 +8,6 @@ struct _SmtkEvent {
 	char *source;
 	SmtkEventType event_type;
 	SmtkEventState event_state;
-	char *device_name;
 	char *key_name;
 	unsigned int key_code;
 	unsigned int time_stamp;
@@ -63,7 +62,6 @@ static void smtk_event_init(SmtkEvent *event)
 {
 	event->error = NULL;
 	event->source = NULL;
-	event->device_name = NULL;
 	event->key_name = NULL;
 	event->event_type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
 	event->event_state = SMTK_EVENT_STATE_RELEASED;
@@ -103,8 +101,6 @@ static void smtk_event_constructed(GObject *object)
 		event->event_state = SMTK_EVENT_STATE_RELEASED;
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-JSON-Object.html#json-object-get-member>.
 	// Transfer none, so we need g_strdup().
-	event->device_name = g_strdup(
-		json_object_get_string_member(json_object, "device_name"));
 	event->key_name = g_strdup(
 		json_object_get_string_member(json_object, "key_name"));
 	event->key_code = json_object_get_int_member(json_object, "key_code");
@@ -119,10 +115,6 @@ static void smtk_event_finalize(GObject *object)
 	if (event->source != NULL) {
 		g_free(event->source);
 		event->source = NULL;
-	}
-	if (event->device_name != NULL) {
-		g_free(event->device_name);
-		event->device_name = NULL;
 	}
 	if (event->key_name != NULL) {
 		g_free(event->key_name);
@@ -175,13 +167,6 @@ SmtkEventState smtk_event_get_event_state(SmtkEvent *event)
 	g_return_val_if_fail(event != NULL, SMTK_EVENT_STATE_UNKNOWN);
 
 	return event->event_state;
-}
-
-const char *smtk_event_get_device_name(SmtkEvent *event)
-{
-	g_return_val_if_fail(event != NULL, NULL);
-
-	return event->device_name;
 }
 
 const char *smtk_event_get_key_name(SmtkEvent *event)
