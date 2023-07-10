@@ -64,6 +64,7 @@ Please help package showmethekey to your distribution!
 - libinput
 - glib2
 - gtk4
+- libadwaita
 - json-glib
 - cairo
 - pango
