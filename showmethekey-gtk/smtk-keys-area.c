@@ -28,9 +28,9 @@ struct _SmtkKeysArea {
 };
 G_DEFINE_TYPE(SmtkKeysArea, smtk_keys_area, GTK_TYPE_DRAWING_AREA)
 
-enum { PROP_0, PROP_TIMEOUT, N_PROPERTIES };
+enum { PROP_0, PROP_TIMEOUT, N_PROPS };
 
-static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+static GParamSpec *obj_props[N_PROPS] = { NULL };
 
 static void smtk_keys_area_set_property(GObject *object,
 					unsigned int property_id,
@@ -40,7 +40,7 @@ static void smtk_keys_area_set_property(GObject *object,
 
 	switch (property_id) {
 	case PROP_TIMEOUT:
-		area->timeout = g_value_get_int(value);
+		smtk_keys_area_set_timeout(area, g_value_get_int(value));
 		break;
 	default:
 		/* We don't have any other property... */
@@ -277,12 +277,11 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 	object_class->dispose = smtk_keys_area_dispose;
 	object_class->finalize = smtk_keys_area_finalize;
 
-	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
+	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
-	g_object_class_install_properties(object_class, N_PROPERTIES,
-					  obj_properties);
+	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
 GtkWidget *smtk_keys_area_new(int timeout)
@@ -297,7 +296,7 @@ void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)
 {
 	g_return_if_fail(area != NULL);
 
-	g_object_set(area, "timeout", timeout, NULL);
+	area->timeout = timeout;
 }
 
 void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])

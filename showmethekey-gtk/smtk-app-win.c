@@ -1,15 +1,18 @@
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
+#include <xkbcommon/xkbregistry.h>
 
 #include "smtk.h"
 #include "smtk-app.h"
 #include "smtk-app-win.h"
 #include "smtk-keys-win.h"
 #include "smtk-keys-emitter.h"
+#include "smtk-keymap-list.h"
 
 struct _SmtkAppWin {
 	AdwApplicationWindow parent_instance;
+	struct rxkb_context *rxkb_context;
 	GSettings *settings;
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
@@ -20,6 +23,7 @@ struct _SmtkAppWin {
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
 	GtkWidget *timeout_entry;
+	GtkWidget *keymap_selector;
 	GtkWidget *keys_win;
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
@@ -85,11 +89,17 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 				GTK_SPIN_BUTTON(win->height_entry));
 			height = height <= 0 ? 200 : height;
 			g_debug("Size: %dx%d.", width, height);
+			GObject *keymap = adw_combo_row_get_selected_item(
+				ADW_COMBO_ROW(win->keymap_selector));
+			const char *layout = smtk_keymap_item_get_layout(
+				SMTK_KEYMAP_ITEM(keymap));
+			const char *variant = smtk_keymap_item_get_variant(
+				SMTK_KEYMAP_ITEM(keymap));
+			g_debug("Keymap: %s (%s).", layout, variant);
 			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(show_shift,
-							  show_mouse, mode,
-							  width, height,
-							  timeout, &error);
+			win->keys_win = smtk_keys_win_new(
+				show_shift, show_mouse, mode, width, height,
+				timeout, layout, variant, &error);
 			if (win->keys_win == NULL) {
 				g_warning("%s", error->message);
 				g_error_free(error);
@@ -190,6 +200,68 @@ static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,
 	smtk_keys_win_set_timeout(SMTK_KEYS_WIN(win->keys_win), timeout);
 }
 
+static void
+smtk_app_win_on_keymap_selector_selected(SmtkAppWin *win, GParamSpec *prop,
+					 AdwComboRow *keymap_selector)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	GObject *keymap = adw_combo_row_get_selected_item(
+		ADW_COMBO_ROW(win->keymap_selector));
+	const char *layout =
+		smtk_keymap_item_get_layout(SMTK_KEYMAP_ITEM(keymap));
+	const char *variant =
+		smtk_keymap_item_get_variant(SMTK_KEYMAP_ITEM(keymap));
+	g_debug("Keymap: %s (%s).", layout, variant);
+
+	smtk_keys_win_set_layout(SMTK_KEYS_WIN(win->keys_win), layout);
+	smtk_keys_win_set_variant(SMTK_KEYS_WIN(win->keys_win), variant);
+}
+
+static int _settings_to_object(GValue *value, GVariant *variant,
+			       gpointer user_data)
+{
+	SmtkAppWin *win = user_data;
+	char *name = NULL;
+
+	g_variant_get(variant, "&s", &name);
+
+	if (name == NULL || strlen(name) == 0)
+		return -1;
+
+	GListModel *keymap_list =
+		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
+	int position =
+		smtk_keymap_list_find(SMTK_KEYMAP_LIST(keymap_list), name);
+	if (position < 0)
+		return -1;
+
+	g_value_set_uint(value, position);
+	return 1;
+}
+
+static GVariant *_object_to_settings(const GValue *value,
+				     const GVariantType *expected_type,
+				     gpointer user_data)
+{
+	SmtkAppWin *win = user_data;
+	unsigned int position = g_value_get_uint(value);
+	GListModel *keymap_list =
+		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
+	GObject *keymap = g_list_model_get_object(keymap_list, position);
+	const char *name = smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(keymap));
+
+	if (name == NULL || strlen(name) == 0)
+		return NULL;
+
+	char *format_string = g_variant_type_dup_string(expected_type);
+	GVariant *variant = g_variant_new(format_string, name);
+	g_free(format_string);
+	return variant;
+}
+
 static void smtk_app_win_init(SmtkAppWin *win)
 {
 	gtk_widget_init_template(GTK_WIDGET(win));
@@ -219,6 +291,26 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->height_entry), 100,
 				       500);
 
+	SmtkKeymapList *keymap_list = smtk_keymap_list_new();
+	GtkExpression *name_expression = gtk_property_expression_new(
+		SMTK_TYPE_KEYMAP_ITEM, NULL, "name");
+	adw_combo_row_set_expression(ADW_COMBO_ROW(win->keymap_selector),
+				     name_expression);
+	adw_combo_row_set_model(ADW_COMBO_ROW(win->keymap_selector),
+				G_LIST_MODEL(keymap_list));
+	win->rxkb_context = rxkb_context_new(RXKB_CONTEXT_NO_FLAGS);
+	if (win->rxkb_context != NULL &&
+	    rxkb_context_parse_default_ruleset(win->rxkb_context)) {
+		for (struct rxkb_layout *rxkb_layout =
+			     rxkb_layout_first(win->rxkb_context);
+		     rxkb_layout != NULL;
+		     rxkb_layout = rxkb_layout_next(rxkb_layout))
+			smtk_keymap_list_append(
+				keymap_list, rxkb_layout_get_name(rxkb_layout),
+				rxkb_layout_get_variant(rxkb_layout));
+		smtk_keymap_list_sort(keymap_list);
+	}
+
 	win->settings = g_settings_new("one.alynx.showmethekey");
 	g_settings_bind(win->settings, "show-shift", win->shift_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
@@ -233,6 +325,12 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	g_settings_bind(win->settings, "timeout", win->timeout_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
 
+	g_settings_bind_with_mapping(win->settings, "keymap",
+				     win->keymap_selector, "selected",
+				     G_SETTINGS_BIND_DEFAULT,
+				     _settings_to_object, _object_to_settings,
+				     win, NULL);
+
 	if (g_settings_get_boolean(win->settings, "first-time")) {
 		smtk_app_win_show_usage_dialog(win);
 		g_settings_set_boolean(win->settings, "first-time", false);
@@ -244,6 +342,8 @@ static void smtk_app_win_dispose(GObject *object)
 	SmtkAppWin *win = SMTK_APP_WIN(object);
 
 	g_clear_object(&win->settings);
+
+	g_clear_pointer(&win->rxkb_context, rxkb_context_unref);
 
 	// Manually destroy keys_win, so CLI backend will be told to stop.、
 	if (win->keys_win != NULL) {
@@ -281,6 +381,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 					     SmtkAppWin, height_entry);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, timeout_entry);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, keymap_selector);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_keys_win_switch_active);
@@ -298,6 +400,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 		smtk_app_win_on_mode_selector_selected);
 	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
 						smtk_app_win_on_timeout_value);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_keymap_selector_selected);
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)

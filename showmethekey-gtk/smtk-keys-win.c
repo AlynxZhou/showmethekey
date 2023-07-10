@@ -16,14 +16,13 @@ struct _SmtkKeysWin {
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *area;
-	GtkCssProvider *basic_css_provider;
-	GtkCssProvider *window_css_provider;
-	GtkCssProvider *header_bar_css_provider;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
 	bool show_shift;
 	bool show_mouse;
 	int timeout;
+	char *layout;
+	char *variant;
 	bool paused;
 	GError *error;
 };
@@ -35,10 +34,12 @@ enum {
 	PROP_SHOW_SHIFT,
 	PROP_SHOW_MOUSE,
 	PROP_TIMEOUT,
-	N_PROPERTIES
+	PROP_LAYOUT,
+	PROP_VARIANT,
+	N_PROPS
 };
 
-static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+static GParamSpec *obj_props[N_PROPS] = { NULL };
 
 static void smtk_keys_win_set_property(GObject *object,
 				       unsigned int property_id,
@@ -48,16 +49,22 @@ static void smtk_keys_win_set_property(GObject *object,
 
 	switch (property_id) {
 	case PROP_MODE:
-		win->mode = g_value_get_enum(value);
+		smtk_keys_win_set_mode(win, g_value_get_enum(value));
 		break;
 	case PROP_SHOW_SHIFT:
-		win->show_shift = g_value_get_boolean(value);
+		smtk_keys_win_set_show_shift(win, g_value_get_boolean(value));
 		break;
 	case PROP_SHOW_MOUSE:
-		win->show_mouse = g_value_get_boolean(value);
+		smtk_keys_win_set_show_mouse(win, g_value_get_boolean(value));
 		break;
 	case PROP_TIMEOUT:
-		win->timeout = g_value_get_int(value);
+		smtk_keys_win_set_timeout(win, g_value_get_int(value));
+		break;
+	case PROP_LAYOUT:
+		smtk_keys_win_set_layout(win, g_value_get_string(value));
+		break;
+	case PROP_VARIANT:
+		smtk_keys_win_set_variant(win, g_value_get_string(value));
 		break;
 	default:
 		/* We don't have any other property... */
@@ -84,6 +91,12 @@ static void smtk_keys_win_get_property(GObject *object,
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, win->timeout);
+		break;
+	case PROP_LAYOUT:
+		g_value_set_string(value, smtk_keys_win_get_layout(win));
+		break;
+	case PROP_VARIANT:
+		g_value_set_string(value, smtk_keys_win_get_variant(win));
 		break;
 	default:
 		/* We don't have any other property... */
@@ -275,7 +288,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	gtk_box_append(GTK_BOX(win->box), win->header_bar);
 
 	win->emitter = smtk_keys_emitter_new(win->show_shift, win->show_mouse,
-					     win->mode, &win->error);
+					     win->mode, win->layout,
+					     win->variant, &win->error);
 	// `win->error` is set so just return.
 	if (win->emitter == NULL)
 		goto out;
@@ -302,10 +316,6 @@ static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
-	g_clear_object(&win->basic_css_provider);
-	g_clear_object(&win->window_css_provider);
-	g_clear_object(&win->header_bar_css_provider);
-
 	if (win->emitter != NULL) {
 		smtk_keys_emitter_stop_async(win->emitter);
 		g_object_unref(win->emitter);
@@ -313,6 +323,14 @@ static void smtk_keys_win_dispose(GObject *object)
 	}
 
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->dispose(object);
+}
+
+static void smtk_keys_win_finalize(GObject *object)
+{
+	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
+
+	g_clear_pointer(&win->layout, g_free);
+	g_clear_pointer(&win->variant, g_free);
 }
 
 static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
@@ -326,30 +344,38 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	object_class->constructed = smtk_keys_win_constructed;
 
 	object_class->dispose = smtk_keys_win_dispose;
+	object_class->finalize = smtk_keys_win_finalize;
 
 	// In GTK4 size allocate is not a signal but a virtual method, but I
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
 
-	obj_properties[PROP_MODE] = g_param_spec_enum(
+	obj_props[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
 		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_properties[PROP_SHOW_SHIFT] = g_param_spec_boolean(
+	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
 		"show-shift", "Show Shift", "Show Shift Separately", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_properties[PROP_SHOW_MOUSE] = g_param_spec_boolean(
+	obj_props[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_properties[PROP_TIMEOUT] = g_param_spec_int(
+	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_LAYOUT] =
+		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
+				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_VARIANT] = g_param_spec_string(
+		"variant", "Variant", "Keymap Variant", NULL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
-	g_object_class_install_properties(object_class, N_PROPERTIES,
-					  obj_properties);
+	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
 GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
-			     int width, int height, int timeout, GError **error)
+			     int width, int height, int timeout,
+			     const char *layout, const char *variant,
+			     GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -365,7 +391,8 @@ GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
 		"mode", mode, "show-shift", show_shift, "show-mouse",
-		show_mouse, "timeout", timeout, NULL);
+		show_mouse, "timeout", timeout, "layout", layout, "variant",
+		variant, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
@@ -403,9 +430,10 @@ void smtk_keys_win_set_show_shift(SmtkKeysWin *win, bool show_shift)
 	g_return_if_fail(win != NULL);
 
 	// Pass property to emitter.
-	smtk_keys_emitter_set_show_shift(win->emitter, show_shift);
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_show_shift(win->emitter, show_shift);
 	// Sync self property.
-	g_object_set(win, "show-shift", show_shift, NULL);
+	win->show_shift = show_shift;
 }
 
 void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse)
@@ -413,9 +441,10 @@ void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse)
 	g_return_if_fail(win != NULL);
 
 	// Pass property to emitter.
-	smtk_keys_emitter_set_show_mouse(win->emitter, show_mouse);
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_show_mouse(win->emitter, show_mouse);
 	// Sync self property.
-	g_object_set(win, "show-mouse", show_mouse, NULL);
+	win->show_mouse = show_mouse;
 }
 
 void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode)
@@ -423,9 +452,10 @@ void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode)
 	g_return_if_fail(win != NULL);
 
 	// Pass property to emitter.
-	smtk_keys_emitter_set_mode(win->emitter, mode);
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_mode(win->emitter, mode);
 	// Sync self property.
-	g_object_set(win, "mode", mode, NULL);
+	win->mode = mode;
 }
 
 void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout)
@@ -433,7 +463,46 @@ void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout)
 	g_return_if_fail(win != NULL);
 
 	// Pass property to area.
-	smtk_keys_area_set_timeout(SMTK_KEYS_AREA(win->area), timeout);
+	if (win->area != NULL)
+		smtk_keys_area_set_timeout(SMTK_KEYS_AREA(win->area), timeout);
 	// Sync self property.
-	g_object_set(win, "timeout", timeout, NULL);
+	win->timeout = timeout;
+}
+
+const char *smtk_keys_win_get_layout(SmtkKeysWin *win)
+{
+	g_return_val_if_fail(win != NULL, NULL);
+
+	return win->layout;
+}
+
+void smtk_keys_win_set_layout(SmtkKeysWin *win, const char *layout)
+{
+	g_return_if_fail(win != NULL);
+
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_layout(win->emitter, layout);
+
+	if (win->layout != NULL)
+		g_free(win->layout);
+	win->layout = g_strdup(layout);
+}
+
+const char *smtk_keys_win_get_variant(SmtkKeysWin *win)
+{
+	g_return_val_if_fail(win != NULL, NULL);
+
+	return win->variant;
+}
+
+void smtk_keys_win_set_variant(SmtkKeysWin *win, const char *variant)
+{
+	g_return_if_fail(win != NULL);
+
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_variant(win->emitter, variant);
+
+	if (win->variant != NULL)
+		g_free(win->variant);
+	win->variant = g_strdup(variant);
 }

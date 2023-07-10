@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
   <schema path="/one/alynx/showmethekey/" id="one.alynx.showmethekey">
-    <key name="first-time" type="b">
+    <key type="b" name="first-time">
       <summary>First Time Launch or Not</summary>
       <description>The program is running for the first time.</description>
       <default>true</default>
     </key>
-    <key name="show-shift" type="b">
+    <key type="b" name="show-shift">
       <summary>Show Shift or Not</summary>
       <description>Show shift separately or only when not consumed.</description>
       <default>true</default>
     </key>
-    <key name="show-mouse" type="b">
+    <key type="b" name="show-mouse">
       <summary>Show Mouse Button or Not</summary>
       <description>Show mouse button and keyboard key or only keyboard key.</description>
       <default>true</default>
     </key>
-    <key type="d" name="mode">
+    <key type="u" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>
       <default>0</default>
@@ -39,6 +39,11 @@
       <description>The inactive timeout after which text disappears, in milliseconds.</description>
       <default>0</default>
       <range min="0" />
+    </key>
+    <key type="s" name="keymap">
+      <summary>Keymap</summary>
+      <description>Keyboard layout and variant.</description>
+      <default>"us"</default>
     </key>
   </schema>
 </schemalist>

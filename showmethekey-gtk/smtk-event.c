@@ -20,9 +20,9 @@ G_DEFINE_TYPE(SmtkEvent, smtk_event, G_TYPE_OBJECT)
 G_DEFINE_QUARK(smtk-event-error-quark, smtk_event_error)
 // clang-format on
 
-enum { PROP_0, PROP_SOURCE, N_PROPERTIES };
+enum { PROP_0, PROP_SOURCE, N_PROPS };
 
-static GParamSpec *obj_properties[N_PROPERTIES] = { NULL };
+static GParamSpec *obj_props[N_PROPS] = { NULL };
 
 static void smtk_event_set_property(GObject *object, unsigned int property_id,
 				    const GValue *value, GParamSpec *pspec)
@@ -133,12 +133,11 @@ static void smtk_event_class_init(SmtkEventClass *event_class)
 
 	object_class->finalize = smtk_event_finalize;
 
-	obj_properties[PROP_SOURCE] = g_param_spec_string(
+	obj_props[PROP_SOURCE] = g_param_spec_string(
 		"source", "Source", "Event Text Source", NULL,
 		G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE);
 
-	g_object_class_install_properties(object_class, N_PROPERTIES,
-					  obj_properties);
+	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
 SmtkEvent *smtk_event_new(char *source, GError **error)

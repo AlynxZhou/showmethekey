@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-06 21:35+0800\n"
+"POT-Creation-Date: 2023-07-10 21:54+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:77 showmethekey-gtk/smtk-app-win.c:421
+#: showmethekey-gtk/smtk-app.c:77 showmethekey-gtk/smtk-app-win.c:526
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
 msgstr ""
@@ -26,11 +26,11 @@ msgstr ""
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:343
+#: showmethekey-gtk/smtk-app-win.c:448
 msgid "Usage"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:344
+#: showmethekey-gtk/smtk-app-win.c:449
 msgid ""
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
@@ -65,19 +65,19 @@ msgid ""
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:382
+#: showmethekey-gtk/smtk-app-win.c:487
 msgid "Close"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:419
+#: showmethekey-gtk/smtk-app-win.c:524
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:420
+#: showmethekey-gtk/smtk-app-win.c:525
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:422
+#: showmethekey-gtk/smtk-app-win.c:527
 msgid "Show keys you typed on screen."
 msgstr ""
 
@@ -89,70 +89,86 @@ msgstr ""
 msgid "Primary menu"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:63
+#: showmethekey-gtk/smtk-app-win.ui:56
+msgid "General"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:60
 msgid "_Pause"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:64
+#: showmethekey-gtk/smtk-app-win.ui:61
 msgid "Temporary hide input like password."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:83
+#: showmethekey-gtk/smtk-app-win.ui:80
 msgid "Show _Shift Separately"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:84
+#: showmethekey-gtk/smtk-app-win.ui:81
 msgid "Show Ctrl+Shfit+A or Ctrl+A."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:102
+#: showmethekey-gtk/smtk-app-win.ui:99
 msgid "Show _Mouse Button"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:103
+#: showmethekey-gtk/smtk-app-win.ui:100
 msgid "Mouse buttons can be very annoying."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:120
+#: showmethekey-gtk/smtk-app-win.ui:117
 msgid "Display Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:121
+#: showmethekey-gtk/smtk-app-win.ui:118
 msgid "Raw is Linux kernel's scancode and maybe not so useful."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:127
+#: showmethekey-gtk/smtk-app-win.ui:124
 msgid "Composed"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:128
+#: showmethekey-gtk/smtk-app-win.ui:125
 msgid "Raw"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:142
+#: showmethekey-gtk/smtk-app-win.ui:139
 msgid "Timeout (ms)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:143
+#: showmethekey-gtk/smtk-app-win.ui:140
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:163
+#: showmethekey-gtk/smtk-app-win.ui:160
 msgid "Width (px)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:164
+#: showmethekey-gtk/smtk-app-win.ui:161
 msgid "Width of keys window."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:179
+#: showmethekey-gtk/smtk-app-win.ui:176
 msgid "Height (px)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:180
+#: showmethekey-gtk/smtk-app-win.ui:177
 msgid "Height of keys window."
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:193
+msgid "Keyboard Rules"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:197
+msgid "Keymap"
+msgstr ""
+
+#: showmethekey-gtk/smtk-app-win.ui:198
+msgid "Choose your keyboard layout and variant."
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:7
@@ -167,6 +183,6 @@ msgstr ""
 msgid "_Quit"
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:272
+#: showmethekey-gtk/smtk-keys-win.c:285
 msgid "Clickable Area"
 msgstr ""

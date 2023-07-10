@@ -8,6 +8,7 @@ gtk_sources = files(
   'smtk-keys-area.c',
   'smtk-keys-emitter.c',
   'smtk-keys-mapper.c',
+  'smtk-keymap-list.c',
   'smtk-event.c'
 )
 
@@ -19,6 +20,7 @@ gtk_headers = files(
   'smtk-keys-area.h',
   'smtk-keys-emitter.h',
   'smtk-keys-mapper.h',
+  'smtk-keymap-list.h',
   'smtk-event.h'
 )
 
@@ -33,8 +35,9 @@ gio = dependency('gio-2.0', required: true)
 cairo = dependency('cairo', required: true)
 pango = dependency('pango', required: true)
 xkbcommon = dependency('xkbcommon', required: true)
+xkbregistry = dependency('xkbregistry', required: true)
 gtk_dependencies += [
-  gtk, libadw, x11, glib, json_glib, gio, cairo, pango, xkbcommon
+  gtk, libadw, x11, glib, json_glib, gio, cairo, pango, xkbcommon, xkbregistry
 ]
 # For config.h.
 gtk_include_directories += include_directories('../')

@@ -52,11 +52,8 @@
                 <property name="margin-end">10</property>
                 <property name="spacing">10</property>
                 <child>
-                  <object class="GtkListBox">
-                    <property name="selection-mode">none</property>
-                    <style>
-                      <class name="boxed-list"/>
-                    </style>
+                  <object class="AdwPreferencesGroup">
+                    <property name="title" translatable="yes">General</property>
                     <child>
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
@@ -187,6 +184,25 @@
                             <property name="text">200</property>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwPreferencesGroup">
+                    <property name="title" translatable="yes">Keyboard</property>
+                    <child>
+                      <object class="AdwComboRow" id="keymap_selector">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Keymap</property>
+                        <property name="subtitle" translatable="yes">Choose your keyboard layout and variant.</property>
+                        <!-- <property name="enable-search">true</property> -->
+                        <property name="selected">0</property>
+                        <signal
+                            name="notify::selected"
+                            handler="smtk_app_win_on_keymap_selector_selected"
+                            object="SmtkAppWin"
+                            swapped="yes" />
                       </object>
                     </child>
                   </object>

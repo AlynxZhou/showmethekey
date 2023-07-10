@@ -20,10 +20,13 @@ typedef enum {
 	SMTK_KEYS_MAPPER_ERROR_UNKNOWN
 } SmtkKeysMapperError;
 
-SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, GError **error);
+SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, const char *layout,
+				     const char *variant, GError **error);
 char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event);
 char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event);
 void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift);
+void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper, const char *layout);
+void smtk_keys_mapper_set_variant(SmtkKeysMapper *mapper, const char *variant);
 
 G_END_DECLS
 
