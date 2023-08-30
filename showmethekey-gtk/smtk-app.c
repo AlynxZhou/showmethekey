@@ -12,6 +12,15 @@ struct _SmtkApp {
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, ADW_TYPE_APPLICATION)
 
+static void clickable_action(GSimpleAction *action, GVariant *parameter,
+			     gpointer user_data)
+{
+	SmtkApp *app = SMTK_APP(user_data);
+
+	if (app->win != NULL)
+		smtk_app_win_toggle_clickable_switch(SMTK_APP_WIN(app->win));
+}
+
 static void pause_action(GSimpleAction *action, GVariant *parameter,
 			 gpointer user_data)
 {
@@ -104,7 +113,9 @@ static void smtk_app_startup(GApplication *g_app)
 
 	// Because application is not a construct property of GtkWindow,
 	// we have to setup accels here.
-	GActionEntry actions[] = { { "pause", pause_action, NULL, NULL, NULL },
+	GActionEntry actions[] = { { "clickable", clickable_action, NULL, NULL,
+				     NULL },
+				   { "pause", pause_action, NULL, NULL, NULL },
 				   { "shift", shift_action, NULL, NULL, NULL },
 				   { "mouse", mouse_action, NULL, NULL, NULL },
 				   { "usage", usage_action, NULL, NULL, NULL },
@@ -112,6 +123,7 @@ static void smtk_app_startup(GApplication *g_app)
 				   { "quit", quit_action, NULL, NULL, NULL } };
 	g_action_map_add_action_entries(G_ACTION_MAP(app), actions,
 					G_N_ELEMENTS(actions), app);
+	const char *clickable_accels[] = { "<Ctrl>C", NULL };
 	const char *pause_accels[] = { "<Ctrl>P", NULL };
 	const char *shift_accels[] = { "<Ctrl>S", NULL };
 	const char *mouse_accels[] = { "<Ctrl>M", NULL };
@@ -121,6 +133,8 @@ static void smtk_app_startup(GApplication *g_app)
 	// See Description of
 	// <https://developer.gnome.org/gio/stable/GActionMap.html>
 	// about "app." here.
+	gtk_application_set_accels_for_action(
+		GTK_APPLICATION(app), "app.clickable", clickable_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.pause",
 					      pause_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.shift",

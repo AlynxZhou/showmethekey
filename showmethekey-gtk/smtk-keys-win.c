@@ -18,21 +18,23 @@ struct _SmtkKeysWin {
 	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
+	bool clickable;
+	bool paused;
 	bool show_shift;
 	bool show_mouse;
 	int timeout;
 	char *layout;
 	char *variant;
-	bool paused;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_WINDOW)
 
 enum {
 	PROP_0,
-	PROP_MODE,
+	PROP_CLICKABLE,
 	PROP_SHOW_SHIFT,
 	PROP_SHOW_MOUSE,
+	PROP_MODE,
 	PROP_TIMEOUT,
 	PROP_LAYOUT,
 	PROP_VARIANT,
@@ -48,14 +50,17 @@ static void smtk_keys_win_set_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
-	case PROP_MODE:
-		smtk_keys_win_set_mode(win, g_value_get_enum(value));
+	case PROP_CLICKABLE:
+		smtk_keys_win_set_clickable(win, g_value_get_boolean(value));
 		break;
 	case PROP_SHOW_SHIFT:
 		smtk_keys_win_set_show_shift(win, g_value_get_boolean(value));
 		break;
 	case PROP_SHOW_MOUSE:
 		smtk_keys_win_set_show_mouse(win, g_value_get_boolean(value));
+		break;
+	case PROP_MODE:
+		smtk_keys_win_set_mode(win, g_value_get_enum(value));
 		break;
 	case PROP_TIMEOUT:
 		smtk_keys_win_set_timeout(win, g_value_get_int(value));
@@ -80,14 +85,17 @@ static void smtk_keys_win_get_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
-	case PROP_MODE:
-		g_value_set_enum(value, win->mode);
+	case PROP_CLICKABLE:
+		g_value_set_boolean(value, win->clickable);
 		break;
 	case PROP_SHOW_SHIFT:
 		g_value_set_boolean(value, win->show_shift);
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, win->show_mouse);
+		break;
+	case PROP_MODE:
+		g_value_set_enum(value, win->mode);
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, win->timeout);
@@ -222,6 +230,8 @@ static void smtk_keys_win_on_map(SmtkKeysWin *win, gpointer user_data)
 #endif
 }
 
+// NOTE: Not sure why but we can only alter input region in this function,
+// calling `gdk_surface_set_input_region()` in setter is invalid.
 static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 					int height, int baseline)
 {
@@ -234,20 +244,22 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 	g_debug("Allocated size: %dx%d.", width, height);
 
-	// Widget's allocation is only usable after realize.
-	GtkAllocation handle_allocation;
-	gtk_widget_get_allocation(win->handle, &handle_allocation);
-	g_debug("Clickable area: x: %d, y: %d, w: %d, h: %d.",
-		handle_allocation.x, handle_allocation.y,
-		handle_allocation.width, handle_allocation.height);
-	cairo_region_t *clickable_region =
-		cairo_region_create_rectangle(&handle_allocation);
 	GtkNative *native = gtk_widget_get_native(widget);
 	if (native != NULL) {
 		GdkSurface *surface = gtk_native_get_surface(native);
-		gdk_surface_set_input_region(surface, clickable_region);
+		if (win->clickable) {
+			// See <https://wayland.freedesktop.org/docs/html/apa.html#protocol-spec-wl_surface>.
+			// The initial value for an input region is infinite.
+			// That means the whole surface will accept input. A
+			// NULL wl_region causes the input region to be set to
+			// infinite.
+			gdk_surface_set_input_region(surface, NULL);
+		} else {
+			cairo_region_t *empty_region = cairo_region_create();
+			gdk_surface_set_input_region(surface, empty_region);
+			cairo_region_destroy(empty_region);
+		}
 	}
-	cairo_region_destroy(clickable_region);
 }
 
 static void smtk_keys_win_init(SmtkKeysWin *win)
@@ -257,6 +269,12 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// So we have to make UI from code.
 	win->error = NULL;
 	win->paused = false;
+
+	win->handle = NULL;
+	win->emitter = NULL;
+	win->area = NULL;
+	win->layout = NULL;
+	win->variant = NULL;
 
 	// AdwApplication will automatically load `style.css` under resource
 	// base path, so we don't need to load it manually, just add a class so
@@ -282,7 +300,7 @@ static void smtk_keys_win_constructed(GObject *object)
 		ADW_HEADER_BAR(win->header_bar), false);
 	adw_header_bar_set_show_end_title_buttons(
 		ADW_HEADER_BAR(win->header_bar), false);
-	win->handle = adw_window_title_new(_("Clickable Area"), NULL);
+	win->handle = adw_window_title_new(_("Clickable"), NULL);
 	adw_header_bar_set_title_widget(ADW_HEADER_BAR(win->header_bar),
 					win->handle);
 	gtk_box_append(GTK_BOX(win->box), win->header_bar);
@@ -350,6 +368,9 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
 
+	obj_props[PROP_CLICKABLE] = g_param_spec_boolean(
+		"clickable", "Clickable", "Clickable or Click Through", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
 		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -384,15 +405,13 @@ GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
 		"Floating Window - Show Me The Key", "icon-name",
 		"one.alynx.showmethekey", "can-focus", false, "focus-on-click",
 		false, "vexpand", false, "vexpand-set", true, "hexpand", false,
-		"hexpand-set", true,
-		// We cannot focus on this window, and it has no border,
-		// so user resize is meaningless for it.
-		"resizable", false,
+		"hexpand-set", true, "focusable", false, "resizable", true,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
-		"mode", mode, "show-shift", show_shift, "show-mouse",
-		show_mouse, "timeout", timeout, "layout", layout, "variant",
-		variant, NULL);
+		// Window should not be click through by default.
+		"clickable", true, "mode", mode, "show-shift", show_shift,
+		"show-mouse", show_mouse, "timeout", timeout, "layout", layout,
+		"variant", variant, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
@@ -409,6 +428,22 @@ GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
 
 	// GTK always return GtkWidget, so do I.
 	return GTK_WIDGET(win);
+}
+
+void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable)
+{
+	g_return_if_fail(win != NULL);
+
+	// We don't need the handle if click through. But the handle might not
+	// be there during init.
+	if (win->handle != NULL)
+		gtk_widget_set_visible(win->handle, clickable);
+
+	// NOTE: We don't handle input region here, I don't know why we can't.
+	// We just save property and handle the input region in
+	// `size_allocate()`.
+	// Sync self property.
+	win->clickable = clickable;
 }
 
 void smtk_keys_win_pause(SmtkKeysWin *win)

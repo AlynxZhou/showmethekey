@@ -57,6 +57,25 @@
                     <child>
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">_Clickable</property>
+                        <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window.</property>
+                        <property name="activatable-widget">clickable_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="clickable_switch">
+                            <property name="valign">center</property>
+                            <property name="active">true</property>
+                            <signal
+                                name="notify::active"
+                                handler="smtk_app_win_on_clickable_switch_active"
+                                object="SmtkAppWin"
+                                swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Pause</property>
                         <property name="subtitle" translatable="yes">Temporary hide input like password.</property>
                         <property name="activatable-widget">pause_switch</property>

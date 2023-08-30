@@ -16,6 +16,7 @@ struct _SmtkAppWin {
 	GSettings *settings;
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
+	GtkWidget *clickable_switch;
 	GtkWidget *pause_switch;
 	GtkWidget *shift_switch;
 	GtkWidget *mouse_switch;
@@ -30,6 +31,7 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
+	gtk_widget_set_sensitive(win->clickable_switch, false);
 	gtk_widget_set_sensitive(win->pause_switch, false);
 	gtk_widget_set_sensitive(win->width_entry, true);
 	gtk_widget_set_sensitive(win->height_entry, true);
@@ -37,6 +39,7 @@ static void smtk_app_win_enable(SmtkAppWin *win)
 
 static void smtk_app_win_disable(SmtkAppWin *win)
 {
+	gtk_widget_set_sensitive(win->clickable_switch, true);
 	gtk_widget_set_sensitive(win->pause_switch, true);
 	gtk_widget_set_sensitive(win->width_entry, false);
 	gtk_widget_set_sensitive(win->height_entry, false);
@@ -47,9 +50,12 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 					     SmtkKeysWin *keys_win)
 {
 	if (win->keys_win != NULL) {
+		// Should set this first as we check it in callback.
 		win->keys_win = NULL;
 
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), false);
+		// Clickable by default.
+		gtk_switch_set_active(GTK_SWITCH(win->clickable_switch), true);
 		gtk_switch_set_active(GTK_SWITCH(win->pause_switch), false);
 		smtk_app_win_enable(win);
 	}
@@ -120,6 +126,21 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 		if (win->keys_win != NULL)
 			gtk_window_destroy(GTK_WINDOW(win->keys_win));
 	}
+}
+
+static void smtk_app_win_on_clickable_switch_active(SmtkAppWin *win,
+						    GParamSpec *prop,
+						    GtkSwitch *clickable_switch)
+{
+	// This only works when keys_win is open.
+	// Calling `gtk_switch_set_active()` also triggers this, but then we
+	// don't have a `keys_win` at that time.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_clickable(
+		SMTK_KEYS_WIN(win->keys_win),
+		gtk_switch_get_active(GTK_SWITCH(win->clickable_switch)));
 }
 
 static void smtk_app_win_on_pause_switch_active(SmtkAppWin *win,
@@ -368,6 +389,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, menu_button);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, clickable_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, pause_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, shift_switch);
@@ -386,6 +409,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_keys_win_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_clickable_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_pause_switch_active);
@@ -408,6 +434,16 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 GtkWidget *smtk_app_win_new(SmtkApp *app)
 {
 	return g_object_new(SMTK_TYPE_APP_WIN, "application", app, NULL);
+}
+
+void smtk_app_win_toggle_clickable_switch(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	if (gtk_widget_get_sensitive(win->clickable_switch))
+		gtk_switch_set_active(GTK_SWITCH(win->clickable_switch),
+				      !gtk_switch_get_active(GTK_SWITCH(
+					      win->clickable_switch)));
 }
 
 void smtk_app_win_toggle_pause_switch(SmtkAppWin *win)
@@ -456,17 +492,16 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "2. After you toggle the switch to show the floating window, "
 		  "you need to drag it manually to anywhere you want, "
 		  "because Wayland does not allow window to set its position. "
-		  "Though the floating window is mostly transparent for click, "
-		  "the \"Clickable Area\" label on titlebar are clickable and "
-		  "can be dragged as a handle.\n\n"
+		  "The \"Clickable\" label on titlebar can be dragged as a "
+		  "handle.\n\n"
 		  "3. Because Wayland does not allow a window to set "
 		  "\"Always on Top\" and \"Always on Visible Workspace\" "
 		  "by itself, you should set it manually if you are in a "
 		  "Wayland session and your window manager support it.\n"
 		  "For example if you are using GNOME Shell (Wayland), you can "
-		  "right click the \"Clickable Area\" on title bar to show a "
-		  "window manager menu and check \"Always on Top\" and "
-		  "\"Always on Visible Workspace\" in it.\n"
+		  "right click the \"Clickable\" on title bar to show a window "
+		  "manager menu and check \"Always on Top\" and \"Always on "
+		  "Visible Workspace\" in it.\n"
 		  "If you are using KDE Plasma (Wayland), you can right click "
 		  "\"Floating Window - Show Me The Key\" on task bar, check "
 		  "\"Move to Desktop\" -> \"All Desktops\" and "
@@ -475,10 +510,14 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "href=\"https://github.com/AlynxZhou/showmethekey#special-"
 		  "notice-for-wayland-session-users\">README</a> to see if "
 		  "there are configurations for your compositor.\n\n"
-		  "4. If you want to pause it (for example you need to insert "
+		  "4. To allow user move or resize the keys window, it is not "
+		  "click through by default, after moving it to the location "
+		  "you want, turn off \"Clickable\" switch so it won't block "
+		  "your other operations.\n\n"
+		  "5. If you want to pause it (for example you need to insert "
 		  "password), you can use the \"Pause\" switch, it will not "
 		  "record your keys when paused.\n\n"
-		  "5. Set Timeout to 0 if you want to keep all keys.\n\n"
+		  "6. Set Timeout to 0 if you want to keep all keys.\n\n"
 		  "You can open this dialog again via menu icon on title bar "
 		  "-> \"Usage\"."));
 	adw_message_dialog_set_body_use_markup(ADW_MESSAGE_DIALOG(dialog),

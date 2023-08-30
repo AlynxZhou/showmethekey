@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-10 21:54+0800\n"
+"POT-Creation-Date: 2023-08-30 15:29+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,20 +16,20 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:77 showmethekey-gtk/smtk-app-win.c:526
+#: showmethekey-gtk/smtk-app.c:86 showmethekey-gtk/smtk-app-win.c:565
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:82
+#: showmethekey-gtk/smtk-app.c:91
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:448
+#: showmethekey-gtk/smtk-app-win.c:484
 msgid "Usage"
 msgstr "使用说明（_U）"
 
-#: showmethekey-gtk/smtk-app-win.c:449
+#: showmethekey-gtk/smtk-app-win.c:485
 msgid ""
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
@@ -39,16 +39,15 @@ msgid ""
 "\n"
 "2. After you toggle the switch to show the floating window, you need to drag "
 "it manually to anywhere you want, because Wayland does not allow window to "
-"set its position. Though the floating window is mostly transparent for "
-"click, the \"Clickable Area\" label on titlebar are clickable and can be "
-"dragged as a handle.\n"
+"set its position. The \"Clickable\" label on titlebar can be dragged as a "
+"handle.\n"
 "\n"
 "3. Because Wayland does not allow a window to set \"Always on Top\" and "
 "\"Always on Visible Workspace\" by itself, you should set it manually if you "
 "are in a Wayland session and your window manager support it.\n"
 "For example if you are using GNOME Shell (Wayland), you can right click the "
-"\"Clickable Area\" on title bar to show a window manager menu and check "
-"\"Always on Top\" and \"Always on Visible Workspace\" in it.\n"
+"\"Clickable\" on title bar to show a window manager menu and check \"Always "
+"on Top\" and \"Always on Visible Workspace\" in it.\n"
 "If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
 "- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
 "Desktops\" and \"More Actions\" -> \"Keep Above Others\".\n"
@@ -56,10 +55,14 @@ msgid ""
 "showmethekey#special-notice-for-wayland-session-users\">README</a> to see if "
 "there are configurations for your compositor.\n"
 "\n"
-"4. If you want to pause it (for example you need to insert password), you "
+"4. To allow user move or resize the keys window, it is not click through by "
+"default, after moving it to the location you want, turn off \"Clickable\" "
+"switch so it won't block your other operations.\n"
+"\n"
+"5. If you want to pause it (for example you need to insert password), you "
 "can use the \"Pause\" switch, it will not record your keys when paused.\n"
 "\n"
-"5. Set Timeout to 0 if you want to keep all keys.\n"
+"6. Set Timeout to 0 if you want to keep all keys.\n"
 "\n"
 "You can open this dialog again via menu icon on title bar -> \"Usage\"."
 msgstr ""
@@ -69,39 +72,42 @@ msgstr ""
 "过密码验证。\n"
 "\n"
 "2. 在打开开关显示悬浮窗口之后，您需要手动拖拽它到您想要的位置，因为 Wayland "
-"不允许窗口自行设定位置。尽管悬浮窗口的大部分面积都无法点击，标题栏上的“可点击"
-"区域”标签仍然是可以点击的并且可以作为把手来拖拽。\n"
+"不允许窗口自行设定位置。标题栏上的“可点击”标签可以作为把手来拖拽。\n"
 "\n"
 "3. 因为 Wayland 不允许窗口自行设置“置顶”和“总在可见工作区”，所以如果您在使用 "
 "Wayland 会话，您需要手动设置这两种功能，如果您的窗口管理器支持的话。\n"
 "例如如果您在使用 GNOME Shell (Wayland)，您可以右键点击标题栏上的“可点击区"
 "域”来显示窗口管理器菜单并勾选“置顶”和“总在可见工作区”。\n"
-"如果您在使用 KDE Plasma (Wayland)，您可以右键点击任务栏上的“悬浮窗口 - 让我看"
-"键”，勾选“移动到桌面”->“全部桌面”和“更多动作”->“常居顶端”。\n"
+"如果您在使用 KDE Plasma (Wayland)，您可以右键点击任务栏上的“Floating Window "
+"- Show Me The Key”，勾选“移动到桌面”->“全部桌面”和“更多动作”->“常居顶端”。\n"
 "您可以访问项目的 <a href=\"https://github.com/AlynxZhou/showmethekey#special-"
 "notice-for-wayland-session-users\">README</a> 文件来查看是否有针对您的混成器"
 "的配置方法。\n"
 "\n"
-"4. 如果您想要暂停该程序（比如你需要输入密码），您可以使用“暂停”开关，在暂停状"
+"4. 为了允许用户移动窗口或者调整窗口大小，窗口默认是接收输入事件的，当把窗口移"
+"动到您需要的位置后，可以关闭“接收输入事件（_C）”开关，这样它就不会影响您的其它"
+"操作。\n"
+"\n"
+"5. 如果您想要暂停该程序（比如你需要输入密码），您可以使用“暂停”开关，在暂停状"
 "态下它不会记录您的按键。\n"
 "\n"
-"5. 如果想保留所有的按键记录，请将超时设为 0。\n"
+"6. 如果想保留所有的按键记录，请将超时设为 0。\n"
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:487
+#: showmethekey-gtk/smtk-app-win.c:526
 msgid "Close"
 msgstr "关闭"
 
-#: showmethekey-gtk/smtk-app-win.c:524
+#: showmethekey-gtk/smtk-app-win.c:563
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:525
+#: showmethekey-gtk/smtk-app-win.c:564
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:527
+#: showmethekey-gtk/smtk-app-win.c:566
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -118,80 +124,91 @@ msgid "General"
 msgstr "常规"
 
 #: showmethekey-gtk/smtk-app-win.ui:60
+msgid "_Clickable"
+msgstr "接收输入事件（_C)"
+
+#: showmethekey-gtk/smtk-app-win.ui:61
+msgid ""
+"Turning off will pass input event to other apps under the floating window."
+msgstr ""
+"关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。"
+
+#: showmethekey-gtk/smtk-app-win.ui:79
 msgid "_Pause"
 msgstr "暂停（_P）"
 
-#: showmethekey-gtk/smtk-app-win.ui:61
+#: showmethekey-gtk/smtk-app-win.ui:80
 msgid "Temporary hide input like password."
 msgstr "临时隐藏输入，比如密码。"
 
-#: showmethekey-gtk/smtk-app-win.ui:80
+#: showmethekey-gtk/smtk-app-win.ui:99
 msgid "Show _Shift Separately"
 msgstr "单独显示 Shift（_S）"
 
-#: showmethekey-gtk/smtk-app-win.ui:81
+#: showmethekey-gtk/smtk-app-win.ui:100
 msgid "Show Ctrl+Shfit+A or Ctrl+A."
 msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
 
-#: showmethekey-gtk/smtk-app-win.ui:99
+#: showmethekey-gtk/smtk-app-win.ui:118
 msgid "Show _Mouse Button"
 msgstr "显示鼠标按钮（_M）"
 
-#: showmethekey-gtk/smtk-app-win.ui:100
+#: showmethekey-gtk/smtk-app-win.ui:119
 msgid "Mouse buttons can be very annoying."
 msgstr "鼠标按钮有时候会太占地方。"
 
-#: showmethekey-gtk/smtk-app-win.ui:117
+#: showmethekey-gtk/smtk-app-win.ui:136
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:118
+#: showmethekey-gtk/smtk-app-win.ui:137
 msgid "Raw is Linux kernel's scancode and maybe not so useful."
 msgstr "按键名是 Linux 内核的扫描码，可能不会特别有用。"
 
-#: showmethekey-gtk/smtk-app-win.ui:124
+#: showmethekey-gtk/smtk-app-win.ui:143
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:125
+#: showmethekey-gtk/smtk-app-win.ui:144
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:139
+#: showmethekey-gtk/smtk-app-win.ui:158
 msgid "Timeout (ms)"
 msgstr "超时（毫秒）"
 
-#: showmethekey-gtk/smtk-app-win.ui:140
+#: showmethekey-gtk/smtk-app-win.ui:159
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
-msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
+msgstr ""
+"多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:160
+#: showmethekey-gtk/smtk-app-win.ui:179
 msgid "Width (px)"
 msgstr "宽度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:161
+#: showmethekey-gtk/smtk-app-win.ui:180
 msgid "Width of keys window."
 msgstr "按键窗口的宽度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:176
+#: showmethekey-gtk/smtk-app-win.ui:195
 msgid "Height (px)"
 msgstr "高度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:177
+#: showmethekey-gtk/smtk-app-win.ui:196
 msgid "Height of keys window."
 msgstr "按键窗口的高度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:193
+#: showmethekey-gtk/smtk-app-win.ui:212
 msgid "Keyboard"
 msgstr "键盘"
 
-#: showmethekey-gtk/smtk-app-win.ui:197
+#: showmethekey-gtk/smtk-app-win.ui:216
 msgid "Keymap"
 msgstr "键位"
 
-#: showmethekey-gtk/smtk-app-win.ui:198
+#: showmethekey-gtk/smtk-app-win.ui:217
 msgid "Choose your keyboard layout and variant."
 msgstr "选择您的键盘布局和变体。"
 
@@ -207,6 +224,6 @@ msgstr "关于让我看键（_A）"
 msgid "_Quit"
 msgstr "退出（_Q）"
 
-#: showmethekey-gtk/smtk-keys-win.c:285
-msgid "Clickable Area"
-msgstr "可点击区域"
+#: showmethekey-gtk/smtk-keys-win.c:303
+msgid "Clickable"
+msgstr "可点击"

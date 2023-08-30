@@ -16,6 +16,7 @@ GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, SmtkKeyMode mode,
 			     int width, int height, int timeout,
 			     const char *layout, const char *variant,
 			     GError **error);
+void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable);
 void smtk_keys_win_pause(SmtkKeysWin *win);
 void smtk_keys_win_resume(SmtkKeysWin *win);
 void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode);
