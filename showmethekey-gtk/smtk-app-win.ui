@@ -63,6 +63,7 @@
                         <child>
                           <object class="GtkSwitch" id="clickable_switch">
                             <property name="valign">center</property>
+                            <property name="sensitive">false</property>
                             <property name="active">true</property>
                             <signal
                                 name="notify::active"
