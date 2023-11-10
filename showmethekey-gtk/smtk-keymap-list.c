@@ -241,10 +241,17 @@ void smtk_keymap_list_append(SmtkKeymapList *keymap_list, const char *layout,
 
 static int _compare(gconstpointer a, gconstpointer b)
 {
+#if GLIB_CHECK_VERSION(2, 76, 0)
 	const char *name1 =
 		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((gpointer)a));
 	const char *name2 =
 		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((gpointer)b));
+#else
+	const char *name1 =
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(gpointer *)a));
+	const char *name2 =
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(gpointer *)b));
+#endif
 	// Most people use US (QWERTY) layout, so make it first to be the
 	// default value.
 	if (g_strcmp0(name1, "us") == 0)
@@ -257,8 +264,11 @@ static int _compare(gconstpointer a, gconstpointer b)
 void smtk_keymap_list_sort(SmtkKeymapList *keymap_list)
 {
 	g_return_if_fail(keymap_list != NULL);
-
+#if GLIB_CHECK_VERSION(2, 76, 0)
 	g_ptr_array_sort_values(keymap_list->items, _compare);
+#else
+	g_ptr_array_sort(keymap_list->items, _compare);
+#endif
 	g_list_model_items_changed(G_LIST_MODEL(keymap_list), 0,
 				   keymap_list->items->len,
 				   keymap_list->items->len);
