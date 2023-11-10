@@ -16,6 +16,11 @@
       <description>Show mouse button and keyboard key or only keyboard key.</description>
       <default>true</default>
     </key>
+    <key type="b" name="draw-border">
+      <summary>Draw Border around Keys or Not</summary>
+      <description>Draw border around keys or only show keys.</description>
+      <default>true</default>
+    </key>
     <key type="u" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>

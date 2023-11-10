@@ -169,7 +169,7 @@ If you want to add languages, first add a country code in `showmethekey-gtk/po/L
 
 As I want some clear name that hints its usage, but `screenkey` is already taken and I think `visualkey` sounds like `Visual Studio` and it's horrible. My friend [@LGiki](https://github.com/LGiki) suggests `Show Me The Key` which sounds like "Show me the code" from Linus Torvalds. At first I think it's a little bit long, but now it is acceptable so it's called `showmethekey` or `Show Me The Key`.
 
-The Chinese translate of this program name should be `让我看键`, and it's only used for window title, debug output, package name and desktop entry name should not be translated.
+The Chinese translate of this program name should be `让我看键`, and it's only used for app window title, debug output, package name, desktop entry name and floating window title should not be translated. (**The floating window title is important because some compositors relies on it to write window rules so you should never translate it!!!**)
 
 # Icon
 

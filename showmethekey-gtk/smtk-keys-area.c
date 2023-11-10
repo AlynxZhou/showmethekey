@@ -20,6 +20,7 @@ struct _SmtkKeysArea {
 	int last_key_x;
 	int width;
 	int height;
+	bool draw_border;
 
 	GThread *timer_thread;
 	bool timer_running;
@@ -28,7 +29,7 @@ struct _SmtkKeysArea {
 };
 G_DEFINE_TYPE(SmtkKeysArea, smtk_keys_area, GTK_TYPE_DRAWING_AREA)
 
-enum { PROP_0, PROP_TIMEOUT, N_PROPS };
+enum { PROP_0, PROP_DRAW_BORDER, PROP_TIMEOUT, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
@@ -39,6 +40,10 @@ static void smtk_keys_area_set_property(GObject *object,
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
 	switch (property_id) {
+	case PROP_DRAW_BORDER:
+		smtk_keys_area_set_draw_border(area,
+					       g_value_get_boolean(value));
+		break;
 	case PROP_TIMEOUT:
 		smtk_keys_area_set_timeout(area, g_value_get_int(value));
 		break;
@@ -56,6 +61,9 @@ static void smtk_keys_area_get_property(GObject *object,
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
 	switch (property_id) {
+	case PROP_DRAW_BORDER:
+		g_value_set_boolean(value, area->draw_border);
+		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, area->timeout);
 		break;
@@ -81,10 +89,6 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 	int border_width = ink.width + area->key_padding * 2;
 	int border_y = (area->height - area->key_height) / 2;
 	int border_x = area->last_key_x - (area->key_margin + border_width);
-	cairo_rectangle(area->cr, border_x, border_y, border_width,
-			border_height);
-	cairo_set_line_width(area->cr, area->key_padding / 5.0);
-	cairo_stroke(area->cr);
 
 	// See <https://mail.gnome.org/archives/gtk-devel-list/2001-August/msg00325.html>.
 	// ink rectangle:  x      = -4
@@ -123,11 +127,25 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 	// key_padding for vertically center.
 	// TODO: Center place is still not looks good, maybe I need some
 	// baseline placement but not too high.
-	cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
-		      border_y + (border_height - ink.height) / 2.0 - ink.y);
-	pango_cairo_show_layout(area->cr, area->layout);
+	if (area->draw_border) {
+		// Keys are sitting on the baseline, we need to add slight
+		// offset if we want to draw keys inside border.
+		cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
+			      border_y + (border_height - ink.height) / 2.0 -
+				      ink.y);
+		pango_cairo_show_layout(area->cr, area->layout);
+		// Draw border.
+		cairo_rectangle(area->cr, border_x, border_y, border_width,
+				border_height);
+		cairo_set_line_width(area->cr, area->key_padding / 5.0);
+		cairo_stroke(area->cr);
+	} else {
+		// When no border, just let keys sit on the baseline.
+		cairo_move_to(area->cr, border_x, border_y);
+		pango_cairo_show_layout(area->cr, area->layout);
+	}
 
-	area->last_key_x -= (border_width + area->key_margin);
+	area->last_key_x = border_x;
 }
 
 static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
@@ -135,11 +153,12 @@ static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(drawing_area);
 	area->cr = cr;
-	if (area->layout)
+	if (area->layout) {
 		pango_cairo_update_layout(cr, area->layout);
-	else
+	} else {
 		area->layout = pango_cairo_create_layout(cr);
-	pango_layout_set_ellipsize(area->layout, PANGO_ELLIPSIZE_NONE);
+		pango_layout_set_ellipsize(area->layout, PANGO_ELLIPSIZE_NONE);
+	}
 	area->width = width;
 	area->height = height;
 	area->key_height = height * 0.8;
@@ -280,16 +299,26 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-
+	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
+		"draw-border", "Draw Border", "Draw Keys Border", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_area_new(int timeout)
+GtkWidget *smtk_keys_area_new(bool draw_border, int timeout)
 {
-	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "timeout",
-					  timeout, "vexpand", true, "hexpand",
-					  true, NULL);
+	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "draw-border",
+					  draw_border, "timeout", timeout,
+					  "vexpand", true, "hexpand", true,
+					  NULL);
 	return GTK_WIDGET(area);
+}
+
+void smtk_keys_area_set_draw_border(SmtkKeysArea *area, bool draw_border)
+{
+	g_return_if_fail(area != NULL);
+
+	area->draw_border = draw_border;
 }
 
 void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)

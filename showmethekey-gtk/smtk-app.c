@@ -48,6 +48,15 @@ static void mouse_action(GSimpleAction *action, GVariant *parameter,
 		smtk_app_win_toggle_mouse_switch(SMTK_APP_WIN(app->win));
 }
 
+static void border_action(GSimpleAction *action, GVariant *parameter,
+			  gpointer user_data)
+{
+	SmtkApp *app = SMTK_APP(user_data);
+
+	if (app->win != NULL)
+		smtk_app_win_toggle_border_switch(SMTK_APP_WIN(app->win));
+}
+
 static void usage_action(GSimpleAction *action, GVariant *parameter,
 			 gpointer user_data)
 {
@@ -113,20 +122,23 @@ static void smtk_app_startup(GApplication *g_app)
 
 	// Because application is not a construct property of GtkWindow,
 	// we have to setup accels here.
-	GActionEntry actions[] = { { "clickable", clickable_action, NULL, NULL,
-				     NULL },
-				   { "pause", pause_action, NULL, NULL, NULL },
-				   { "shift", shift_action, NULL, NULL, NULL },
-				   { "mouse", mouse_action, NULL, NULL, NULL },
-				   { "usage", usage_action, NULL, NULL, NULL },
-				   { "about", about_action, NULL, NULL, NULL },
-				   { "quit", quit_action, NULL, NULL, NULL } };
+	GActionEntry actions[] = {
+		{ "clickable", clickable_action, NULL, NULL, NULL },
+		{ "pause", pause_action, NULL, NULL, NULL },
+		{ "shift", shift_action, NULL, NULL, NULL },
+		{ "mouse", mouse_action, NULL, NULL, NULL },
+		{ "border", border_action, NULL, NULL, NULL },
+		{ "usage", usage_action, NULL, NULL, NULL },
+		{ "about", about_action, NULL, NULL, NULL },
+		{ "quit", quit_action, NULL, NULL, NULL }
+	};
 	g_action_map_add_action_entries(G_ACTION_MAP(app), actions,
 					G_N_ELEMENTS(actions), app);
 	const char *clickable_accels[] = { "<Ctrl>C", NULL };
 	const char *pause_accels[] = { "<Ctrl>P", NULL };
 	const char *shift_accels[] = { "<Ctrl>S", NULL };
 	const char *mouse_accels[] = { "<Ctrl>M", NULL };
+	const char *border_accels[] = { "<Ctrl>B", NULL };
 	const char *usage_accels[] = { "<Ctrl>U", NULL };
 	const char *about_accels[] = { "<Ctrl>A", NULL };
 	const char *quit_accels[] = { "<Ctrl>Q", NULL };
@@ -141,6 +153,8 @@ static void smtk_app_startup(GApplication *g_app)
 					      shift_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.mouse",
 					      mouse_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app),
+					      "app.border", border_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.usage",
 					      usage_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.about",

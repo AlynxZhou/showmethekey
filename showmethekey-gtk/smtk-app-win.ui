@@ -133,6 +133,25 @@
                       </object>
                     </child>
                     <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Draw Keys _Border</property>
+                        <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
+                        <property name="activatable-widget">border_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="border_switch">
+	                    <property name="valign">center</property>
+	                    <property name="active">true</property>
+	                    <signal
+	                        name="notify::active"
+	                        handler="smtk_app_win_on_border_switch_active"
+	                        object="SmtkAppWin"
+	                        swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
                       <object class="AdwComboRow" id="mode_selector">
                         <property name="title" translatable="yes">Display Mode</property>
                         <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode and maybe not so useful.</property>
