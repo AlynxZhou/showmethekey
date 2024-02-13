@@ -145,7 +145,7 @@ msgid "Show _Shift Separately"
 msgstr "单独显示 Shift（_S）"
 
 #: showmethekey-gtk/smtk-app-win.ui:101
-msgid "Show Ctrl+Shfit+A or Ctrl+A."
+msgid "Show Ctrl+Shift+A or Ctrl+A."
 msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
 
 #: showmethekey-gtk/smtk-app-win.ui:119
