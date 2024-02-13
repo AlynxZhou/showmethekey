@@ -118,7 +118,7 @@ msgid "Show _Shift Separately"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:101
-msgid "Show Ctrl+Shfit+A or Ctrl+A."
+msgid "Show Ctrl+Shift+A or Ctrl+A."
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:119
