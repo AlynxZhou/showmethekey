@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-11-10 17:15+0800\n"
+"POT-Creation-Date: 2024-05-02 17:09+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:95 showmethekey-gtk/smtk-app-win.c:599
+#: showmethekey-gtk/smtk-app.c:95 showmethekey-gtk/smtk-app-win.c:596
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
 msgstr "让我看键"
@@ -25,11 +25,11 @@ msgstr "让我看键"
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app-win.c:518
+#: showmethekey-gtk/smtk-app-win.c:515
 msgid "Usage"
 msgstr "使用说明（_U）"
 
-#: showmethekey-gtk/smtk-app-win.c:519
+#: showmethekey-gtk/smtk-app-win.c:516
 msgid ""
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
@@ -95,19 +95,19 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:560
+#: showmethekey-gtk/smtk-app-win.c:557
 msgid "Close"
 msgstr "关闭"
 
-#: showmethekey-gtk/smtk-app-win.c:597
+#: showmethekey-gtk/smtk-app-win.c:594
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:598
+#: showmethekey-gtk/smtk-app-win.c:595
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:600
+#: showmethekey-gtk/smtk-app-win.c:597
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -180,41 +180,45 @@ msgstr "组合键"
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:178
+#: showmethekey-gtk/smtk-app-win.ui:165
+msgid "Compact"
+msgstr "紧凑"
+
+#: showmethekey-gtk/smtk-app-win.ui:179
 msgid "Timeout (ms)"
 msgstr "超时（毫秒）"
 
-#: showmethekey-gtk/smtk-app-win.ui:179
+#: showmethekey-gtk/smtk-app-win.ui:180
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
 msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:199
+#: showmethekey-gtk/smtk-app-win.ui:200
 msgid "Width (px)"
 msgstr "宽度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:200
+#: showmethekey-gtk/smtk-app-win.ui:201
 msgid "Width of keys window."
 msgstr "按键窗口的宽度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:215
+#: showmethekey-gtk/smtk-app-win.ui:216
 msgid "Height (px)"
 msgstr "高度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:216
+#: showmethekey-gtk/smtk-app-win.ui:217
 msgid "Height of keys window."
 msgstr "按键窗口的高度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:232
+#: showmethekey-gtk/smtk-app-win.ui:233
 msgid "Keyboard"
 msgstr "键盘"
 
-#: showmethekey-gtk/smtk-app-win.ui:236
+#: showmethekey-gtk/smtk-app-win.ui:237
 msgid "Keymap"
 msgstr "键位"
 
-#: showmethekey-gtk/smtk-app-win.ui:237
+#: showmethekey-gtk/smtk-app-win.ui:238
 msgid "Choose your keyboard layout and variant."
 msgstr "选择您的键盘布局和变体。"
 

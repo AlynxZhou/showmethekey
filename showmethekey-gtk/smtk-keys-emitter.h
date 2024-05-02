@@ -4,20 +4,13 @@
 #include <stdbool.h>
 #include <glib-object.h>
 
+#include "smtk-keys-mapper.h"
+
 G_BEGIN_DECLS
 
 #define SMTK_TYPE_KEYS_EMITTER smtk_keys_emitter_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeysEmitter, smtk_keys_emitter, SMTK, KEYS_EMITTER,
 		     GObject)
-
-// It looks like glib-mkenums cannot make enums
-// if clang-format make this in one line. But why???
-// clang-format off
-typedef enum {
-	SMTK_KEY_MODE_COMPOSED,
-	SMTK_KEY_MODE_RAW
-} SmtkKeyMode;
-// clang-format on
 
 SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
 				       SmtkKeyMode mode, const char *layout,

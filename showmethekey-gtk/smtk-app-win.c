@@ -7,7 +7,7 @@
 #include "smtk-app.h"
 #include "smtk-app-win.h"
 #include "smtk-keys-win.h"
-#include "smtk-keys-emitter.h"
+#include "smtk-keys-mapper.h"
 #include "smtk-keymap-list.h"
 
 struct _SmtkAppWin {
@@ -29,6 +29,23 @@ struct _SmtkAppWin {
 	GtkWidget *keys_win;
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
+
+static SmtkKeyMode smtk_app_win_get_mode(SmtkAppWin *win)
+{
+	int mode_id =
+		adw_combo_row_get_selected(ADW_COMBO_ROW(win->mode_selector));
+	g_debug("Mode: %d.", mode_id);
+	switch (mode_id) {
+	case 0:
+		return SMTK_KEY_MODE_COMPOSED;
+	case 1:
+		return SMTK_KEY_MODE_RAW;
+	case 2:
+		return SMTK_KEY_MODE_COMPACT;
+	default:
+		return SMTK_KEY_MODE_COMPOSED;
+	}
+}
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
@@ -77,17 +94,7 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 				GTK_SWITCH(win->mouse_switch));
 			const bool draw_border = gtk_switch_get_active(
 				GTK_SWITCH(win->border_switch));
-			// See <https://docs.gtk.org/gtk4/class.StringObject.html>.
-			//
-			// We actually get a GObject from GtkDropDown, for
-			// GtkStringList as a model, the type of item is
-			// GtkStringObject.
-			int mode_id = adw_combo_row_get_selected(
-				ADW_COMBO_ROW(win->mode_selector));
-			g_debug("Mode: %d.", mode_id);
-			SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
-			if (mode_id == 1)
-				mode = SMTK_KEY_MODE_RAW;
+			SmtkKeyMode mode = smtk_app_win_get_mode(win);
 			int timeout = gtk_spin_button_get_value_as_int(
 				GTK_SPIN_BUTTON(win->timeout_entry));
 			g_debug("Timeout: %d.", timeout);
@@ -210,18 +217,8 @@ static void smtk_app_win_on_mode_selector_selected(SmtkAppWin *win,
 	if (win->keys_win == NULL)
 		return;
 
-	// See <https://docs.gtk.org/gtk4/class.StringObject.html>.
-	//
-	// We actually get a GObject from GtkDropDown, for GtkStringList as a
-	// model, the type of item is GtkStringObject.
-	int mode_id =
-		adw_combo_row_get_selected(ADW_COMBO_ROW(win->mode_selector));
-	g_debug("Mode: %d.", mode_id);
-	SmtkKeyMode mode = SMTK_KEY_MODE_COMPOSED;
-	if (mode_id == 1)
-		mode = SMTK_KEY_MODE_RAW;
-
-	smtk_keys_win_set_mode(SMTK_KEYS_WIN(win->keys_win), mode);
+	smtk_keys_win_set_mode(SMTK_KEYS_WIN(win->keys_win),
+			       smtk_app_win_get_mode(win));
 }
 
 static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,

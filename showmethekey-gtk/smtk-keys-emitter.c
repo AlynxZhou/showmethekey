@@ -231,6 +231,10 @@ static gpointer poller_function(gpointer user_data)
 		case SMTK_KEY_MODE_RAW:
 			key = smtk_keys_mapper_get_raw(emitter->mapper, event);
 			break;
+		case SMTK_KEY_MODE_COMPACT:
+			key = smtk_keys_mapper_get_compact(emitter->mapper,
+							   event);
+			break;
 		default:
 			// Should never be here.
 			g_warn_if_reached();

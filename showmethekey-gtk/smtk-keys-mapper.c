@@ -17,7 +17,8 @@ struct _SmtkKeysMapper {
 	struct xkb_keymap *xkb_keymap;
 	struct xkb_state *xkb_state;
 	GHashTable *xkb_mod_names;
-	GHashTable *xkb_replace_names;
+	GHashTable *composed_replace_names;
+	GHashTable *compact_replace_names;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
@@ -132,7 +133,7 @@ static void smtk_keys_mapper_dispose(GObject *object)
 	g_clear_pointer(&mapper->xkb_context, xkb_context_unref);
 
 	g_clear_pointer(&mapper->xkb_mod_names, g_hash_table_unref);
-	g_clear_pointer(&mapper->xkb_replace_names, g_hash_table_unref);
+	g_clear_pointer(&mapper->composed_replace_names, g_hash_table_unref);
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->dispose(object);
 }
@@ -176,127 +177,258 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_L"));
 	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_R"));
 
-	// Some key names I don't like, replace them.
-	mapper->xkb_replace_names =
+	// Some key names I don't like, replace them. There is no need to
+	// replace modifiers here because they are handled differently.
+	mapper->composed_replace_names =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	// It should be safe to add "Shift+" here, if you want to make some
 	// Shift modified key raw. For example ISO_Left_Tab here.
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ISO_Left_Tab"),
-			    g_strdup("Shift+Tab"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Meta_L"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("ISO_Left_Tab"), g_strdup("Shift+Tab"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Meta_L"),
 			    g_strdup("Meta"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Meta_R"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Meta_R"),
 			    g_strdup("Meta"));
-	g_hash_table_insert(mapper->xkb_replace_names,
+	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
-	g_hash_table_insert(mapper->xkb_replace_names,
+	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86AudioLowerVolume"),
 			    g_strdup("VolumnDown"));
-	g_hash_table_insert(mapper->xkb_replace_names,
+	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86AudioRaiseVolume"),
 			    g_strdup("VolumnUp"));
-	g_hash_table_insert(mapper->xkb_replace_names,
+	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86MonBrightnessDown"),
 			    g_strdup("BrightnessDown"));
-	g_hash_table_insert(mapper->xkb_replace_names,
+	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86MonBrightnessUp"),
 			    g_strdup("BrightnessUp"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Num_Lock"),
-			    g_strdup("NumLock"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("asciitilde"),
-			    g_strdup("~"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("grave"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("Num_Lock"), g_strdup("NumLock"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("asciitilde"), g_strdup("~"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("grave"),
 			    g_strdup("`"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("exclam"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("exclam"),
 			    g_strdup("!"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("at"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("at"),
 			    g_strdup("@"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("numbersign"),
-			    g_strdup("#"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("dollar"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("numbersign"), g_strdup("#"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("dollar"),
 			    g_strdup("$"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("percent"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("percent"),
 			    g_strdup("%"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("asciicircum"),
-			    g_strdup("^"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("ampersand"),
-			    g_strdup("&"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("asterisk"),
-			    g_strdup("*"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("parenleft"),
-			    g_strdup("("));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("parenright"),
-			    g_strdup(")"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("minus"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("asciicircum"), g_strdup("^"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("ampersand"), g_strdup("&"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("asterisk"), g_strdup("*"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("parenleft"), g_strdup("("));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("parenright"), g_strdup(")"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("minus"),
 			    g_strdup("-"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("underscore"),
-			    g_strdup("_"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("equal"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("underscore"), g_strdup("_"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("equal"),
 			    g_strdup("="));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("plus"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("plus"),
 			    g_strdup("+"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("bracketleft"),
-			    g_strdup("["));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("braceleft"),
-			    g_strdup("{"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("bracketright"),
-			    g_strdup("]"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("braceright"),
-			    g_strdup("}"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("backslash"),
-			    g_strdup("\\"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("bar"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("bracketleft"), g_strdup("["));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("braceleft"), g_strdup("{"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("bracketright"), g_strdup("]"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("braceright"), g_strdup("}"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("backslash"), g_strdup("\\"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("bar"),
 			    g_strdup("|"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Caps_Lock"),
-			    g_strdup("CapsLock"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("semicolon"),
-			    g_strdup(";"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("colon"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("Caps_Lock"), g_strdup("CapsLock"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("semicolon"), g_strdup(";"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("colon"),
 			    g_strdup(":"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("apostrophe"),
-			    g_strdup("'"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("quotedbl"),
-			    g_strdup("\""));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Return"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("apostrophe"), g_strdup("'"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("quotedbl"), g_strdup("\""));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Return"),
 			    g_strdup("Enter"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Escape"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Escape"),
 			    g_strdup("Escape"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("comma"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("comma"),
 			    g_strdup(","));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("less"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("less"),
 			    g_strdup("<"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("period"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("period"),
 			    g_strdup("."));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("greater"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("greater"),
 			    g_strdup(">"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("slash"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("slash"),
 			    g_strdup("/"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("question"),
-			    g_strdup("?"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("space"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("question"), g_strdup("?"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("space"),
 			    g_strdup("Space"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Print"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Print"),
 			    g_strdup("PrintScreen"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Sys_Req"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Sys_Req"),
 			    g_strdup("SysReq"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Scroll_Lock"),
-			    g_strdup("ScrollLock"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Prior"),
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("Scroll_Lock"), g_strdup("ScrollLock"));
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Prior"),
 			    g_strdup("PageUp"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Next"),
+	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Next"),
 			    g_strdup("PageDown"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("BTN_LEFT"),
-			    g_strdup("MouseLeft"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("BTN_RIGHT"),
-			    g_strdup("MouseRight"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("BTN_MIDDLE"),
-			    g_strdup("MouseMiddle"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("BTN_EXTRA"),
-			    g_strdup("MouseForward"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("BTN_SIDE"),
-			    g_strdup("MouseBack"));
-	g_hash_table_insert(mapper->xkb_replace_names, g_strdup("Num_Lock"),
-			    g_strdup("NumLock"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("BTN_LEFT"), g_strdup("MouseLeft"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("BTN_RIGHT"), g_strdup("MouseRight"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("BTN_MIDDLE"), g_strdup("MouseMiddle"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("BTN_EXTRA"), g_strdup("MouseForward"));
+	g_hash_table_insert(mapper->composed_replace_names,
+			    g_strdup("BTN_SIDE"), g_strdup("MouseBack"));
+
+	// For simple mode, we use shorter strings and icons.
+	//
+	// Icons are chosen based on @arielherself's idea.
+	//
+	// See <https://github.com/AlynxZhou/showmethekey/pull/43/files>.
+	mapper->compact_replace_names =
+		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("ISO_Left_Tab"), g_strdup("⭰"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Meta_L"),
+			    g_strdup("Meta"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Meta_R"),
+			    g_strdup("Meta"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("XF86AudioMute"), g_strdup("🔇"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("XF86AudioLowerVolume"), g_strdup("🔈"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("XF86AudioRaiseVolume"), g_strdup("🔊"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("XF86MonBrightnessDown"), g_strdup("🔅"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("XF86MonBrightnessUp"), g_strdup("🔆"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Num_Lock"),
+			    g_strdup("⇭"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("asciitilde"), g_strdup("~"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("grave"),
+			    g_strdup("`"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("exclam"),
+			    g_strdup("!"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("at"),
+			    g_strdup("@"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("numbersign"), g_strdup("#"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("dollar"),
+			    g_strdup("$"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("percent"),
+			    g_strdup("%"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("asciicircum"), g_strdup("^"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("ampersand"), g_strdup("&"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("asterisk"),
+			    g_strdup("*"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("parenleft"), g_strdup("("));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("parenright"), g_strdup(")"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("minus"),
+			    g_strdup("-"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("underscore"), g_strdup("_"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("equal"),
+			    g_strdup("="));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("plus"),
+			    g_strdup("+"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("bracketleft"), g_strdup("["));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("braceleft"), g_strdup("{"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("bracketright"), g_strdup("]"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("braceright"), g_strdup("}"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("backslash"), g_strdup("\\"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("bar"),
+			    g_strdup("|"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("Caps_Lock"), g_strdup("⇪"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("semicolon"), g_strdup(";"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("colon"),
+			    g_strdup(":"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("apostrophe"), g_strdup("'"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("quotedbl"),
+			    g_strdup("\""));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Return"),
+			    g_strdup("⏎"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Escape"),
+			    g_strdup("Esc"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("comma"),
+			    g_strdup(","));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("less"),
+			    g_strdup("<"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("period"),
+			    g_strdup("."));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("greater"),
+			    g_strdup(">"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("slash"),
+			    g_strdup("/"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("question"),
+			    g_strdup("?"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("space"),
+			    g_strdup("⎵"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Print"),
+			    g_strdup("⎙"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Sys_Req"),
+			    g_strdup("SysReq"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("Scroll_Lock"), g_strdup("⇳"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Prior"),
+			    g_strdup("PageUp"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Next"),
+			    g_strdup("PageDown"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("BTN_LEFT"),
+			    g_strdup("🖰↖"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("BTN_RIGHT"), g_strdup("🖰↗"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("BTN_MIDDLE"), g_strdup("🖰↕"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("BTN_EXTRA"), g_strdup("🖰F"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("BTN_SIDE"),
+			    g_strdup("🖰B"));
+	g_hash_table_insert(mapper->compact_replace_names,
+			    g_strdup("BackSpace"), g_strdup("⌫"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Delete"),
+			    g_strdup("⌦"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Tab"),
+			    g_strdup("⇥"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Left"),
+			    g_strdup("←"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Right"),
+			    g_strdup("→"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Up"),
+			    g_strdup("↑"));
+	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Down"),
+			    g_strdup("↓"));
 }
 
 static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
@@ -391,7 +523,7 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 		return NULL;
 	}
 	const char *replace_name =
-		g_hash_table_lookup(mapper->xkb_replace_names, main_key);
+		g_hash_table_lookup(mapper->composed_replace_names, main_key);
 	if (replace_name != NULL) {
 		g_free(main_key);
 		// Copy from the string reference in GHashTable,
@@ -428,6 +560,81 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
 						     XKB_MOD_NAME_SHIFT)))
 			g_string_append(buffer, "Shift+");
+	g_string_append(buffer, main_key);
+	g_free(main_key);
+	return g_string_free(buffer, FALSE);
+}
+
+char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event)
+{
+	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(event != NULL, NULL);
+
+	char *main_key = NULL;
+	// We put xkb_key_code here because the Shift detection use it.
+	// Though Xkbcommon don't handle mouse button state, we can still
+	// convert evdev key code to xkb key code.
+	xkb_keycode_t xkb_key_code =
+		KEY_CODE_EV_TO_XKB(smtk_event_get_key_code(event));
+	// Xkbcommon only handle keyboards,
+	// so we use libinput key name for mouse button.
+	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
+		SmtkEventState event_state = smtk_event_get_event_state(event);
+		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
+				     event_state == SMTK_EVENT_STATE_PRESSED ?
+					     XKB_KEY_DOWN :
+					     XKB_KEY_UP);
+		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
+			mapper->xkb_state, xkb_key_code);
+		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
+		xkb_keysym_get_name(xkb_key_sym, main_key,
+				    XKB_KEY_SYM_NAME_LENGTH);
+	} else {
+		main_key = g_strdup(smtk_event_get_key_name(event));
+	}
+	// Just ignore mods so we can prevent text like mod+mod.
+	if (g_hash_table_contains(mapper->xkb_mod_names, main_key)) {
+		g_free(main_key);
+		return NULL;
+	}
+	const char *replace_name =
+		g_hash_table_lookup(mapper->compact_replace_names, main_key);
+	if (replace_name != NULL) {
+		g_free(main_key);
+		// Copy from the string reference in GHashTable,
+		// so we can use g_free() after append it into GString.
+		main_key = g_strdup(replace_name);
+	}
+	// Use a GString for easior mods concat.
+	GString *buffer = g_string_new(NULL);
+	// I'd like to call it "Super".
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_LOGO,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		g_string_append(buffer, "⌘");
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		g_string_append(buffer, "⌃");
+	// Shift+Alt will get Meta_L and Meta_R,
+	// and we should not add Alt for it.
+	// I think Meta should be a modifier, but Xkbcommon does not.
+	// Sounds like a bug.
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
+					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
+	    strcmp(main_key, "Meta") != 0)
+		g_string_append(buffer, "⌥");
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		// Shift is a little bit complex, it can be consumed by
+		// capitalization transformation, so we check it here. This
+		// prevents text like Shift+! but allows text like
+		// Shift+PrintScreen. However, if user sets `show_shift`, always
+		// append it even consumed.
+		if (mapper->show_shift ||
+		    !xkb_state_mod_index_is_consumed(
+			    mapper->xkb_state, xkb_key_code,
+			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
+						     XKB_MOD_NAME_SHIFT)))
+			g_string_append(buffer, "⇧");
 	g_string_append(buffer, main_key);
 	g_free(main_key);
 	return g_string_free(buffer, FALSE);

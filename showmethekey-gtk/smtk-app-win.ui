@@ -140,13 +140,13 @@
                         <property name="activatable-widget">border_switch</property>
                         <child>
                           <object class="GtkSwitch" id="border_switch">
-	                    <property name="valign">center</property>
-	                    <property name="active">true</property>
-	                    <signal
-	                        name="notify::active"
-	                        handler="smtk_app_win_on_border_switch_active"
-	                        object="SmtkAppWin"
-	                        swapped="yes" />
+                            <property name="valign">center</property>
+                            <property name="active">true</property>
+                            <signal
+                                name="notify::active"
+                                handler="smtk_app_win_on_border_switch_active"
+                                object="SmtkAppWin"
+                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -162,6 +162,7 @@
                             <items>
                               <item translatable="yes">Composed</item>
                               <item translatable="yes">Raw</item>
+                              <item translatable="yes">Compact</item>
                             </items>
                           </object>
                         </property>
