@@ -3,9 +3,15 @@
 #include "smtk.h"
 #include "smtk-keys-area.h"
 
+struct key_data {
+	char *string;
+	int counter;
+};
+
 struct _SmtkKeysArea {
 	GtkDrawingArea parent_instance;
 
+	SmtkKeyMode mode;
 	GSList *keys;
 	// Use single list because we only do prepend and iter, it's easier to
 	// break;
@@ -29,7 +35,7 @@ struct _SmtkKeysArea {
 };
 G_DEFINE_TYPE(SmtkKeysArea, smtk_keys_area, GTK_TYPE_DRAWING_AREA)
 
-enum { PROP_0, PROP_DRAW_BORDER, PROP_TIMEOUT, N_PROPS };
+enum { PROP_0, PROP_MODE, PROP_DRAW_BORDER, PROP_TIMEOUT, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
@@ -40,6 +46,9 @@ static void smtk_keys_area_set_property(GObject *object,
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
 	switch (property_id) {
+	case PROP_MODE:
+		smtk_keys_area_set_mode(area, g_value_get_enum(value));
+		break;
 	case PROP_DRAW_BORDER:
 		smtk_keys_area_set_draw_border(area,
 					       g_value_get_boolean(value));
@@ -61,6 +70,9 @@ static void smtk_keys_area_get_property(GObject *object,
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
 	switch (property_id) {
+	case PROP_MODE:
+		g_value_set_enum(value, area->mode);
+		break;
 	case PROP_DRAW_BORDER:
 		g_value_set_boolean(value, area->draw_border);
 		break;
@@ -74,15 +86,24 @@ static void smtk_keys_area_get_property(GObject *object,
 	}
 }
 
-static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
+static void smtk_keys_area_draw_key(SmtkKeysArea *area,
+				    const struct key_data *key_data)
 {
-	g_debug("Drawing key: %s.", key);
+	g_debug("Drawing key: %sx%d.", key_data->string, key_data->counter);
+
+	// Let Pango handle smaller counter so we do less calculations.
+	char *escaped = g_markup_escape_text(key_data->string, -1);
+	char *key = key_data->counter > 1 ?
+			    g_strdup_printf("%s<sub>x%d</sub>", escaped,
+					    key_data->counter) :
+			    g_strdup(escaped);
+	g_free(escaped);
 
 	cairo_set_source_rgba(area->cr, 1.0, 1.0, 1.0, 1.0);
 
-	// See <https://docs.gtk.org/Pango/method.Layout.set_text.html#parameters>.
-	pango_layout_set_text(area->layout, key, -1);
+	// See <https://docs.gtk.org/Pango/method.Layout.set_markup.html#parameters>.
 	PangoRectangle ink;
+	pango_layout_set_markup(area->layout, key, -1);
 	pango_layout_get_pixel_extents(area->layout, &ink, NULL);
 
 	int border_height = area->key_height;
@@ -91,11 +112,13 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 	int border_x = area->last_key_x - (area->key_margin + border_width);
 
 	// See <https://mail.gnome.org/archives/gtk-devel-list/2001-August/msg00325.html>.
+	//
 	// ink rectangle:  x      = -4
 	//                 y      = -9
 	//                 width  = 31
 	//                 height = 19
-	// (Width and height seems not correct but not a problem.)
+	//
+	// (Width and height seems not correct but it's not a problem.)
 	//
 	// ---------------------------------
 	// |            __aaaaaas,,        |
@@ -120,11 +143,14 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 	// ---------------------------------
 	//
 	// Pango draws text from reference point.
-	// 1: centered box topleft is (border_width - ink.width) / 2 + border_x,
-	//    border_y + (border_height - ink.height) / 2.
-	// 2: reference point is topleft.x - ink.x, topleft.y - ink.y.
+	//
+	//   1. Centered box topleft is (border_width - ink.width) / 2 +
+	//      border_x, border_y + (border_height - ink.height) / 2.
+	//   2. Reference point is topleft.x - ink.x, topleft.y - ink.y.
+	//
 	// Note that ink.height is not always font_size, so we cannot use
 	// key_padding for vertically center.
+	//
 	// TODO: Center place is still not looks good, maybe I need some
 	// baseline placement but not too high.
 	if (area->draw_border) {
@@ -141,11 +167,14 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, const char key[])
 		cairo_stroke(area->cr);
 	} else {
 		// When no border, just let keys sit on the baseline.
-		cairo_move_to(area->cr, border_x, border_y);
+		cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
+			      border_y);
 		pango_cairo_show_layout(area->cr, area->layout);
 	}
 
 	area->last_key_x = border_x;
+
+	g_free(key);
 }
 
 static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
@@ -296,6 +325,9 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 	object_class->dispose = smtk_keys_area_dispose;
 	object_class->finalize = smtk_keys_area_finalize;
 
+	obj_props[PROP_MODE] = g_param_spec_enum(
+		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
+		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -305,13 +337,20 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_area_new(bool draw_border, int timeout)
+GtkWidget *smtk_keys_area_new(SmtkKeyMode mode, bool draw_border, int timeout)
 {
-	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "draw-border",
-					  draw_border, "timeout", timeout,
-					  "vexpand", true, "hexpand", true,
-					  NULL);
+	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "mode", mode,
+					  "draw-border", draw_border, "timeout",
+					  timeout, "vexpand", true, "hexpand",
+					  true, NULL);
 	return GTK_WIDGET(area);
+}
+
+void smtk_keys_area_set_mode(SmtkKeysArea *area, SmtkKeyMode mode)
+{
+	g_return_if_fail(area != NULL);
+
+	area->mode = mode;
 }
 
 void smtk_keys_area_set_draw_border(SmtkKeysArea *area, bool draw_border)
@@ -334,7 +373,19 @@ void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])
 
 	g_debug("Adding key: %s.", key);
 	g_mutex_lock(&area->keys_mutex);
-	area->keys = g_slist_prepend(area->keys, key);
+	struct key_data *last = NULL;
+	if (area->keys != NULL)
+		last = area->keys->data;
+	if (area->mode == SMTK_KEY_MODE_COMPACT && last != NULL &&
+	    strcmp(last->string, key) == 0) {
+		++last->counter;
+		g_free(key);
+	} else {
+		struct key_data *key_data = g_malloc(sizeof(*key_data));
+		key_data->string = key;
+		key_data->counter = 1;
+		area->keys = g_slist_prepend(area->keys, key_data);
+	}
 	g_timer_start(area->timer);
 	g_mutex_unlock(&area->keys_mutex);
 

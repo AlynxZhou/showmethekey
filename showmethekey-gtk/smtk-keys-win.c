@@ -331,7 +331,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	if (win->error != NULL)
 		goto out;
 
-	win->area = smtk_keys_area_new(win->draw_border, win->timeout);
+	win->area =
+		smtk_keys_area_new(win->mode, win->draw_border, win->timeout);
 	gtk_box_append(GTK_BOX(win->box), win->area);
 
 out:
@@ -512,6 +513,9 @@ void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode)
 	// Pass property to emitter.
 	if (win->emitter != NULL)
 		smtk_keys_emitter_set_mode(win->emitter, mode);
+	// Pass property to area.
+	if (win->area != NULL)
+		smtk_keys_area_set_mode(SMTK_KEYS_AREA(win->area), mode);
 	// Sync self property.
 	win->mode = mode;
 }
