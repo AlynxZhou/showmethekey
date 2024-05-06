@@ -13,19 +13,20 @@ struct _SmtkKeysArea {
 
 	SmtkKeyMode mode;
 	GSList *keys;
-	// Use single list because we only do prepend and iter, it's easier to
-	// break;
+	// Use single list because we only prepend and iter.
 	GMutex keys_mutex;
 
-	PangoLayout *layout;
-	PangoFontDescription *font;
-	cairo_t *cr;
-	int key_margin;
-	int key_padding;
-	int key_height;
-	int last_key_x;
+	PangoLayout *string_layout;
+	PangoFontDescription *string_font;
+	PangoLayout *counter_layout;
+	PangoFontDescription *counter_font;
 	int width;
 	int height;
+	int string_height;
+	int counter_height;
+	int margin;
+	int padding;
+	int last_key_x;
 	bool draw_border;
 
 	GThread *timer_thread;
@@ -86,118 +87,164 @@ static void smtk_keys_area_get_property(GObject *object,
 	}
 }
 
-static void smtk_keys_area_draw_key(SmtkKeysArea *area,
+static void smtk_keys_area_draw_key(SmtkKeysArea *area, cairo_t *cr,
 				    const struct key_data *key_data)
 {
-	g_debug("Drawing key: %sx%d.", key_data->string, key_data->counter);
+	char *string = g_strdup(key_data->string);
+	char *counter = g_strdup_printf("×%d", key_data->counter);
 
-	// Let Pango handle smaller counter so we do less calculations.
-	char *escaped = g_markup_escape_text(key_data->string, -1);
-	char *key = key_data->counter > 1 ?
-			    g_strdup_printf("%s<sub>x%d</sub>", escaped,
-					    key_data->counter) :
-			    g_strdup(escaped);
-	g_free(escaped);
+	if (key_data->counter > 1)
+		g_debug("Drawing key: %s%s.", string, counter);
+	else
+		g_debug("Drawing key: %s.", string);
 
-	cairo_set_source_rgba(area->cr, 1.0, 1.0, 1.0, 1.0);
+	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
 
-	// See <https://docs.gtk.org/Pango/method.Layout.set_markup.html#parameters>.
-	PangoRectangle ink;
-	pango_layout_set_markup(area->layout, key, -1);
-	pango_layout_get_pixel_extents(area->layout, &ink, NULL);
+	// See <https://docs.gtk.org/Pango/method.Layout.set_text.html#parameters>.
+	PangoRectangle s_ink;
+	PangoRectangle s_logical;
+	pango_layout_set_text(area->string_layout, string, -1);
+	pango_layout_get_pixel_extents(area->string_layout, &s_ink, &s_logical);
+	g_debug("Ink: x is %d, y is %d, width is %d, height is %d.", s_ink.x,
+		s_ink.y, s_ink.width, s_ink.height);
+	g_debug("Logical: x is %d, y is %d, width is %d, height is %d.",
+		s_logical.x, s_logical.y, s_logical.width, s_logical.height);
 
-	int border_height = area->key_height;
-	int border_width = ink.width + area->key_padding * 2;
-	int border_y = (area->height - area->key_height) / 2;
-	int border_x = area->last_key_x - (area->key_margin + border_width);
+	int border_height = area->string_height;
+	int border_width = s_ink.width + area->padding * 2;
+	int border_y = (area->height - area->string_height) / 2;
+	int border_x = area->last_key_x - (area->margin + border_width);
 
-	// See <https://mail.gnome.org/archives/gtk-devel-list/2001-August/msg00325.html>.
-	//
-	// ink rectangle:  x      = -4
-	//                 y      = -9
-	//                 width  = 31
-	//                 height = 19
-	//
-	// (Width and height seems not correct but it's not a problem.)
-	//
-	// ---------------------------------
-	// |            __aaaaaas,,        |
-	// |         awQ ?^   ~?WQQQQQQQQW`|
-	// |       aQWWF        )WQQQT???^ |
-	// |     .mQQQF          QQQQ[     |
-	// |     jQQQ@          <QQQQ[     |
-	// |     QQQQf          dQQQ@      |
-	// |     4QQQL         jQQQP`      |
-	// |      4QQQc      _yQQV^        |
-	// |    |  -?9WmwaaadT?"`          |
-	// -----+---------------------------
-	// |    | _mQQ;                    |
-	// |      QQQQQgaa,,,              |
-	// |      )QQQQQQQQQQQmya,.        |
-	// |  .<wmT^ --"?TT$QQQQQQQa       |
-	// | jQQD'           -"?$QQQr      |
-	// |dQQW`                4QQ(      |
-	// |$QQQ,                jQF       |
-	// |-9QQQa.           _sdT'        |
-	// |   "?YVGwaaaaa%%%?!`           |
-	// ---------------------------------
-	//
-	// Pango draws text from reference point.
-	//
-	//   1. Centered box topleft is (border_width - ink.width) / 2 +
-	//      border_x, border_y + (border_height - ink.height) / 2.
-	//   2. Reference point is topleft.x - ink.x, topleft.y - ink.y.
-	//
-	// Note that ink.height is not always font_size, so we cannot use
-	// key_padding for vertically center.
-	//
-	// TODO: Center place is still not looks good, maybe I need some
-	// baseline placement but not too high.
+	PangoRectangle c_ink;
+	if (key_data->counter > 1) {
+		pango_layout_set_text(area->counter_layout, counter, -1);
+		pango_layout_get_pixel_extents(area->counter_layout, &c_ink,
+					       NULL);
+
+		// Don't forget to leave space for counter.
+		border_x -= (area->padding + c_ink.width);
+	}
+
+	g_debug("Border: x is %d, y is %d, width is %d, height is %d.",
+		border_x, border_y, border_width, border_height);
+
 	if (area->draw_border) {
-		// Keys are sitting on the baseline, we need to add slight
-		// offset if we want to draw keys inside border.
-		cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
-			      border_y + (border_height - ink.height) / 2.0 -
-				      ink.y);
-		pango_cairo_show_layout(area->cr, area->layout);
+		// See <https://sh.alynx.one/posts/Ink-and-Logical-Rectangles-of-Pango/>.
+		//
+		// We align keys by borders, so move texts into borders. To
+		// archive this, we are treating glyphs as images instead of
+		// texts, because texts are aligned via baseline, which means
+		// some glyphs can be drawn outside the given border because the
+		// given border is treated as baseline. The logical rectangle is
+		// used to align glyphs as texts on baseline, which is not
+		// useful to us. The ink rectangle is the bounding box of
+		// glphys, which is the one we need.
+		//
+		// See <https://docs.gtk.org/PangoCairo/func.show_layout.html>.
+		//
+		// `pango_cairo_show_layout()` draw from the top-left corner of
+		// the logical rectangle, not the ink rectangle. The x and y
+		// coordinates of the ink rectangle are the offset to the
+		// top-left corner of the logical rectangle, so we use them to
+		// offset the draw point.
+		//
+		// For example:
+		// String font size: 97.
+		// Drawing key: g.
+		// Ink: x is -1, y is 50, width is 60, height is 73.
+		// Logical: x is 0, y is 0, width is 55, height is 129.
+		// Border: x is 2428, y is 15, width is 84, height is 122.
+		//
+		// Finally we will have a center-bottom alignment.
+		const int x = border_x + area->padding - s_ink.x;
+		const int y = border_y + border_height - area->padding -
+			      s_ink.height - s_ink.y;
+		cairo_move_to(cr, x, y);
+		pango_cairo_show_layout(cr, area->string_layout);
 		// Draw border.
-		cairo_rectangle(area->cr, border_x, border_y, border_width,
+		cairo_set_line_width(cr, area->padding / 5.0);
+		cairo_rectangle(cr, border_x, border_y, border_width,
 				border_height);
-		cairo_set_line_width(area->cr, area->key_padding / 5.0);
-		cairo_stroke(area->cr);
+		cairo_stroke(cr);
 	} else {
-		// When no border, just let keys sit on the baseline.
-		cairo_move_to(area->cr, border_x + area->key_padding - ink.x,
-			      border_y);
-		pango_cairo_show_layout(area->cr, area->layout);
+		// When no border, just let Pango align texts so they will
+		// sit on the baseline. But some icons are too large so if they
+		// are aligned by baseline, they will draw outside area, so we
+		// use ink rectangle for them to align glyphs by bottom.
+		//
+		// Finally we get a center-baseline or center-bottom alignment
+		// so keys won't move horizontally when toggling borders.
+		const int x = border_x + area->padding - s_ink.x;
+		int y = border_y - s_logical.y;
+		if (y + s_logical.height > area->height) {
+			g_debug("%s will draw outside area if aligned by "
+				"baseline, will be aligned by bottom.",
+				string);
+			y = border_y + border_height - area->padding -
+			    s_ink.height - s_ink.y;
+		}
+		cairo_move_to(cr, x, y);
+		pango_cairo_show_layout(cr, area->string_layout);
+	}
+
+	if (key_data->counter > 1) {
+		// We always use the ink rectangles to align counters because
+		// they are all similiar and this is simple.
+		const int x = border_x + border_width + area->padding - c_ink.x;
+		const int y = border_y + border_height - c_ink.height - c_ink.y;
+		cairo_move_to(cr, x, y);
+		pango_cairo_show_layout(cr, area->counter_layout);
 	}
 
 	area->last_key_x = border_x;
 
-	g_free(key);
+	g_free(string);
+	g_free(counter);
 }
 
 static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 				int width, int height, gpointer user_data)
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(drawing_area);
-	area->cr = cr;
-	if (area->layout) {
-		pango_cairo_update_layout(cr, area->layout);
-	} else {
-		area->layout = pango_cairo_create_layout(cr);
-		pango_layout_set_ellipsize(area->layout, PANGO_ELLIPSIZE_NONE);
-	}
+
 	area->width = width;
 	area->height = height;
-	area->key_height = height * 0.8;
-	int font_size = area->key_height * 0.8;
-	area->key_margin = area->key_height * 0.4;
-	area->key_padding = (area->key_height - font_size) / 2;
-	area->last_key_x = width;
-	pango_font_description_set_absolute_size(area->font,
-						 font_size * PANGO_SCALE);
-	pango_layout_set_font_description(area->layout, area->font);
+	area->last_key_x = area->width;
+
+	if (area->string_layout) {
+		pango_cairo_update_layout(cr, area->string_layout);
+	} else {
+		area->string_layout = pango_cairo_create_layout(cr);
+		pango_layout_set_ellipsize(area->string_layout,
+					   PANGO_ELLIPSIZE_NONE);
+	}
+
+	area->string_height = area->height * 0.8;
+	const int string_font_size = area->string_height * 0.8;
+	g_debug("String font size: %d.", string_font_size);
+	pango_font_description_set_absolute_size(
+		area->string_font, string_font_size * PANGO_SCALE);
+	pango_layout_set_font_description(area->string_layout,
+					  area->string_font);
+
+	if (area->counter_layout) {
+		pango_cairo_update_layout(cr, area->counter_layout);
+	} else {
+		area->counter_layout = pango_cairo_create_layout(cr);
+		pango_layout_set_ellipsize(area->counter_layout,
+					   PANGO_ELLIPSIZE_NONE);
+	}
+
+	area->counter_height = area->string_height * 0.5;
+	const int counter_font_size = area->counter_height * 0.8;
+	g_debug("Counter font size: %d.", string_font_size);
+	pango_font_description_set_absolute_size(
+		area->counter_font, counter_font_size * PANGO_SCALE);
+	pango_layout_set_font_description(area->counter_layout,
+					  area->counter_font);
+
+	area->margin = area->string_height * 0.4;
+	area->padding = (area->string_height - string_font_size) / 2;
 
 	g_mutex_lock(&area->keys_mutex);
 	for (GSList *iter = area->keys; iter; iter = iter->next) {
@@ -211,9 +258,9 @@ static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 						  g_free);
 			break;
 		}
-		smtk_keys_area_draw_key(area, iter->data);
+		smtk_keys_area_draw_key(area, cr, iter->data);
 	}
-	// g_print("%d\n", g_slist_length(area->keys));
+	g_debug("Keys list length: %d", g_slist_length(area->keys));
 	g_mutex_unlock(&area->keys_mutex);
 }
 
@@ -267,13 +314,19 @@ static gpointer timer_function(gpointer user_data)
 
 static void smtk_keys_area_init(SmtkKeysArea *area)
 {
-	area->layout = NULL;
-	area->font = pango_font_description_new();
-	pango_font_description_set_family(area->font, "monospace");
-	area->cr = NULL;
-	area->key_height = 0;
 	area->width = 0;
 	area->height = 0;
+
+	area->string_layout = NULL;
+	area->string_font = pango_font_description_new();
+	pango_font_description_set_family(area->string_font, "monospace");
+	area->string_height = 0;
+
+	area->counter_layout = NULL;
+	area->counter_font = pango_font_description_new();
+	pango_font_description_set_family(area->counter_font, "monospace");
+	area->counter_height = 0;
+
 	area->keys = NULL;
 	g_mutex_init(&area->keys_mutex);
 
@@ -292,8 +345,11 @@ static void smtk_keys_area_dispose(GObject *object)
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
 
-	g_clear_object(&area->layout);
-	g_clear_pointer(&area->font, pango_font_description_free);
+	g_clear_object(&area->string_layout);
+	g_clear_pointer(&area->string_font, pango_font_description_free);
+
+	g_clear_object(&area->counter_layout);
+	g_clear_pointer(&area->counter_font, pango_font_description_free);
 
 	if (area->timer_thread != NULL) {
 		area->timer_running = false;
@@ -358,6 +414,9 @@ void smtk_keys_area_set_draw_border(SmtkKeysArea *area, bool draw_border)
 	g_return_if_fail(area != NULL);
 
 	area->draw_border = draw_border;
+
+	// Trigger re-draw because border changed.
+	gtk_widget_queue_draw(GTK_WIDGET(area));
 }
 
 void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)

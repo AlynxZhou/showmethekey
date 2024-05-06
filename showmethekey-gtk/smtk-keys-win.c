@@ -250,7 +250,7 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 	GTK_WIDGET_CLASS(smtk_keys_win_parent_class)
 		->size_allocate(widget, width, height, baseline);
 
-	g_debug("Allocated size: %dx%d.", width, height);
+	g_debug("Allocated size: %d×%d.", width, height);
 
 	GtkNative *native = gtk_widget_get_native(widget);
 	if (native != NULL) {

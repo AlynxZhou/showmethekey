@@ -397,7 +397,7 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 			    g_strdup("⎵"));
 	// The UTF-8 Print Screen Symbol is too large for some fonts.
 	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Print"),
-			    g_strdup("PrtSc"));
+			    g_strdup("⎙"));
 	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Sys_Req"),
 			    g_strdup("SysReq"));
 	g_hash_table_insert(mapper->compact_replace_names,

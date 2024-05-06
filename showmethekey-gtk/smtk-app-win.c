@@ -47,6 +47,16 @@ static SmtkKeyMode smtk_app_win_get_mode(SmtkAppWin *win)
 	}
 }
 
+static void smtk_app_win_get_keymap(SmtkAppWin *win, const char **layout,
+				    const char **variant)
+{
+	GObject *keymap = adw_combo_row_get_selected_item(
+		ADW_COMBO_ROW(win->keymap_selector));
+	*layout = smtk_keymap_item_get_layout(SMTK_KEYMAP_ITEM(keymap));
+	*variant = smtk_keymap_item_get_variant(SMTK_KEYMAP_ITEM(keymap));
+	g_debug("Keymap: %s (%s).", *layout, *variant);
+}
+
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
 	gtk_widget_set_sensitive(win->clickable_switch, false);
@@ -79,6 +89,52 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 	}
 }
 
+static void smtk_app_win_active(SmtkAppWin *win)
+{
+	const bool show_shift =
+		gtk_switch_get_active(GTK_SWITCH(win->shift_switch));
+	const bool show_mouse =
+		gtk_switch_get_active(GTK_SWITCH(win->mouse_switch));
+	const bool draw_border =
+		gtk_switch_get_active(GTK_SWITCH(win->border_switch));
+
+	SmtkKeyMode mode = smtk_app_win_get_mode(win);
+
+	const int timeout = gtk_spin_button_get_value_as_int(
+		GTK_SPIN_BUTTON(win->timeout_entry));
+	g_debug("Timeout: %d.", timeout);
+
+	int width = gtk_spin_button_get_value_as_int(
+		GTK_SPIN_BUTTON(win->width_entry));
+	width = width <= 0 ? 1500 : width;
+	int height = gtk_spin_button_get_value_as_int(
+		GTK_SPIN_BUTTON(win->height_entry));
+	height = height <= 0 ? 200 : height;
+	g_debug("Size: %d×%d.", width, height);
+
+	const char *layout = NULL;
+	const char *variant = NULL;
+	smtk_app_win_get_keymap(win, &layout, &variant);
+
+	GError *error = NULL;
+	win->keys_win = smtk_keys_win_new(show_shift, show_mouse, draw_border,
+					  mode, width, height, timeout, layout,
+					  variant, &error);
+	if (win->keys_win == NULL) {
+		g_warning("%s", error->message);
+		g_error_free(error);
+		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), false);
+		return;
+	}
+	g_signal_connect_object(win->keys_win, "destroy",
+				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
+				win, G_CONNECT_SWAPPED);
+
+	smtk_app_win_disable(win);
+
+	gtk_window_present(GTK_WINDOW(win->keys_win));
+}
+
 // See <https://mail.gnome.org/archives/networkmanager-list/2010-October/msg00129.html>.
 // notify of property have one more argument for property
 // in the middle of instance and object.
@@ -87,53 +143,10 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 						   GtkSwitch *keys_win_switch)
 {
 	if (gtk_switch_get_active(GTK_SWITCH(win->keys_win_switch))) {
-		if (win->keys_win == NULL) {
-			const bool show_shift = gtk_switch_get_active(
-				GTK_SWITCH(win->shift_switch));
-			const bool show_mouse = gtk_switch_get_active(
-				GTK_SWITCH(win->mouse_switch));
-			const bool draw_border = gtk_switch_get_active(
-				GTK_SWITCH(win->border_switch));
-			SmtkKeyMode mode = smtk_app_win_get_mode(win);
-			int timeout = gtk_spin_button_get_value_as_int(
-				GTK_SPIN_BUTTON(win->timeout_entry));
-			g_debug("Timeout: %d.", timeout);
-			int width = gtk_spin_button_get_value_as_int(
-				GTK_SPIN_BUTTON(win->width_entry));
-			width = width <= 0 ? 1500 : width;
-			int height = gtk_spin_button_get_value_as_int(
-				GTK_SPIN_BUTTON(win->height_entry));
-			height = height <= 0 ? 200 : height;
-			g_debug("Size: %dx%d.", width, height);
-			GObject *keymap = adw_combo_row_get_selected_item(
-				ADW_COMBO_ROW(win->keymap_selector));
-			const char *layout = smtk_keymap_item_get_layout(
-				SMTK_KEYMAP_ITEM(keymap));
-			const char *variant = smtk_keymap_item_get_variant(
-				SMTK_KEYMAP_ITEM(keymap));
-			g_debug("Keymap: %s (%s).", layout, variant);
-			GError *error = NULL;
-			win->keys_win = smtk_keys_win_new(
-				show_shift, show_mouse, draw_border, mode,
-				width, height, timeout, layout, variant,
-				&error);
-			if (win->keys_win == NULL) {
-				g_warning("%s", error->message);
-				g_error_free(error);
-				gtk_switch_set_active(
-					GTK_SWITCH(win->keys_win_switch),
-					false);
-				return;
-			}
-			smtk_app_win_disable(win);
-			g_signal_connect_object(
-				win->keys_win, "destroy",
-				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
-				win, G_CONNECT_SWAPPED);
-			gtk_window_present(GTK_WINDOW(win->keys_win));
-		}
+		if (win->keys_win == NULL)
+			smtk_app_win_active(win);
 	} else {
-		// We clear pointer and change widget states in signal callback.
+		// We clear pointer and change widget states in signal handler.
 		if (win->keys_win != NULL)
 			gtk_window_destroy(GTK_WINDOW(win->keys_win));
 	}
@@ -243,20 +256,16 @@ smtk_app_win_on_keymap_selector_selected(SmtkAppWin *win, GParamSpec *prop,
 	if (win->keys_win == NULL)
 		return;
 
-	GObject *keymap = adw_combo_row_get_selected_item(
-		ADW_COMBO_ROW(win->keymap_selector));
-	const char *layout =
-		smtk_keymap_item_get_layout(SMTK_KEYMAP_ITEM(keymap));
-	const char *variant =
-		smtk_keymap_item_get_variant(SMTK_KEYMAP_ITEM(keymap));
-	g_debug("Keymap: %s (%s).", layout, variant);
+	const char *layout = NULL;
+	const char *variant = NULL;
+	smtk_app_win_get_keymap(win, &layout, &variant);
 
 	smtk_keys_win_set_layout(SMTK_KEYS_WIN(win->keys_win), layout);
 	smtk_keys_win_set_variant(SMTK_KEYS_WIN(win->keys_win), variant);
 }
 
-static int _settings_to_object(GValue *value, GVariant *variant,
-			       gpointer user_data)
+static int settings_to_object(GValue *value, GVariant *variant,
+			      gpointer user_data)
 {
 	SmtkAppWin *win = user_data;
 	char *name = NULL;
@@ -277,9 +286,9 @@ static int _settings_to_object(GValue *value, GVariant *variant,
 	return 1;
 }
 
-static GVariant *_object_to_settings(const GValue *value,
-				     const GVariantType *expected_type,
-				     gpointer user_data)
+static GVariant *object_to_settings(const GValue *value,
+				    const GVariantType *expected_type,
+				    gpointer user_data)
 {
 	SmtkAppWin *win = user_data;
 	unsigned int position = g_value_get_uint(value);
@@ -365,7 +374,7 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	g_settings_bind_with_mapping(win->settings, "keymap",
 				     win->keymap_selector, "selected",
 				     G_SETTINGS_BIND_DEFAULT,
-				     _settings_to_object, _object_to_settings,
+				     settings_to_object, object_to_settings,
 				     win, NULL);
 
 	if (g_settings_get_boolean(win->settings, "first-time")) {
