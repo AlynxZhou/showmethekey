@@ -573,11 +573,15 @@ void smtk_app_win_show_about_dialog(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	const char *developers[] = { "Alynx Zhou", "LGiki", NULL };
+	const char *developers[] = { "Alynx Zhou",    "LGiki",	      "mimir-d",
+				     "Jakub Jirutka", "Eli Schwartz", "Ariel",
+				     "LordRishav",    "Bobby Rong",   NULL };
 
 	const char *artists[] = { "Freepik", NULL };
 
-	const char *documenters[] = { "Alynx Zhou", NULL };
+	const char *documenters[] = { "Alynx Zhou", "Pedro Sade Azevedo",
+				      "Mridhul",    "WhiredPlanck",
+				      "Jan Beich",  NULL };
 
 	const char license[] =
 		"Licensed under the Apache License, "
