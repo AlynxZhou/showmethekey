@@ -12,6 +12,7 @@
 
 struct _SmtkKeysWin {
 	AdwWindow parent_instance;
+	SmtkAppWin *app_win;
 	GtkWidget *box;
 	GtkWidget *header_bar;
 	GtkWidget *handle;
@@ -252,6 +253,8 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 	g_debug("Allocated size: %d×%d.", width, height);
 
+	smtk_app_win_set_size(win->app_win, width, height);
+
 	GtkNative *native = gtk_widget_get_native(widget);
 	if (native != NULL) {
 		GdkSurface *surface = gtk_native_get_surface(native);
@@ -405,7 +408,8 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, bool draw_border,
+GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
+			     bool show_mouse, bool draw_border,
 			     SmtkKeyMode mode, int width, int height,
 			     int timeout, const char *layout,
 			     const char *variant, GError **error)
@@ -433,6 +437,8 @@ GtkWidget *smtk_keys_win_new(bool show_shift, bool show_mouse, bool draw_border,
 		gtk_window_destroy(GTK_WINDOW(win));
 		return NULL;
 	}
+
+	win->app_win = app_win;
 
 	gtk_window_set_default_size(GTK_WINDOW(win), width, height);
 	// Setting transient will block showing on all desktop so don't use it.

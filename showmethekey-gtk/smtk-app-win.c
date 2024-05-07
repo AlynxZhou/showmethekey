@@ -117,9 +117,9 @@ static void smtk_app_win_active(SmtkAppWin *win)
 	smtk_app_win_get_keymap(win, &layout, &variant);
 
 	GError *error = NULL;
-	win->keys_win = smtk_keys_win_new(show_shift, show_mouse, draw_border,
-					  mode, width, height, timeout, layout,
-					  variant, &error);
+	win->keys_win = smtk_keys_win_new(win, show_shift, show_mouse,
+					  draw_border, mode, width, height,
+					  timeout, layout, variant, &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);
@@ -514,6 +514,14 @@ void smtk_app_win_toggle_border_switch(SmtkAppWin *win)
 		gtk_switch_set_active(
 			GTK_SWITCH(win->border_switch),
 			!gtk_switch_get_active(GTK_SWITCH(win->border_switch)));
+}
+
+void smtk_app_win_set_size(SmtkAppWin *win, int width, int height)
+{
+	g_return_if_fail(win != NULL);
+
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(win->width_entry), width);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(win->height_entry), height);
 }
 
 void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
