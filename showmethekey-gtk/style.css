@@ -7,7 +7,7 @@ window.smtk-keys-win {
 }
 /* Half transparent window. */
 window.smtk-keys-win.background {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Create a transparent header bar. */
