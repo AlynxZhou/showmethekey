@@ -65,7 +65,7 @@ sudo dnf install showmethekey
 If you are running an Atomic Desktop (Fedora Silverblue, Fedora Kinoite, Fedora Sericea, etc), run:
 
 ```bash
-export RELEASE=39 # or whichever release of Fedora you are running
+export RELEASE=40 # or whichever release of Fedora you are running
 sudo curl -o /etc/yum.repos.d/showmethekey.repo https://copr.fedorainfracloud.org/coprs/pesader/showmethekey/repo/fedora-$RELEASE/pesader-showmethekey-fedora-$RELEASE.repo
 rpm-ostree install showmethekey
 ```
