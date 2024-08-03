@@ -19,7 +19,7 @@ msgstr ""
 #: showmethekey-gtk/smtk-app.c:95 showmethekey-gtk/smtk-app-win.c:596
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
-msgstr "Muéstrame la tecla"
+msgstr "Muéstrame La Tecla"
 
 #: showmethekey-gtk/smtk-app.c:100
 msgid "Display version then exit."
@@ -184,7 +184,7 @@ msgstr "\"Bruto\" es el código de escaneo del núcleo de Linux y tal vez no sea
 
 #: showmethekey-gtk/smtk-app-win.ui:163
 msgid "Composed"
-msgstr "Compuesta"
+msgstr "Compuesto"
 
 #: showmethekey-gtk/smtk-app-win.ui:164
 msgid "Raw"
@@ -206,11 +206,11 @@ msgstr "Borrar teclas si no hay nuevas teclas después de cuántos milisegundos.
 
 #: showmethekey-gtk/smtk-app-win.ui:200
 msgid "Width (px)"
-msgstr "Ancho (px)"
+msgstr "Anchura (px)"
 
 #: showmethekey-gtk/smtk-app-win.ui:201
 msgid "Width of keys window."
-msgstr "Ancho de la ventana de teclas."
+msgstr "Anchura de la ventana de teclas."
 
 #: showmethekey-gtk/smtk-app-win.ui:216
 msgid "Height (px)"
@@ -238,7 +238,7 @@ msgstr "_Uso"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:11
 msgid "_About Show Me The Key"
-msgstr "_Acerca de Muéstrame la Tecla"
+msgstr "_Acerca de Muéstrame La Tecla"
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:17
 msgid "_Quit"
