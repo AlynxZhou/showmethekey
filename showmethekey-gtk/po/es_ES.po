@@ -1,0 +1,249 @@
+# Spanish translations for showmethekey package.
+# Copyright (C) 2024 THE showmethekey'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the showmethekey package.
+# Automatically generated, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: showmethekey\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-08-02 10:16-0600\n"
+"PO-Revision-Date: 2024-08-02 10:16-0600\n"
+"Last-Translator: ItzSelenux\n"
+"Language-Team: none\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: showmethekey-gtk/smtk-app.c:95 showmethekey-gtk/smtk-app-win.c:596
+#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
+msgid "Show Me The Key"
+msgstr "Muéstrame La Tecla"
+
+#: showmethekey-gtk/smtk-app.c:100
+msgid "Display version then exit."
+msgstr "Mostrar versión y salir."
+
+#: showmethekey-gtk/smtk-app-win.c:515
+msgid "Usage"
+msgstr "Uso"
+
+#: showmethekey-gtk/smtk-app-win.c:516
+msgid ""
+"1. Please input admin password after toggling the switch, because it needs "
+"superuser permission to read input events, and Wayland does not allow "
+"running graphics program with superuser permission, so it uses polkit to run "
+"a backend with superuser permission. This program does not handle or store "
+"your password. Users in `wheel` group can skip password authentication.\n"
+"\n"
+"2. After you toggle the switch to show the floating window, you need to drag "
+"it manually to anywhere you want, because Wayland does not allow window to "
+"set its position. The \"Clickable\" label on titlebar can be dragged as a "
+"handle.\n"
+"\n"
+"3. Because Wayland does not allow a window to set \"Always on Top\" and "
+"\"Always on Visible Workspace\" by itself, you should set it manually if you "
+"are in a Wayland session and your window manager support it.\n"
+"For example if you are using GNOME Shell (Wayland), you can right click the "
+"\"Clickable\" on title bar to show a window manager menu and check \"Always "
+"on Top\" and \"Always on Visible Workspace\" in it.\n"
+"If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
+"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
+"Desktops\" and \"More Actions\" -> \"Keep Above Others\".\n"
+"You can check this project's <a href=\"https://github.com/AlynxZhou/"
+"showmethekey#special-notice-for-wayland-session-users\">README</a> to see if "
+"there are configurations for your compositor.\n"
+"\n"
+"4. To allow user move or resize the keys window, it is not click through by "
+"default, after moving it to the location you want, turn off \"Clickable\" "
+"switch so it won't block your other operations.\n"
+"\n"
+"5. If you want to pause it (for example you need to insert password), you "
+"can use the \"Pause\" switch, it will not record your keys when paused.\n"
+"\n"
+"6. Set Timeout to 0 if you want to keep all keys.\n"
+"\n"
+"You can open this dialog again via menu icon on title bar -> \"Usage\"."
+msgstr ""
+"1. Por favor, ingrese la contraseña de administrador después de activar el "
+"interruptor. Los permisos elevados son necesarios para  "
+"leer eventos de entrada, y Wayland no permite ejecutar programas gráficos  "
+"con permisos elevados, por lo que se utiliza polkit para ejecutar un  "
+"backend con permisos elevados. Este programa no maneja ni almacena su contraseña. "
+"Los usuarios  en el grupo `wheel` pueden omitir la autenticación de contraseña.\n"
+"\n"
+"2. Después de activar el interruptor para mostrar la ventana flotante, debe "
+"arrastrarla manualmente a cualquier lugar que desee, porque Wayland no permite "
+"que la ventana establezca su posición. La etiqueta \"Clickable\" en la barra "
+"de título se puede arrastrar con el cursor.\n"
+"\n"
+"3. Debido a que Wayland no permite que una ventana establezca \"Siempre "
+"Encima\" y \"Siempre en el Espacio de Trabajo Visible\" por sí misma, debe "
+"configurarlo manualmente si está en una sesión de Wayland y su gestor de ventanas "
+"lo admite.\n"
+"Por ejemplo, si está utilizando GNOME Shell (Wayland), puede hacer clic derecho "
+"en \"Clickable\" en la barra de título para mostrar un menú del gestor de ventanas "
+"y marcar \"Siempre encima\" y \"Siempre en el Espacio de Trabajo Visible\" "
+"en él.\n"
+"Si está utilizando KDE Plasma (Wayland), puede hacer clic derecho en \"Floating "
+"Window - Show Me The Key\" en la barra de tareas, marcar \"Mover al Escritorio\" "
+"-> \"Todos los Escritorios\" y \"Más Acciones\" -> \"Mantener Encima\".\n"
+"Puede consultar <a href=\"https://github.com/AlynxZhou/showmethekey#special-"
+"notice-for-wayland-session-users\">README</a> para ver si hay "
+"configuraciones para su compositor.\n"
+"\n"
+"4. Para permitir al usuario mover o cambiar el tamaño de la ventana de teclas, "
+"no es clickeable por defecto, después de moverlo a la ubicación deseada, apague "
+"el interruptor \"Clickeable\" para que no bloquee sus otras operaciones.\n"
+"\n"
+"5. Si desea pausarlo (por ejemplo, necesita ingresar una contraseña), puede "
+"utilizar el interruptor \"Pausa\", no registrará sus teclas cuando esté en pausa.\n"
+"\n"
+"6. Establezca el tiempo de espera en 0 si desea mantener todas las teclas.\n"
+"\n"
+"Puede abrir este diálogo nuevamente a través del icono de menú en la barra de "
+"título -> \"Uso\"."
+
+#: showmethekey-gtk/smtk-app-win.c:557
+msgid "Close"
+msgstr "Cerrar"
+
+#: showmethekey-gtk/smtk-app-win.c:594
+msgid "translator-credits"
+msgstr "ItzSelenux"
+
+#: showmethekey-gtk/smtk-app-win.c:595
+msgid "About Show Me The Key"
+msgstr "Acerca de Muéstrame la Tecla"
+
+#: showmethekey-gtk/smtk-app-win.c:597
+msgid "Show keys you typed on screen."
+msgstr "Muestra las teclas que escribiste en pantalla."
+
+#: showmethekey-gtk/smtk-app-win.ui:35
+msgid "Menu"
+msgstr "Menú"
+
+#: showmethekey-gtk/smtk-app-win.ui:38
+msgid "Primary menu"
+msgstr "Menú principal"
+
+#: showmethekey-gtk/smtk-app-win.ui:56
+msgid "General"
+msgstr "General"
+
+#: showmethekey-gtk/smtk-app-win.ui:60
+msgid "_Clickable"
+msgstr "_Clickeable"
+
+#: showmethekey-gtk/smtk-app-win.ui:61
+msgid ""
+"Turning off will pass input event to other apps under the floating window."
+msgstr "Desactivar permitirá que los eventos de entrada pasen a otras aplicaciones bajo la ventana flotante."
+
+#: showmethekey-gtk/smtk-app-win.ui:80
+msgid "_Pause"
+msgstr "_Pausa"
+
+#: showmethekey-gtk/smtk-app-win.ui:81
+msgid "Temporary hide input like password."
+msgstr "Ocultar temporalmente entradas como una contraseña."
+
+#: showmethekey-gtk/smtk-app-win.ui:100
+msgid "Show _Shift Separately"
+msgstr "Mostrar _Shift Separadamente"
+
+#: showmethekey-gtk/smtk-app-win.ui:101
+msgid "Show Ctrl+Shift+A or Ctrl+A."
+msgstr "Mostrar Ctrl+Shift+A o Ctrl+A."
+
+#: showmethekey-gtk/smtk-app-win.ui:119
+msgid "Show _Mouse Button"
+msgstr "Mostrar _Botón del Ratón"
+
+#: showmethekey-gtk/smtk-app-win.ui:120
+msgid "Mouse buttons can be very annoying."
+msgstr "Los botones del ratón pueden ser muy molestos."
+
+#: showmethekey-gtk/smtk-app-win.ui:138
+msgid "Draw Keys _Border"
+msgstr "Dibujar _Borde de Teclas"
+
+#: showmethekey-gtk/smtk-app-win.ui:139
+msgid "In case keys and key combos are hard to distinguish."
+msgstr "En caso de que las teclas y combinaciones de teclas sean difíciles de distinguir."
+
+#: showmethekey-gtk/smtk-app-win.ui:156
+msgid "Display Mode"
+msgstr "Modo de Pantalla"
+
+#: showmethekey-gtk/smtk-app-win.ui:157
+msgid "Raw is Linux kernel's scancode and maybe not so useful."
+msgstr "\"Bruto\" es el código de escaneo del núcleo de Linux y tal vez no sea tan útil."
+
+#: showmethekey-gtk/smtk-app-win.ui:163
+msgid "Composed"
+msgstr "Compuesto"
+
+#: showmethekey-gtk/smtk-app-win.ui:164
+msgid "Raw"
+msgstr "Bruto"
+
+#: showmethekey-gtk/smtk-app-win.ui:165
+msgid "Compact"
+msgstr "Compacto"
+
+#: showmethekey-gtk/smtk-app-win.ui:179
+msgid "Timeout (ms)"
+msgstr "Tiempo de Espera (ms)"
+
+#: showmethekey-gtk/smtk-app-win.ui:180
+msgid ""
+"Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
+"keys."
+msgstr "Borrar teclas si no hay nuevas teclas después de cuántos milisegundos. Establecer en 0 para mantener todas las teclas."
+
+#: showmethekey-gtk/smtk-app-win.ui:200
+msgid "Width (px)"
+msgstr "Anchura (px)"
+
+#: showmethekey-gtk/smtk-app-win.ui:201
+msgid "Width of keys window."
+msgstr "Anchura de la ventana de teclas."
+
+#: showmethekey-gtk/smtk-app-win.ui:216
+msgid "Height (px)"
+msgstr "Altura (px)"
+
+#: showmethekey-gtk/smtk-app-win.ui:217
+msgid "Height of keys window."
+msgstr "Altura de la ventana de teclas."
+
+#: showmethekey-gtk/smtk-app-win.ui:233
+msgid "Keyboard"
+msgstr "Teclado"
+
+#: showmethekey-gtk/smtk-app-win.ui:237
+msgid "Keymap"
+msgstr "Distribución de Teclas"
+
+#: showmethekey-gtk/smtk-app-win.ui:238
+msgid "Choose your keyboard layout and variant."
+msgstr "Elija su distribución y variante del teclado."
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:7
+msgid "_Usage"
+msgstr "_Uso"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:11
+msgid "_About Show Me The Key"
+msgstr "_Acerca de Muéstrame La Tecla"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:17
+msgid "_Quit"
+msgstr "_Salir"
+
+#: showmethekey-gtk/smtk-keys-win.c:311
+msgid "Clickable"
+msgstr "Clickeable"
