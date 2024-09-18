@@ -357,7 +357,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
 }
 
 // Check if user is on "input" group
-gboolean is_user_oninput(const char* group_name) {
+gboolean is_group(const char* group_name) {
 	gid_t *groups;
 	int ngroups;
 	struct group *grp;
@@ -397,7 +397,7 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	g_debug("smtk_keys_emitter_start_async() called.");
 	g_return_if_fail(emitter != NULL);
 
-	if (is_user_oninput("input")) {
+	if (is_group("input")) {
 	 		emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 			G_SUBPROCESS_FLAGS_STDERR_PIPE,
