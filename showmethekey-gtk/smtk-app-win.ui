@@ -17,7 +17,7 @@
                 <property name="title" translatable="yes">Show Me The Key</property>
               </object>
             </property>
-            <property name="show-start-title-buttons">false</property>
+            <property name="show-start-title-buttons">true</property>
             <property name="show-end-title-buttons">true</property>
             <child type="start">
               <object class="GtkSwitch" id="keys_win_switch">
