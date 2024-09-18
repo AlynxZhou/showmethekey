@@ -1,5 +1,6 @@
 #include <gio/gio.h>
 #include <json-glib/json-glib.h>
+#include <grp.h>
 
 #include "smtk.h"
 #include "smtk-keys-emitter.h"
@@ -355,6 +356,35 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
 	return emitter;
 }
 
+// Check if user is on "input" group
+gboolean is_group(const char* group_name) {
+	gid_t *groups;
+	int ngroups;
+	struct group *grp;
+	gid_t gid;
+
+	ngroups = getgroups(0, NULL);
+	groups = g_malloc(ngroups * sizeof(gid_t));
+	getgroups(ngroups, groups);
+
+	grp = getgrnam(group_name);
+	if (!grp) {
+		g_free(groups);
+		return FALSE;
+	}
+	gid = grp->gr_gid;
+
+	for (int i = 0; i < ngroups; i++) {
+		if (groups[i] == gid) {
+			g_free(groups);
+			return TRUE;
+		}
+	}
+
+	g_free(groups);
+	return FALSE;
+}
+
 // Those two functions are splitted from init and dispose functions,
 // because we need to pass a reference to the async callback of GTask,
 // and don't want a loop reference (e.g. a emitter reference is dropped
@@ -367,10 +397,18 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	g_debug("smtk_keys_emitter_start_async() called.");
 	g_return_if_fail(emitter != NULL);
 
-	emitter->cli = g_subprocess_new(
+	if (is_group("input")) {
+	 		emitter->cli = g_subprocess_new(
 		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 			G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		error, PKEXEC_PATH, PACKAGE_BINDIR "/showmethekey-cli", NULL);
+		error, PACKAGE_BINDIR "/showmethekey-cli", NULL);
+	}
+	else {
+		emitter->cli = g_subprocess_new(
+			G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+				G_SUBPROCESS_FLAGS_STDERR_PIPE,
+			error, PKEXEC_PATH, PACKAGE_BINDIR "/showmethekey-cli", NULL);
+	}
 	// emitter->error is already set, just return.
 	if (emitter->cli == NULL)
 		return;
