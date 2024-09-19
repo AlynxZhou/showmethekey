@@ -357,7 +357,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
 }
 
 // Check if user is on "input" group
-gboolean is_group(const char *group_name)
+bool is_group(const char *group_name)
 {
 	gid_t *groups;
 	int ngroups;
@@ -371,19 +371,19 @@ gboolean is_group(const char *group_name)
 	grp = getgrnam(group_name);
 	if (!grp) {
 		g_free(groups);
-		return FALSE;
+		return false;
 	}
 	gid = grp->gr_gid;
 
 	for (int i = 0; i < ngroups; i++) {
 		if (groups[i] == gid) {
 			g_free(groups);
-			return TRUE;
+			return true;
 		}
 	}
 
 	g_free(groups);
-	return FALSE;
+	return false;
 }
 
 // Those two functions are splitted from init and dispose functions,
