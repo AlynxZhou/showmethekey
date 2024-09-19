@@ -9,6 +9,7 @@
 struct _SmtkApp {
 	AdwApplication parent_instance;
 	GtkWidget *win;
+	bool active;
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, ADW_TYPE_APPLICATION)
 
@@ -91,6 +92,7 @@ static void quit_action(GSimpleAction *action, GVariant *parameter,
 static void smtk_app_init(SmtkApp *app)
 {
 	app->win = NULL;
+	app->active = false;
 
 	g_set_application_name(_("Show Me The Key"));
 	gtk_window_set_default_icon_name("one.alynx.showmethekey");
@@ -98,6 +100,8 @@ static void smtk_app_init(SmtkApp *app)
 	const GOptionEntry options[] = {
 		{ "version", 'v', 0, G_OPTION_ARG_NONE, NULL,
 		  N_("Display version then exit."), NULL },
+		{ "active", 'a', 0, G_OPTION_ARG_NONE, NULL,
+		  N_("Activate keys window on start up."), NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
@@ -113,6 +117,8 @@ static void smtk_app_activate(GApplication *g_app)
 	if (app->win == NULL) {
 		app->win = smtk_app_win_new(SMTK_APP(app));
 		gtk_window_present(GTK_WINDOW(app->win));
+		if (app->active)
+			smtk_app_win_activate(SMTK_APP_WIN(app->win));
 	}
 }
 
@@ -169,9 +175,13 @@ static void smtk_app_startup(GApplication *g_app)
 static int smtk_app_handle_local_options(GApplication *application,
 					 GVariantDict *options)
 {
+	SmtkApp *app = SMTK_APP(application);
+
 	if (g_variant_dict_contains(options, "version")) {
 		g_print(PROJECT_VERSION "\n");
 		return 0;
+	} else if (g_variant_dict_contains(options, "active")) {
+		app->active = true;
 	}
 
 	return -1;

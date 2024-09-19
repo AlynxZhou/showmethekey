@@ -89,7 +89,7 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 	}
 }
 
-static void smtk_app_win_active(SmtkAppWin *win)
+void smtk_app_win_activate(SmtkAppWin *win)
 {
 	const bool show_shift =
 		gtk_switch_get_active(GTK_SWITCH(win->shift_switch));
@@ -130,9 +130,10 @@ static void smtk_app_win_active(SmtkAppWin *win)
 				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
 				win, G_CONNECT_SWAPPED);
 
-	smtk_app_win_disable(win);
-
 	gtk_window_present(GTK_WINDOW(win->keys_win));
+
+	gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), true);
+	smtk_app_win_disable(win);
 }
 
 // See <https://mail.gnome.org/archives/networkmanager-list/2010-October/msg00129.html>.
@@ -144,7 +145,7 @@ static void smtk_app_win_on_keys_win_switch_active(SmtkAppWin *win,
 {
 	if (gtk_switch_get_active(GTK_SWITCH(win->keys_win_switch))) {
 		if (win->keys_win == NULL)
-			smtk_app_win_active(win);
+			smtk_app_win_activate(win);
 	} else {
 		// We clear pointer and change widget states in signal handler.
 		if (win->keys_win != NULL)

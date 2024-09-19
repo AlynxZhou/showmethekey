@@ -357,7 +357,8 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
 }
 
 // Check if user is on "input" group
-gboolean is_group(const char* group_name) {
+gboolean is_group(const char *group_name)
+{
 	gid_t *groups;
 	int ngroups;
 	struct group *grp;
@@ -398,16 +399,18 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	g_return_if_fail(emitter != NULL);
 
 	if (is_group("input")) {
-	 		emitter->cli = g_subprocess_new(
-		G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
-			G_SUBPROCESS_FLAGS_STDERR_PIPE,
-		error, PACKAGE_BINDIR "/showmethekey-cli", NULL);
-	}
-	else {
 		emitter->cli = g_subprocess_new(
-			G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+			G_SUBPROCESS_FLAGS_STDIN_PIPE |
+				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 				G_SUBPROCESS_FLAGS_STDERR_PIPE,
-			error, PKEXEC_PATH, PACKAGE_BINDIR "/showmethekey-cli", NULL);
+			error, PACKAGE_BINDIR "/showmethekey-cli", NULL);
+	} else {
+		emitter->cli = g_subprocess_new(
+			G_SUBPROCESS_FLAGS_STDIN_PIPE |
+				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+				G_SUBPROCESS_FLAGS_STDERR_PIPE,
+			error, PKEXEC_PATH, PACKAGE_BINDIR "/showmethekey-cli",
+			NULL);
 	}
 	// emitter->error is already set, just return.
 	if (emitter->cli == NULL)
