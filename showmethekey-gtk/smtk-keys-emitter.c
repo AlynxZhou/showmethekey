@@ -20,6 +20,7 @@ struct _SmtkKeysEmitter {
 
 	SmtkKeyMode mode;
 	bool show_shift;
+	bool show_keyboard;
 	bool show_mouse;
 	char *layout;
 	char *variant;
@@ -35,6 +36,7 @@ enum {
 	PROP_0,
 	PROP_MODE,
 	PROP_SHOW_SHIFT,
+	PROP_SHOW_KEYBOARD,
 	PROP_SHOW_MOUSE,
 	PROP_LAYOUT,
 	PROP_VARIANT,
@@ -88,6 +90,10 @@ static void smtk_keys_emitter_set_property(GObject *object,
 		smtk_keys_emitter_set_show_shift(emitter,
 						 g_value_get_boolean(value));
 		break;
+	case PROP_SHOW_KEYBOARD:
+		smtk_keys_emitter_set_show_keyboard(emitter,
+						    g_value_get_boolean(value));
+		break;
 	case PROP_SHOW_MOUSE:
 		smtk_keys_emitter_set_show_mouse(emitter,
 						 g_value_get_boolean(value));
@@ -119,6 +125,9 @@ static void smtk_keys_emitter_get_property(GObject *object,
 		break;
 	case PROP_SHOW_SHIFT:
 		g_value_set_boolean(value, emitter->show_shift);
+		break;
+	case PROP_SHOW_KEYBOARD:
+		g_value_set_boolean(value, emitter->show_keyboard);
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
@@ -213,10 +222,11 @@ static gpointer poller_function(gpointer user_data)
 			continue;
 		}
 
-		// Don't handle if skip mouse button.
-		if (!emitter->show_mouse &&
-		    smtk_event_get_event_type(event) ==
-			    SMTK_EVENT_TYPE_POINTER_BUTTON) {
+		SmtkEventType type = smtk_event_get_event_type(event);
+		if ((!emitter->show_mouse &&
+		     type == SMTK_EVENT_TYPE_POINTER_BUTTON) ||
+		    (!emitter->show_keyboard &&
+		     type == SMTK_EVENT_TYPE_KEYBOARD_KEY)) {
 			g_clear_object(&event);
 			g_free(line);
 			continue;
@@ -325,6 +335,9 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
 		"show-shift", "Show Shift", "Show Shift Separately", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_SHOW_KEYBOARD] = g_param_spec_boolean(
+		"show-keyboard", "Show Keyboard", "Show Keyboard Key", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -338,14 +351,15 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_mouse,
-				       SmtkKeyMode mode, const char *layout,
-				       const char *variant, GError **error)
+SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_keyboard,
+				       bool show_mouse, SmtkKeyMode mode,
+				       const char *layout, const char *variant,
+				       GError **error)
 {
-	SmtkKeysEmitter *emitter =
-		g_object_new(SMTK_TYPE_KEYS_EMITTER, "mode", mode, "show-shift",
-			     show_shift, "show-mouse", show_mouse, "layout",
-			     layout, "variant", variant, NULL);
+	SmtkKeysEmitter *emitter = g_object_new(
+		SMTK_TYPE_KEYS_EMITTER, "mode", mode, "show-shift", show_shift,
+		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
+		"layout", layout, "variant", variant, NULL);
 
 	if (emitter->error != NULL) {
 		g_propagate_error(error, emitter->error);
@@ -480,6 +494,14 @@ void smtk_keys_emitter_set_show_shift(SmtkKeysEmitter *emitter, bool show_shift)
 		smtk_keys_mapper_set_show_shift(emitter->mapper, show_shift);
 	// Sync self property.
 	emitter->show_shift = show_shift;
+}
+
+void smtk_keys_emitter_set_show_keyboard(SmtkKeysEmitter *emitter,
+					 bool show_keyboard)
+{
+	g_return_if_fail(emitter != NULL);
+
+	emitter->show_keyboard = show_keyboard;
 }
 
 void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter, bool show_mouse)

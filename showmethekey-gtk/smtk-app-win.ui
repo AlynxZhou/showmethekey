@@ -116,6 +116,25 @@
                     <child>
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Show _Keyboard Key</property>
+                        <property name="subtitle" translatable="yes">Maybe some users don't want keyboard keys.</property>
+                        <property name="activatable-widget">keyboard_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="keyboard_switch">
+	                    <property name="valign">center</property>
+	                    <property name="active">true</property>
+	                    <signal
+	                        name="notify::active"
+	                        handler="smtk_app_win_on_keyboard_switch_active"
+	                        object="SmtkAppWin"
+	                        swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Show _Mouse Button</property>
                         <property name="subtitle" translatable="yes">Mouse buttons can be very annoying.</property>
                         <property name="activatable-widget">mouse_switch</property>

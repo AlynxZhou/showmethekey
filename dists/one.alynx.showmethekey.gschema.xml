@@ -11,9 +11,14 @@
       <description>Show shift separately or only when not consumed.</description>
       <default>true</default>
     </key>
+    <key type="b" name="show-keyboard">
+      <summary>Show Keyboard Key or Not</summary>
+      <description>Show keyboard key.</description>
+      <default>true</default>
+    </key>
     <key type="b" name="show-mouse">
       <summary>Show Mouse Button or Not</summary>
-      <description>Show mouse button and keyboard key or only keyboard key.</description>
+      <description>Show mouse button.</description>
       <default>true</default>
     </key>
     <key type="b" name="draw-border">

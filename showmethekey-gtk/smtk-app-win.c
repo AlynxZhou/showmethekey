@@ -19,6 +19,7 @@ struct _SmtkAppWin {
 	GtkWidget *clickable_switch;
 	GtkWidget *pause_switch;
 	GtkWidget *shift_switch;
+	GtkWidget *keyboard_switch;
 	GtkWidget *mouse_switch;
 	GtkWidget *border_switch;
 	GtkWidget *mode_selector;
@@ -93,6 +94,8 @@ void smtk_app_win_activate(SmtkAppWin *win)
 {
 	const bool show_shift =
 		gtk_switch_get_active(GTK_SWITCH(win->shift_switch));
+	const bool show_keyboard =
+		gtk_switch_get_active(GTK_SWITCH(win->keyboard_switch));
 	const bool show_mouse =
 		gtk_switch_get_active(GTK_SWITCH(win->mouse_switch));
 	const bool draw_border =
@@ -117,9 +120,10 @@ void smtk_app_win_activate(SmtkAppWin *win)
 	smtk_app_win_get_keymap(win, &layout, &variant);
 
 	GError *error = NULL;
-	win->keys_win = smtk_keys_win_new(win, show_shift, show_mouse,
-					  draw_border, mode, width, height,
-					  timeout, layout, variant, &error);
+	win->keys_win = smtk_keys_win_new(win, show_shift, show_keyboard,
+					  show_mouse, draw_border, mode, width,
+					  height, timeout, layout, variant,
+					  &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);
@@ -195,6 +199,19 @@ static void smtk_app_win_on_shift_switch_active(SmtkAppWin *win,
 	smtk_keys_win_set_show_shift(
 		SMTK_KEYS_WIN(win->keys_win),
 		gtk_switch_get_active(GTK_SWITCH(win->shift_switch)));
+}
+
+static void smtk_app_win_on_keyboard_switch_active(SmtkAppWin *win,
+						   GParamSpec *prop,
+						   GtkSwitch *keyboard_switch)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_show_keyboard(
+		SMTK_KEYS_WIN(win->keys_win),
+		gtk_switch_get_active(GTK_SWITCH(win->keyboard_switch)));
 }
 
 static void smtk_app_win_on_mouse_switch_active(SmtkAppWin *win,
@@ -359,6 +376,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	win->settings = g_settings_new("one.alynx.showmethekey");
 	g_settings_bind(win->settings, "show-shift", win->shift_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "show-keyboard", win->keyboard_switch,
+			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "draw-border", win->border_switch,
@@ -421,6 +440,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, shift_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, keyboard_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mouse_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, border_switch);
@@ -446,6 +467,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_shift_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_keyboard_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_mouse_switch_active);
