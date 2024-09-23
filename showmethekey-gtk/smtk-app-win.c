@@ -553,8 +553,8 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-	GtkWidget *dialog = adw_message_dialog_new(
-		GTK_WINDOW(win), _("Usage"),
+	AdwDialog *dialog = adw_alert_dialog_new(
+		_("Usage"),
 		_("1. Please input admin password after toggling the switch, "
 		  "because it needs superuser permission to read input events, "
 		  "and Wayland does not allow running graphics program with "
@@ -593,13 +593,13 @@ void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
 		  "6. Set Timeout to 0 if you want to keep all keys.\n\n"
 		  "You can open this dialog again via menu icon on title bar "
 		  "-> \"Usage\"."));
-	adw_message_dialog_set_body_use_markup(ADW_MESSAGE_DIALOG(dialog),
-					       true);
-	adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(dialog), "close",
-					_("Close"));
-	g_signal_connect_swapped(dialog, "response",
-				 G_CALLBACK(gtk_window_destroy), dialog);
-	gtk_window_present(GTK_WINDOW(dialog));
+	adw_alert_dialog_set_body_use_markup(ADW_ALERT_DIALOG(dialog), true);
+	adw_alert_dialog_add_response(ADW_ALERT_DIALOG(dialog), "close",
+				      _("Close"));
+	adw_alert_dialog_set_default_response(ADW_ALERT_DIALOG(dialog),
+					      "close");
+	adw_alert_dialog_set_close_response(ADW_ALERT_DIALOG(dialog), "close");
+	adw_dialog_present(dialog, GTK_WIDGET(win));
 }
 
 void smtk_app_win_show_about_dialog(SmtkAppWin *win)
@@ -635,7 +635,7 @@ void smtk_app_win_show_about_dialog(SmtkAppWin *win)
 		"governing permissions and\n"
 		"limitations under the License.";
 
-	adw_show_about_window(GTK_WINDOW(win), "developers", developers,
+	adw_show_about_dialog(GTK_WIDGET(win), "developers", developers,
 			      "artists", artists, "documenters", documenters,
 			      "translator-credits", _("translator-credits"),
 			      "title", _("About Show Me The Key"),
