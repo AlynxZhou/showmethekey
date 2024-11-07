@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-23 16:30+0800\n"
+"POT-Creation-Date: 2024-11-07 10:58+0800\n"
 "PO-Revision-Date: 2024-08-02 10:16-0600\n"
 "Last-Translator: ItzSelenux\n"
 "Language-Team: none\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:97 showmethekey-gtk/smtk-app-win.c:642
+#: showmethekey-gtk/smtk-app.c:97 showmethekey-gtk/smtk-app-win.c:645
 #: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
 msgid "Show Me The Key"
 msgstr "Muéstrame La Tecla"
@@ -29,11 +29,11 @@ msgstr "Mostrar versión y salir."
 msgid "Activate keys window on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:557
+#: showmethekey-gtk/smtk-app-win.c:560
 msgid "Usage"
 msgstr "Uso"
 
-#: showmethekey-gtk/smtk-app-win.c:558
+#: showmethekey-gtk/smtk-app-win.c:561
 msgid ""
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
@@ -112,19 +112,19 @@ msgstr ""
 "Puede abrir este diálogo nuevamente a través del icono de menú en la barra "
 "de título -> \"Uso\"."
 
-#: showmethekey-gtk/smtk-app-win.c:599
+#: showmethekey-gtk/smtk-app-win.c:601
 msgid "Close"
 msgstr "Cerrar"
 
-#: showmethekey-gtk/smtk-app-win.c:640
+#: showmethekey-gtk/smtk-app-win.c:643
 msgid "translator-credits"
 msgstr "ItzSelenux"
 
-#: showmethekey-gtk/smtk-app-win.c:641
+#: showmethekey-gtk/smtk-app-win.c:644
 msgid "About Show Me The Key"
 msgstr "Acerca de Muéstrame la Tecla"
 
-#: showmethekey-gtk/smtk-app-win.c:643
+#: showmethekey-gtk/smtk-app-win.c:646
 msgid "Show keys you typed on screen."
 msgstr "Muestra las teclas que escribiste en pantalla."
 
@@ -156,7 +156,9 @@ msgid "_Pause"
 msgstr "_Pausa"
 
 #: showmethekey-gtk/smtk-app-win.ui:81
-msgid "Temporary hide input like password."
+#, fuzzy
+msgid ""
+"Temporary hide input like password. Press both alt anywhere to toggle this."
 msgstr "Ocultar temporalmente entradas como una contraseña."
 
 #: showmethekey-gtk/smtk-app-win.ui:100
@@ -268,6 +270,6 @@ msgstr "_Acerca de Muéstrame La Tecla"
 msgid "_Quit"
 msgstr "_Salir"
 
-#: showmethekey-gtk/smtk-keys-win.c:323
+#: showmethekey-gtk/smtk-keys-win.c:332
 msgid "Clickable"
 msgstr "Clickeable"

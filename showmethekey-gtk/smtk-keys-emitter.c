@@ -22,13 +22,14 @@ struct _SmtkKeysEmitter {
 	bool show_shift;
 	bool show_keyboard;
 	bool show_mouse;
+	bool alt_pressed;
 	char *layout;
 	char *variant;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
-enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
+enum { SIG_KEY, SIG_ERROR_CLI_EXIT, SIG_PAUSE, N_SIGNALS };
 
 static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
@@ -145,55 +146,67 @@ static void smtk_keys_emitter_get_property(GObject *object,
 	}
 }
 
-struct idle_data {
+struct key_idle_data {
 	SmtkKeysEmitter *emitter;
 	char *key;
 };
 
-static void idle_destroy_function(gpointer user_data)
+static void key_idle_destroy_function(gpointer user_data)
 {
-	struct idle_data *idle_data = user_data;
-	SmtkKeysEmitter *emitter = idle_data->emitter;
+	struct key_idle_data *key_idle_data = user_data;
+	SmtkKeysEmitter *emitter = key_idle_data->emitter;
+
 	g_object_unref(emitter);
-	g_free(idle_data);
+	g_free(key_idle_data);
 }
 
 // true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
-static int idle_function(gpointer user_data)
+static int key_idle_function(gpointer user_data)
 {
 	// Here we back to UI thread.
-	struct idle_data *idle_data = user_data;
-	SmtkKeysEmitter *emitter = idle_data->emitter;
+	struct key_idle_data *key_idle_data = user_data;
+	SmtkKeysEmitter *emitter = key_idle_data->emitter;
 
-	g_signal_emit_by_name(emitter, "key", idle_data->key);
+	g_signal_emit_by_name(emitter, "key", key_idle_data->key);
 
 	return 0;
 }
 
-static void trigger_idle_function(SmtkKeysEmitter *emitter, const char key[])
+static void trigger_key_idle_function(SmtkKeysEmitter *emitter, const char key[])
 {
-	// UI can only be modified in UI thread,
-	// and we are not in UI thread here.
-	// So we need to use `g_timeout_add()` to kick
-	// an async callback into glib's main loop
-	// (the same as GTK UI thread).
-	// Signals are not async!
-	// So we cannot emit signal here,
-	// because they will run in poller thread
-	// instead of UI thread.
-	// `g_idle_add()` is not suitable because we
-	// have a high priority.
-	// We dup the key and use malloc because we will enter another thread,
-	// so the poller thread may already continue and calls free for key.
-	struct idle_data *idle_data = g_malloc(sizeof(*idle_data));
-	if (!idle_data) {
-		g_warning("Alloc idle_data failed.\n");
+	// UI can only be modified in UI thread, and we are not in UI thread
+	// here. So we need to use `g_timeout_add()` to kick an async callback
+	// into glib's main loop (the same as GTK UI thread).
+	//
+	// Signals are not async! So we cannot emit signal here, because they
+	// will run in poller thread instead of UI thread. `g_idle_add()` is not
+	// suitable because we have a high priority. We dup the key and use
+	// malloc because we will enter another thread, so the poller thread may
+	// already continue and calls free for key.
+	struct key_idle_data *key_idle_data = g_malloc(sizeof(*key_idle_data));
+	if (!key_idle_data) {
+		g_warning("Alloc key_idle_data failed.\n");
 		return;
 	}
-	idle_data->emitter = g_object_ref(emitter);
-	idle_data->key = g_strdup(key);
-	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, idle_function, idle_data,
-			   idle_destroy_function);
+	key_idle_data->emitter = g_object_ref(emitter);
+	key_idle_data->key = g_strdup(key);
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, key_idle_function,
+			   key_idle_data, key_idle_destroy_function);
+}
+
+static int pause_idle_function(gpointer user_data)
+{
+	SmtkKeysEmitter *emitter = user_data;
+
+	g_signal_emit_by_name(emitter, "pause");
+
+	return 0;
+}
+
+static void trigger_pause_idle_function(SmtkKeysEmitter *emitter)
+{
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, pause_idle_function,
+			   g_object_ref(emitter), g_object_unref);
 }
 
 static gpointer poller_function(gpointer user_data)
@@ -222,18 +235,29 @@ static gpointer poller_function(gpointer user_data)
 			continue;
 		}
 
+		// Press both Alt to pause. Xkbcommon treat left and right alt
+		// as the same one, so we have to do it here.
 		SmtkEventType type = smtk_event_get_event_type(event);
-		if ((!emitter->show_mouse &&
-		     type == SMTK_EVENT_TYPE_POINTER_BUTTON) ||
-		    (!emitter->show_keyboard &&
-		     type == SMTK_EVENT_TYPE_KEYBOARD_KEY)) {
-			g_clear_object(&event);
-			g_free(line);
-			continue;
+		SmtkEventState state = smtk_event_get_event_state(event);
+		const char *key_name = smtk_event_get_key_name(event);
+		if (type == SMTK_EVENT_TYPE_KEYBOARD_KEY &&
+		    state == SMTK_EVENT_STATE_PRESSED &&
+		    (strcmp(key_name, "KEY_LEFTALT") == 0 ||
+		     strcmp(key_name, "KEY_RIGHTALT") == 0)) {
+			if (emitter->alt_pressed) {
+				trigger_pause_idle_function(emitter);
+				emitter->alt_pressed = false;
+			} else {
+				emitter->alt_pressed = true;
+			}
+		} else {
+			if (emitter->alt_pressed)
+				emitter->alt_pressed = false;
 		}
 
 		char *key = NULL;
-		// Always get key with SmtkKeysMapper, it will update XKB state.
+		// Always get key with SmtkKeysMapper, it will update XKB state
+		// to keep sync with actual keyboard.
 		switch (emitter->mode) {
 		case SMTK_KEY_MODE_COMPOSED:
 			key = smtk_keys_mapper_get_composed(emitter->mapper,
@@ -252,9 +276,12 @@ static gpointer poller_function(gpointer user_data)
 			break;
 		}
 		if (key != NULL) {
-			if (smtk_event_get_event_state(event) ==
-			    SMTK_EVENT_STATE_PRESSED)
-				trigger_idle_function(emitter, key);
+			if (state == SMTK_EVENT_STATE_PRESSED &&
+			    ((emitter->show_mouse &&
+			      type == SMTK_EVENT_TYPE_POINTER_BUTTON) ||
+			     (emitter->show_keyboard &&
+			      type == SMTK_EVENT_TYPE_KEYBOARD_KEY)))
+				trigger_key_idle_function(emitter, key);
 			g_free(key);
 		}
 		g_clear_object(&event);
@@ -272,6 +299,7 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	emitter->layout = NULL;
 	emitter->variant = NULL;
 	emitter->error = NULL;
+	emitter->alt_pressed = false;
 }
 
 static void smtk_keys_emitter_constructed(GObject *object)
@@ -327,6 +355,9 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 					    G_TYPE_NONE, 1, G_TYPE_STRING);
 	obj_signals[SIG_ERROR_CLI_EXIT] = g_signal_new(
 		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
+		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	obj_signals[SIG_PAUSE] = g_signal_new(
+		"pause", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 	obj_props[PROP_MODE] = g_param_spec_enum(

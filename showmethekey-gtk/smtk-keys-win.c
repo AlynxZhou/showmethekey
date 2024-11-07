@@ -32,6 +32,10 @@ struct _SmtkKeysWin {
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_WINDOW)
 
+enum { SIG_PAUSE, N_SIGNALS };
+
+static unsigned int obj_signals[N_SIGNALS] = { 0 };
+
 enum {
 	PROP_0,
 	PROP_CLICKABLE,
@@ -146,6 +150,11 @@ static void smtk_keys_win_emitter_on_key(SmtkKeysWin *win, char key[])
 	// See <http://garfileo.is-programmer.com/2011/3/25/gobject-signal-extra-1.25576.html>.
 	// void (*callback)(gpointer instance, const gchar *arg1, gpointer user_data)
 	smtk_keys_area_add_key(SMTK_KEYS_AREA(win->area), g_strdup(key));
+}
+
+static void smtk_keys_win_emitter_on_pause(SmtkKeysWin *win)
+{
+	g_signal_emit_by_name(win, "pause");
 }
 
 #ifdef GDK_WINDOWING_X11
@@ -338,6 +347,9 @@ static void smtk_keys_win_constructed(GObject *object)
 	g_signal_connect_object(win->emitter, "key",
 				G_CALLBACK(smtk_keys_win_emitter_on_key), win,
 				G_CONNECT_SWAPPED);
+	g_signal_connect_object(win->emitter, "pause",
+			G_CALLBACK(smtk_keys_win_emitter_on_pause), win,
+			G_CONNECT_SWAPPED);
 
 	smtk_keys_emitter_start_async(win->emitter, &win->error);
 	if (win->error != NULL)
@@ -388,6 +400,10 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// In GTK4 size allocate is not a signal but a virtual method, but I
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
+
+	obj_signals[SIG_PAUSE] = g_signal_new(
+		"pause", SMTK_TYPE_KEYS_WIN, G_SIGNAL_RUN_LAST, 0,
+		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
 	obj_props[PROP_CLICKABLE] = g_param_spec_boolean(
 		"clickable", "Clickable", "Clickable or Click Through", true,

@@ -130,6 +130,9 @@ void smtk_app_win_activate(SmtkAppWin *win)
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), false);
 		return;
 	}
+	g_signal_connect_object(win->keys_win, "pause",
+				G_CALLBACK(smtk_app_win_toggle_pause_switch),
+				win, G_CONNECT_SWAPPED);
 	g_signal_connect_object(win->keys_win, "destroy",
 				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
 				win, G_CONNECT_SWAPPED);

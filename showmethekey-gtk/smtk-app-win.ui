@@ -78,7 +78,7 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Pause</property>
-                        <property name="subtitle" translatable="yes">Temporary hide input like password.</property>
+                        <property name="subtitle" translatable="yes">Temporary hide input like password. Press both alt anywhere to toggle this.</property>
                         <property name="activatable-widget">pause_switch</property>
                         <child>
                           <object class="GtkSwitch" id="pause_switch">
