@@ -310,6 +310,13 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// we change style of the keys window only.
 	gtk_widget_add_css_class(GTK_WIDGET(win), "smtk-keys-win");
 
+	// Since libadwaita v1.6, it starts to set minimal size of window to
+	// 320x200, however 200 is too large for some users when using this keys
+	// window, so we unset it.
+	//
+	// See <https://gitlab.gnome.org/GNOME/libadwaita/-/commit/7a705c7959d784fa6d40af202d5d06d06f1e2fa6>.
+	gtk_widget_set_size_request(GTK_WIDGET(win), -1, -1);
+
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
 			 G_CALLBACK(smtk_keys_win_on_map), NULL);
