@@ -25,6 +25,7 @@ struct _SmtkKeysWin {
 	bool show_keyboard;
 	bool show_mouse;
 	bool draw_border;
+	bool hide_visible;
 	int timeout;
 	char *layout;
 	char *variant;
@@ -43,6 +44,7 @@ enum {
 	PROP_SHOW_KEYBOARD,
 	PROP_SHOW_MOUSE,
 	PROP_DRAW_BORDER,
+	PROP_HIDE_VISIBLE,
 	PROP_MODE,
 	PROP_TIMEOUT,
 	PROP_LAYOUT,
@@ -74,6 +76,9 @@ static void smtk_keys_win_set_property(GObject *object,
 		break;
 	case PROP_DRAW_BORDER:
 		smtk_keys_win_set_draw_border(win, g_value_get_boolean(value));
+		break;
+	case PROP_HIDE_VISIBLE:
+		smtk_keys_win_set_hide_visible(win, g_value_get_boolean(value));
 		break;
 	case PROP_MODE:
 		smtk_keys_win_set_mode(win, g_value_get_enum(value));
@@ -115,6 +120,9 @@ static void smtk_keys_win_get_property(GObject *object,
 		break;
 	case PROP_DRAW_BORDER:
 		g_value_set_boolean(value, win->draw_border);
+		break;
+	case PROP_HIDE_VISIBLE:
+		g_value_set_boolean(value, win->hide_visible);
 		break;
 	case PROP_MODE:
 		g_value_set_enum(value, win->mode);
@@ -342,7 +350,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	gtk_box_append(GTK_BOX(win->box), win->header_bar);
 
 	win->emitter = smtk_keys_emitter_new(
-		win->show_shift, win->show_keyboard, win->show_mouse, win->mode,
+		win->show_shift, win->show_keyboard, win->show_mouse, win->hide_visible, win->mode,
 		win->layout, win->variant, &win->error);
 	// `win->error` is set so just return.
 	if (win->emitter == NULL)
@@ -430,6 +438,9 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
 		"draw-border", "Draw Border", "Draw Keys Border", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
+		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -445,7 +456,7 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 
 GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
 			     bool show_keyboard, bool show_mouse,
-			     bool draw_border, SmtkKeyMode mode, int width,
+			     bool draw_border, bool hide_visible, SmtkKeyMode mode, int width,
 			     int height, int timeout, const char *layout,
 			     const char *variant, GError **error)
 {
@@ -462,7 +473,7 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
 		// Window should not be click through by default.
 		"clickable", true, "mode", mode, "show-shift", show_shift,
 		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
-		"draw-border", draw_border, "timeout", timeout, "layout",
+		"draw-border", draw_border, "hide-visible", hide_visible, "timeout", timeout, "layout",
 		layout, "variant", variant, NULL);
 
 	if (win->error != NULL) {
@@ -553,9 +564,20 @@ void smtk_keys_win_set_draw_border(SmtkKeysWin *win, bool draw_border)
 	g_return_if_fail(win != NULL);
 
 	// Pass property to area.
-	if (win->emitter != NULL)
+	if (win->area != NULL)
 		smtk_keys_area_set_draw_border(SMTK_KEYS_AREA(win->area),
 					       draw_border);
+	// Sync self property.
+	win->draw_border = draw_border;
+}
+
+void smtk_keys_win_set_hide_visible(SmtkKeysWin *win, bool hide_visible)
+{
+	g_return_if_fail(win != NULL);
+
+	// Pass property to emitter.
+	if (win->emitter != NULL)
+		smtk_keys_emitter_set_hide_visible(win->emitter, hide_visible);
 	// Sync self property.
 	win->draw_border = draw_border;
 }
