@@ -22,6 +22,7 @@ struct _SmtkKeysEmitter {
 	bool show_shift;
 	bool show_keyboard;
 	bool show_mouse;
+	bool hide_visible;
 	bool alt_pressed;
 	char *layout;
 	char *variant;
@@ -39,6 +40,7 @@ enum {
 	PROP_SHOW_SHIFT,
 	PROP_SHOW_KEYBOARD,
 	PROP_SHOW_MOUSE,
+	PROP_HIDE_VISIBLE,
 	PROP_LAYOUT,
 	PROP_VARIANT,
 	N_PROPS
@@ -99,6 +101,10 @@ static void smtk_keys_emitter_set_property(GObject *object,
 		smtk_keys_emitter_set_show_mouse(emitter,
 						 g_value_get_boolean(value));
 		break;
+	case PROP_HIDE_VISIBLE:
+		smtk_keys_emitter_set_hide_visible(emitter,
+						   g_value_get_boolean(value));
+		break;
 	case PROP_LAYOUT:
 		smtk_keys_emitter_set_layout(emitter,
 					     g_value_get_string(value));
@@ -132,6 +138,9 @@ static void smtk_keys_emitter_get_property(GObject *object,
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
+		break;
+	case PROP_HIDE_VISIBLE:
+		g_value_set_boolean(value, emitter->hide_visible);
 		break;
 	case PROP_LAYOUT:
 		g_value_set_string(value, emitter->layout);
@@ -172,7 +181,8 @@ static int key_idle_function(gpointer user_data)
 	return 0;
 }
 
-static void trigger_key_idle_function(SmtkKeysEmitter *emitter, const char key[])
+static void trigger_key_idle_function(SmtkKeysEmitter *emitter,
+				      const char key[])
 {
 	// UI can only be modified in UI thread, and we are not in UI thread
 	// here. So we need to use `g_timeout_add()` to kick an async callback
@@ -307,9 +317,9 @@ static void smtk_keys_emitter_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
 
-	emitter->mapper =
-		smtk_keys_mapper_new(emitter->show_shift, emitter->layout,
-				     emitter->variant, &emitter->error);
+	emitter->mapper = smtk_keys_mapper_new(
+		emitter->show_shift, emitter->hide_visible, emitter->layout,
+		emitter->variant, &emitter->error);
 	// `emitter->error` is already set, just return.
 	if (emitter->mapper == NULL)
 		goto out;
@@ -356,9 +366,10 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_signals[SIG_ERROR_CLI_EXIT] = g_signal_new(
 		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	obj_signals[SIG_PAUSE] = g_signal_new(
-		"pause", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
-		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	obj_signals[SIG_PAUSE] = g_signal_new("pause", SMTK_TYPE_KEYS_EMITTER,
+					      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
+					      g_cclosure_marshal_VOID__VOID,
+					      G_TYPE_NONE, 0);
 
 	obj_props[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
@@ -372,6 +383,9 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_props[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
+		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_LAYOUT] =
 		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
 				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -383,14 +397,15 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 }
 
 SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_keyboard,
-				       bool show_mouse, SmtkKeyMode mode,
-				       const char *layout, const char *variant,
-				       GError **error)
+				       bool show_mouse, bool hide_visible,
+				       SmtkKeyMode mode, const char *layout,
+				       const char *variant, GError **error)
 {
 	SmtkKeysEmitter *emitter = g_object_new(
 		SMTK_TYPE_KEYS_EMITTER, "mode", mode, "show-shift", show_shift,
 		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
-		"layout", layout, "variant", variant, NULL);
+		"hide-visible", hide_visible, "layout", layout, "variant",
+		variant, NULL);
 
 	if (emitter->error != NULL) {
 		g_propagate_error(error, emitter->error);
@@ -402,7 +417,7 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_keyboard,
 }
 
 // Check if user is on "input" group
-bool is_group(const char *group_name)
+static bool is_group(const char *group_name)
 {
 	gid_t *groups;
 	int ngroups;
@@ -443,20 +458,19 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 	g_debug("smtk_keys_emitter_start_async() called.");
 	g_return_if_fail(emitter != NULL);
 
-	if (is_group("input")) {
+	if (is_group("input"))
 		emitter->cli = g_subprocess_new(
 			G_SUBPROCESS_FLAGS_STDIN_PIPE |
 				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 				G_SUBPROCESS_FLAGS_STDERR_PIPE,
 			error, PACKAGE_BINDIR "/showmethekey-cli", NULL);
-	} else {
+	else
 		emitter->cli = g_subprocess_new(
 			G_SUBPROCESS_FLAGS_STDIN_PIPE |
 				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 				G_SUBPROCESS_FLAGS_STDERR_PIPE,
 			error, PKEXEC_PATH, PACKAGE_BINDIR "/showmethekey-cli",
 			NULL);
-	}
 	// emitter->error is already set, just return.
 	if (emitter->cli == NULL)
 		return;
@@ -540,6 +554,18 @@ void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter, bool show_mouse)
 	g_return_if_fail(emitter != NULL);
 
 	emitter->show_mouse = show_mouse;
+}
+
+void smtk_keys_emitter_set_hide_visible(SmtkKeysEmitter *emitter,
+					bool hide_visible)
+{
+	g_return_if_fail(emitter != NULL);
+
+	if (emitter->mapper != NULL)
+		smtk_keys_mapper_set_hide_visible(emitter->mapper,
+						  hide_visible);
+
+	emitter->hide_visible = hide_visible;
 }
 
 void smtk_keys_emitter_set_mode(SmtkKeysEmitter *emitter, SmtkKeyMode mode)

@@ -25,7 +25,7 @@ Just run following command to install from official repository:
 #### Install From AUR
 
 ```
-$ yay showmethekey
+$ paru showmethekey
 ```
 
 Or use other AUR helpers.

@@ -11,6 +11,7 @@
 struct _SmtkKeysMapper {
 	GObject parent_instance;
 	bool show_shift;
+	bool hide_visible;
 	char *layout;
 	char *variant;
 	struct xkb_context *xkb_context;
@@ -23,7 +24,14 @@ struct _SmtkKeysMapper {
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
-enum { PROP_0, PROP_SHOW_SHIFT, PROP_LAYOUT, PROP_VARIANT, N_PROPS };
+enum {
+	PROP_0,
+	PROP_SHOW_SHIFT,
+	PROP_HIDE_VISIBLE,
+	PROP_LAYOUT,
+	PROP_VARIANT,
+	N_PROPS
+};
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
@@ -43,6 +51,10 @@ static void smtk_keys_mapper_set_property(GObject *object,
 	case PROP_SHOW_SHIFT:
 		smtk_keys_mapper_set_show_shift(mapper,
 						g_value_get_boolean(value));
+		break;
+	case PROP_HIDE_VISIBLE:
+		smtk_keys_mapper_set_hide_visible(mapper,
+						  g_value_get_boolean(value));
 		break;
 	case PROP_LAYOUT:
 		smtk_keys_mapper_set_layout(mapper, g_value_get_string(value));
@@ -66,6 +78,9 @@ static void smtk_keys_mapper_get_property(GObject *object,
 	switch (property_id) {
 	case PROP_SHOW_SHIFT:
 		g_value_set_boolean(value, mapper->show_shift);
+		break;
+	case PROP_HIDE_VISIBLE:
+		g_value_set_boolean(value, mapper->hide_visible);
 		break;
 	case PROP_LAYOUT:
 		g_value_set_string(value, mapper->layout);
@@ -447,6 +462,9 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
 		"show-shift", "Show Shift", "Show Shift Separately", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
+		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_LAYOUT] =
 		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
 				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -457,12 +475,13 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, const char *layout,
-				     const char *variant, GError **error)
+SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, bool hide_visible,
+				     const char *layout, const char *variant,
+				     GError **error)
 {
-	SmtkKeysMapper *mapper =
-		g_object_new(SMTK_TYPE_KEYS_MAPPER, "show-shift", show_shift,
-			     "layout", layout, "variant", variant, NULL);
+	SmtkKeysMapper *mapper = g_object_new(
+		SMTK_TYPE_KEYS_MAPPER, "show-shift", show_shift, "hide-visible",
+		hide_visible, "layout", layout, "variant", variant, NULL);
 
 	if (mapper->error != NULL) {
 		g_propagate_error(error, mapper->error);
@@ -491,11 +510,66 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 	return g_strdup(smtk_event_get_key_name(event));
 }
 
-char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
+static char *smtk_keys_mapper_concat_key(SmtkKeysMapper *mapper,
+					 SmtkKeyMode mode, char *main_key,
+					 xkb_keycode_t xkb_key_code)
 {
-	g_return_val_if_fail(mapper != NULL, NULL);
-	g_return_val_if_fail(event != NULL, NULL);
+	// Use a GString for easior mods concat.
+	GString *buffer = g_string_new(NULL);
+	// I'd like to call it "Super".
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_LOGO,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		g_string_append(buffer,
+				mode == SMTK_KEY_MODE_COMPACT ? "⌘" : "Super+");
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		g_string_append(buffer,
+				mode == SMTK_KEY_MODE_COMPACT ? "⌃" : "Ctrl+");
+	// Shift+Alt will get Meta_L and Meta_R,
+	// and we should not add Alt for it.
+	// I think Meta should be a modifier, but Xkbcommon does not.
+	// Sounds like a bug.
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
+					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
+	    strcmp(main_key, "Meta") != 0)
+		g_string_append(buffer,
+				mode == SMTK_KEY_MODE_COMPACT ? "⌥" : "Alt+");
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
+		// Shift is a little bit complex, it can be consumed by
+		// capitalization transformation, so we check it here. This
+		// prevents text like Shift+! but allows text like
+		// Shift+PrintScreen. However, if user sets `show_shift`, always
+		// append it even consumed.
+		if (mapper->show_shift ||
+		    !xkb_state_mod_index_is_consumed(
+			    mapper->xkb_state, xkb_key_code,
+			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
+						     XKB_MOD_NAME_SHIFT)))
+			g_string_append(buffer, mode == SMTK_KEY_MODE_COMPACT ?
+							"⇧" :
+							"Shift+");
+	g_string_append(buffer, main_key);
+	g_free(main_key);
+	return g_string_free(buffer, FALSE);
+}
 
+static bool is_visible_key(struct xkb_state *xkb_state,
+			   xkb_keysym_t xkb_key_sym)
+{
+	// Ideally we should check whether a key is insertable to editor, but
+	// xkbcommon does not provide such a function, and it is hard to
+	// implement by ourselves, because keysyms are not continuous and cannot
+	// be simply filtered out by range, so we only check modifiers. Shift
+	// always generates insertable keys so don't check it here.
+	return !xkb_state_mod_names_are_active(
+		xkb_state, XKB_STATE_MODS_EFFECTIVE, XKB_STATE_MATCH_ANY,
+		XKB_MOD_NAME_LOGO, XKB_MOD_NAME_CTRL, XKB_MOD_NAME_ALT, NULL);
+}
+
+static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
+				      SmtkEvent *event)
+{
 	char *main_key = NULL;
 	// We put xkb_key_code here because the Shift detection use it.
 	// Though Xkbcommon don't handle mouse button state, we can still
@@ -512,6 +586,9 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 					     XKB_KEY_UP);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			mapper->xkb_state, xkb_key_code);
+		if (mapper->hide_visible &&
+		    is_visible_key(mapper->xkb_state, xkb_key_sym))
+			return NULL;
 		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
 		xkb_keysym_get_name(xkb_key_sym, main_key,
 				    XKB_KEY_SYM_NAME_LENGTH);
@@ -523,47 +600,26 @@ char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
 		g_free(main_key);
 		return NULL;
 	}
-	const char *replace_name =
-		g_hash_table_lookup(mapper->composed_replace_names, main_key);
+	const char *replace_name = g_hash_table_lookup(
+		mode == SMTK_KEY_MODE_COMPACT ? mapper->compact_replace_names :
+						mapper->composed_replace_names,
+		main_key);
 	if (replace_name != NULL) {
 		g_free(main_key);
 		// Copy from the string reference in GHashTable,
 		// so we can use g_free() after append it into GString.
 		main_key = g_strdup(replace_name);
 	}
-	// Use a GString for easior mods concat.
-	GString *buffer = g_string_new(NULL);
-	// I'd like to call it "Super".
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_LOGO,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer, "Super+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer, "Ctrl+");
-	// Shift+Alt will get Meta_L and Meta_R,
-	// and we should not add Alt for it.
-	// I think Meta should be a modifier, but Xkbcommon does not.
-	// Sounds like a bug.
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
-	    strcmp(main_key, "Meta") != 0)
-		g_string_append(buffer, "Alt+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		// Shift is a little bit complex, it can be consumed by
-		// capitalization transformation, so we check it here. This
-		// prevents text like Shift+! but allows text like
-		// Shift+PrintScreen. However, if user sets `show_shift`, always
-		// append it even consumed.
-		if (mapper->show_shift ||
-		    !xkb_state_mod_index_is_consumed(
-			    mapper->xkb_state, xkb_key_code,
-			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
-						     XKB_MOD_NAME_SHIFT)))
-			g_string_append(buffer, "Shift+");
-	g_string_append(buffer, main_key);
-	g_free(main_key);
-	return g_string_free(buffer, FALSE);
+	return smtk_keys_mapper_concat_key(mapper, mode, main_key,
+					   xkb_key_code);
+}
+
+char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
+{
+	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(event != NULL, NULL);
+
+	return smtk_keys_mapper_get_key(mapper, SMTK_KEY_MODE_COMPOSED, event);
 }
 
 char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event)
@@ -571,74 +627,7 @@ char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event)
 	g_return_val_if_fail(mapper != NULL, NULL);
 	g_return_val_if_fail(event != NULL, NULL);
 
-	char *main_key = NULL;
-	// We put xkb_key_code here because the Shift detection use it.
-	// Though Xkbcommon don't handle mouse button state, we can still
-	// convert evdev key code to xkb key code.
-	xkb_keycode_t xkb_key_code =
-		KEY_CODE_EV_TO_XKB(smtk_event_get_key_code(event));
-	// Xkbcommon only handle keyboards,
-	// so we use libinput key name for mouse button.
-	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
-		SmtkEventState event_state = smtk_event_get_event_state(event);
-		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
-				     event_state == SMTK_EVENT_STATE_PRESSED ?
-					     XKB_KEY_DOWN :
-					     XKB_KEY_UP);
-		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
-			mapper->xkb_state, xkb_key_code);
-		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
-		xkb_keysym_get_name(xkb_key_sym, main_key,
-				    XKB_KEY_SYM_NAME_LENGTH);
-	} else {
-		main_key = g_strdup(smtk_event_get_key_name(event));
-	}
-	// Just ignore mods so we can prevent text like mod+mod.
-	if (g_hash_table_contains(mapper->xkb_mod_names, main_key)) {
-		g_free(main_key);
-		return NULL;
-	}
-	const char *replace_name =
-		g_hash_table_lookup(mapper->compact_replace_names, main_key);
-	if (replace_name != NULL) {
-		g_free(main_key);
-		// Copy from the string reference in GHashTable,
-		// so we can use g_free() after append it into GString.
-		main_key = g_strdup(replace_name);
-	}
-	// Use a GString for easior mods concat.
-	GString *buffer = g_string_new(NULL);
-	// I'd like to call it "Super".
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_LOGO,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer, "⌘");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer, "⌃");
-	// Shift+Alt will get Meta_L and Meta_R,
-	// and we should not add Alt for it.
-	// I think Meta should be a modifier, but Xkbcommon does not.
-	// Sounds like a bug.
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
-	    strcmp(main_key, "Meta") != 0)
-		g_string_append(buffer, "⌥");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		// Shift is a little bit complex, it can be consumed by
-		// capitalization transformation, so we check it here. This
-		// prevents text like Shift+! but allows text like
-		// Shift+PrintScreen. However, if user sets `show_shift`, always
-		// append it even consumed.
-		if (mapper->show_shift ||
-		    !xkb_state_mod_index_is_consumed(
-			    mapper->xkb_state, xkb_key_code,
-			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
-						     XKB_MOD_NAME_SHIFT)))
-			g_string_append(buffer, "⇧");
-	g_string_append(buffer, main_key);
-	g_free(main_key);
-	return g_string_free(buffer, FALSE);
+	return smtk_keys_mapper_get_key(mapper, SMTK_KEY_MODE_COMPACT, event);
 }
 
 void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift)
@@ -646,6 +635,14 @@ void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift)
 	g_return_if_fail(mapper != NULL);
 
 	mapper->show_shift = show_shift;
+}
+
+void smtk_keys_mapper_set_hide_visible(SmtkKeysMapper *mapper,
+				       bool hide_visible)
+{
+	g_return_if_fail(mapper != NULL);
+
+	mapper->hide_visible = hide_visible;
 }
 
 void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper, const char *layout)

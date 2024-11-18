@@ -22,6 +22,7 @@ struct _SmtkAppWin {
 	GtkWidget *keyboard_switch;
 	GtkWidget *mouse_switch;
 	GtkWidget *border_switch;
+	GtkWidget *hide_visible_switch;
 	GtkWidget *mode_selector;
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
@@ -100,6 +101,8 @@ void smtk_app_win_activate(SmtkAppWin *win)
 		gtk_switch_get_active(GTK_SWITCH(win->mouse_switch));
 	const bool draw_border =
 		gtk_switch_get_active(GTK_SWITCH(win->border_switch));
+	const bool hide_visible =
+		gtk_switch_get_active(GTK_SWITCH(win->hide_visible_switch));
 
 	SmtkKeyMode mode = smtk_app_win_get_mode(win);
 
@@ -121,9 +124,9 @@ void smtk_app_win_activate(SmtkAppWin *win)
 
 	GError *error = NULL;
 	win->keys_win = smtk_keys_win_new(win, show_shift, show_keyboard,
-					  show_mouse, draw_border, mode, width,
-					  height, timeout, layout, variant,
-					  &error);
+					  show_mouse, draw_border, hide_visible,
+					  mode, width, height, timeout, layout,
+					  variant, &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);
@@ -232,7 +235,7 @@ static void smtk_app_win_on_mouse_switch_active(SmtkAppWin *win,
 
 static void smtk_app_win_on_border_switch_active(SmtkAppWin *win,
 						 GParamSpec *prop,
-						 GtkSwitch *mouse_switch)
+						 GtkSwitch *border_switch)
 {
 	// This only works when keys_win is open.
 	if (win->keys_win == NULL)
@@ -241,6 +244,19 @@ static void smtk_app_win_on_border_switch_active(SmtkAppWin *win,
 	smtk_keys_win_set_draw_border(
 		SMTK_KEYS_WIN(win->keys_win),
 		gtk_switch_get_active(GTK_SWITCH(win->border_switch)));
+}
+
+static void
+smtk_app_win_on_hide_visible_switch_active(SmtkAppWin *win, GParamSpec *prop,
+					   GtkSwitch *hide_visible_switch)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_hide_visible(
+		SMTK_KEYS_WIN(win->keys_win),
+		gtk_switch_get_active(GTK_SWITCH(win->hide_visible_switch)));
 }
 
 static void smtk_app_win_on_mode_selector_selected(SmtkAppWin *win,
@@ -385,6 +401,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "draw-border", win->border_switch,
 			"active", G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "hide-visible", win->hide_visible_switch,
+			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "mode", win->mode_selector, "selected",
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "width", win->width_entry, "value",
@@ -449,6 +467,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, border_switch);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, hide_visible_switch);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mode_selector);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, width_entry);
@@ -479,6 +499,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_border_switch_active);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_hide_visible_switch_active);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_mode_selector_selected);
@@ -542,6 +565,16 @@ void smtk_app_win_toggle_border_switch(SmtkAppWin *win)
 		gtk_switch_set_active(
 			GTK_SWITCH(win->border_switch),
 			!gtk_switch_get_active(GTK_SWITCH(win->border_switch)));
+}
+
+void smtk_app_win_toggle_hide_visible_switch(SmtkAppWin *win)
+{
+	g_return_if_fail(win != NULL);
+
+	if (gtk_widget_get_sensitive(win->hide_visible_switch))
+		gtk_switch_set_active(GTK_SWITCH(win->hide_visible_switch),
+				      !gtk_switch_get_active(GTK_SWITCH(
+					      win->hide_visible_switch)));
 }
 
 void smtk_app_win_set_size(SmtkAppWin *win, int width, int height)

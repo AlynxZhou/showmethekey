@@ -26,6 +26,11 @@
       <description>Draw border around keys or only show keys.</description>
       <default>true</default>
     </key>
+    <key type="b" name="hide-visible">
+      <summary>Hide Visible Keys or Not</summary>
+      <description>Hide visible keys or show all keys.</description>
+      <default>false</default>
+    </key>
     <key type="u" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in raw or composed mode.</description>

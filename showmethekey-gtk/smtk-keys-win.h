@@ -14,8 +14,9 @@ G_DECLARE_FINAL_TYPE(SmtkKeysWin, smtk_keys_win, SMTK, KEYS_WIN, AdwWindow)
 
 GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
 			     bool show_keyboard, bool show_mouse,
-			     bool draw_border, SmtkKeyMode mode, int width,
-			     int height, int timeout, const char *layout,
+			     bool draw_border, bool hide_visible,
+			     SmtkKeyMode mode, int width, int height,
+			     int timeout, const char *layout,
 			     const char *variant, GError **error);
 void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable);
 void smtk_keys_win_pause(SmtkKeysWin *win);
@@ -25,6 +26,7 @@ void smtk_keys_win_set_show_shift(SmtkKeysWin *win, bool show_shift);
 void smtk_keys_win_set_show_keyboard(SmtkKeysWin *win, bool show_keyboard);
 void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse);
 void smtk_keys_win_set_draw_border(SmtkKeysWin *win, bool draw_border);
+void smtk_keys_win_set_hide_visible(SmtkKeysWin *win, bool hide_visible);
 void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout);
 const char *smtk_keys_win_get_layout(SmtkKeysWin *win);
 void smtk_keys_win_set_layout(SmtkKeysWin *win, const char *layout);
