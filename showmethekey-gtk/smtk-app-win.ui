@@ -211,6 +211,27 @@
                             swapped="yes" />
                       </object>
                     </child>
+		    <child>
+		      <object class="AdwComboRow" id="alignment_selector">
+			<property name="title" translatable="yes">Alignment Mode</property>
+			<property name="subtitle" translatable="yes">Some users prefer to display keys in center.</property>
+			<!-- Must keep the same sequence with SmtkKeyAlignment. -->
+			<property name="selected">0</property>
+			<property name="model">
+			  <object class="GtkStringList">
+			    <items>
+			      <item translatable="yes">End</item>
+			      <item translatable="yes">Center</item>
+			    </items>
+			  </object>
+			</property>
+			<signal
+			    name="notify::selected"
+			    handler="smtk_app_win_on_alignment_selector_selected"
+			    object="SmtkAppWin"
+			    swapped="yes" />
+		      </object>
+		    </child>
                     <child>
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>

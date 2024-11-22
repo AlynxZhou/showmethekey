@@ -7,6 +7,7 @@
 #include "smtk-app.h"
 #include "smtk-app-win.h"
 #include "smtk-keys-win.h"
+#include "smtk-keys-area.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-keymap-list.h"
 
@@ -24,6 +25,7 @@ struct _SmtkAppWin {
 	GtkWidget *border_switch;
 	GtkWidget *hide_visible_switch;
 	GtkWidget *mode_selector;
+	GtkWidget *alignment_selector;
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
 	GtkWidget *timeout_entry;
@@ -46,6 +48,21 @@ static SmtkKeyMode smtk_app_win_get_mode(SmtkAppWin *win)
 		return SMTK_KEY_MODE_COMPACT;
 	default:
 		return SMTK_KEY_MODE_COMPOSED;
+	}
+}
+
+static SmtkKeyMode smtk_app_win_get_alignment(SmtkAppWin *win)
+{
+	int alignment_id = adw_combo_row_get_selected(
+		ADW_COMBO_ROW(win->alignment_selector));
+	g_debug("Alignment: %d.", alignment_id);
+	switch (alignment_id) {
+	case 0:
+		return SMTK_KEY_ALIGNMENT_END;
+	case 1:
+		return SMTK_KEY_ALIGNMENT_CENTER;
+	default:
+		return SMTK_KEY_ALIGNMENT_END;
 	}
 }
 
@@ -105,6 +122,7 @@ void smtk_app_win_activate(SmtkAppWin *win)
 		gtk_switch_get_active(GTK_SWITCH(win->hide_visible_switch));
 
 	SmtkKeyMode mode = smtk_app_win_get_mode(win);
+	SmtkKeyAlignment alignment = smtk_app_win_get_alignment(win);
 
 	const int timeout = gtk_spin_button_get_value_as_int(
 		GTK_SPIN_BUTTON(win->timeout_entry));
@@ -125,8 +143,8 @@ void smtk_app_win_activate(SmtkAppWin *win)
 	GError *error = NULL;
 	win->keys_win = smtk_keys_win_new(win, show_shift, show_keyboard,
 					  show_mouse, draw_border, hide_visible,
-					  mode, width, height, timeout, layout,
-					  variant, &error);
+					  mode, alignment, width, height,
+					  timeout, layout, variant, &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);
@@ -271,6 +289,18 @@ static void smtk_app_win_on_mode_selector_selected(SmtkAppWin *win,
 			       smtk_app_win_get_mode(win));
 }
 
+static void
+smtk_app_win_on_alignment_selector_selected(SmtkAppWin *win, GParamSpec *prop,
+					    AdwComboRow *alignment_selector)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	smtk_keys_win_set_alignment(SMTK_KEYS_WIN(win->keys_win),
+				    smtk_app_win_get_alignment(win));
+}
+
 static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,
 					  GtkSpinButton *timeout_entry)
 {
@@ -405,6 +435,8 @@ static void smtk_app_win_init(SmtkAppWin *win)
 			"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "mode", win->mode_selector, "selected",
 			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "alignment", win->alignment_selector,
+			"selected", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "width", win->width_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "height", win->height_entry, "value",
@@ -471,6 +503,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, mode_selector);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, alignment_selector);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, width_entry);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, height_entry);
@@ -505,6 +539,9 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_mode_selector_selected);
+	gtk_widget_class_bind_template_callback(
+		GTK_WIDGET_CLASS(win_class),
+		smtk_app_win_on_alignment_selector_selected);
 	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
 						smtk_app_win_on_timeout_value);
 	gtk_widget_class_bind_template_callback(
