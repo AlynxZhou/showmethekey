@@ -36,8 +36,9 @@ cairo = dependency('cairo', required: true)
 pango = dependency('pango', required: true)
 xkbcommon = dependency('xkbcommon', required: true)
 xkbregistry = dependency('xkbregistry', required: true)
+gtk4_layer_shell = dependency('gtk4-layer-shell-0', required: true)
 gtk_dependencies += [
-  gtk, libadw, x11, glib, json_glib, gio, cairo, pango, xkbcommon, xkbregistry
+  gtk, libadw, x11, glib, json_glib, gio, cairo, pango, xkbcommon, xkbregistry, gtk4_layer_shell
 ]
 # For config.h.
 gtk_include_directories += include_directories('../')

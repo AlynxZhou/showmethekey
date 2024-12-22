@@ -24,10 +24,10 @@
                 <property name="hexpand">false</property>
                 <property name="halign">center</property>
                 <signal
-                    name="notify::active"
-                    handler="smtk_app_win_on_keys_win_switch_active"
-                    object="SmtkAppWin"
-                    swapped="yes" />
+                  name="notify::active"
+                  handler="smtk_app_win_on_keys_win_switch_active"
+                  object="SmtkAppWin"
+                  swapped="yes" />
               </object>
             </child>
             <child type="end">
@@ -42,7 +42,8 @@
           </object>
         </child>
         <child>
-          <object class="AdwClamp">
+          <object class="GtkScrolledWindow">
+            <property name="vexpand">true</property>
             <property name="child">
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
@@ -58,7 +59,8 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Clickable</property>
-                        <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window.</property>
+                        <property name="subtitle" translatable="yes">Turning off will pass input
+                          event to other apps under the floating window.</property>
                         <property name="activatable-widget">clickable_switch</property>
                         <child>
                           <object class="GtkSwitch" id="clickable_switch">
@@ -66,10 +68,10 @@
                             <property name="sensitive">false</property>
                             <property name="active">true</property>
                             <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_clickable_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::active"
+                              handler="smtk_app_win_on_clickable_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -78,7 +80,8 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Pause</property>
-                        <property name="subtitle" translatable="yes">Temporary hide input like password. Press both alt anywhere to toggle this.</property>
+                        <property name="subtitle" translatable="yes">Temporary hide input like
+                          password. Press both alt anywhere to toggle this.</property>
                         <property name="activatable-widget">pause_switch</property>
                         <child>
                           <object class="GtkSwitch" id="pause_switch">
@@ -86,10 +89,10 @@
                             <property name="sensitive">false</property>
                             <property name="active">false</property>
                             <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_pause_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::active"
+                              handler="smtk_app_win_on_pause_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -105,10 +108,10 @@
                             <property name="valign">center</property>
                             <property name="active">true</property>
                             <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_shift_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::active"
+                              handler="smtk_app_win_on_shift_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -117,17 +120,18 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Show _Keyboard Key</property>
-                        <property name="subtitle" translatable="yes">Maybe some users don't want keyboard keys.</property>
+                        <property name="subtitle" translatable="yes">Maybe some users don't want
+                          keyboard keys.</property>
                         <property name="activatable-widget">keyboard_switch</property>
                         <child>
                           <object class="GtkSwitch" id="keyboard_switch">
-	                    <property name="valign">center</property>
-	                    <property name="active">true</property>
-	                    <signal
-	                        name="notify::active"
-	                        handler="smtk_app_win_on_keyboard_switch_active"
-	                        object="SmtkAppWin"
-	                        swapped="yes" />
+                            <property name="valign">center</property>
+                            <property name="active">true</property>
+                            <signal
+                              name="notify::active"
+                              handler="smtk_app_win_on_keyboard_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -136,17 +140,18 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Show _Mouse Button</property>
-                        <property name="subtitle" translatable="yes">Mouse buttons can be very annoying.</property>
+                        <property name="subtitle" translatable="yes">Mouse buttons can be very
+                          annoying.</property>
                         <property name="activatable-widget">mouse_switch</property>
                         <child>
                           <object class="GtkSwitch" id="mouse_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
                             <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_mouse_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::active"
+                              handler="smtk_app_win_on_mouse_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -155,44 +160,46 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Draw Keys _Border</property>
-                        <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
+                        <property name="subtitle" translatable="yes">In case keys and key combos are
+                          hard to distinguish.</property>
                         <property name="activatable-widget">border_switch</property>
                         <child>
                           <object class="GtkSwitch" id="border_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
                             <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_border_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::active"
+                              handler="smtk_app_win_on_border_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
                     </child>
-		    <child>
-		      <object class="AdwActionRow">
-			<property name="use-underline">true</property>
-			<property name="title" translatable="yes">Hide _Visible Keys</property>
-			<property name="subtitle" translatable="yes">Only show keys with modifiers.</property>
-			<property name="activatable-widget">hide_visible_switch</property>
-			<child>
-			  <object class="GtkSwitch" id="hide_visible_switch">
-			    <property name="valign">center</property>
-			    <property name="active">false</property>
-			    <signal
-				name="notify::active"
-				handler="smtk_app_win_on_hide_visible_switch_active"
-				object="SmtkAppWin"
-				swapped="yes" />
-			  </object>
-			</child>
-		      </object>
-		    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="use-underline">true</property>
+                        <property name="title" translatable="yes">Hide _Visible Keys</property>
+                        <property name="subtitle" translatable="yes">Only show keys with modifiers.</property>
+                        <property name="activatable-widget">hide_visible_switch</property>
+                        <child>
+                          <object class="GtkSwitch" id="hide_visible_switch">
+                            <property name="valign">center</property>
+                            <property name="active">false</property>
+                            <signal
+                              name="notify::active"
+                              handler="smtk_app_win_on_hide_visible_switch_active"
+                              object="SmtkAppWin"
+                              swapped="yes" />
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                     <child>
                       <object class="AdwComboRow" id="mode_selector">
                         <property name="title" translatable="yes">Display Mode</property>
-                        <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode and maybe not so useful.</property>
+                        <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode
+                          and maybe not so useful.</property>
                         <!-- Must keep the same sequence with SmtkKeyMode. -->
                         <property name="selected">0</property>
                         <property name="model">
@@ -205,38 +212,40 @@
                           </object>
                         </property>
                         <signal
-                            name="notify::selected"
-                            handler="smtk_app_win_on_mode_selector_selected"
-                            object="SmtkAppWin"
-                            swapped="yes" />
+                          name="notify::selected"
+                          handler="smtk_app_win_on_mode_selector_selected"
+                          object="SmtkAppWin"
+                          swapped="yes" />
                       </object>
                     </child>
-		    <child>
-		      <object class="AdwComboRow" id="alignment_selector">
-			<property name="title" translatable="yes">Alignment Mode</property>
-			<property name="subtitle" translatable="yes">Some users prefer to display keys in center.</property>
-			<!-- Must keep the same sequence with SmtkKeyAlignment. -->
-			<property name="selected">0</property>
-			<property name="model">
-			  <object class="GtkStringList">
-			    <items>
-			      <item translatable="yes">End</item>
-			      <item translatable="yes">Center</item>
-			    </items>
-			  </object>
-			</property>
-			<signal
-			    name="notify::selected"
-			    handler="smtk_app_win_on_alignment_selector_selected"
-			    object="SmtkAppWin"
-			    swapped="yes" />
-		      </object>
-		    </child>
+                    <child>
+                      <object class="AdwComboRow" id="alignment_selector">
+                        <property name="title" translatable="yes">Alignment Mode</property>
+                        <property name="subtitle" translatable="yes">Some users prefer to display
+                          keys in center.</property>
+                        <!-- Must keep the same sequence with SmtkKeyAlignment. -->
+                        <property name="selected">0</property>
+                        <property name="model">
+                          <object class="GtkStringList">
+                            <items>
+                              <item translatable="yes">End</item>
+                              <item translatable="yes">Center</item>
+                            </items>
+                          </object>
+                        </property>
+                        <signal
+                          name="notify::selected"
+                          handler="smtk_app_win_on_alignment_selector_selected"
+                          object="SmtkAppWin"
+                          swapped="yes" />
+                      </object>
+                    </child>
                     <child>
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Timeout (ms)</property>
-                        <property name="subtitle" translatable="yes">Clear keys if no new key after how many miliscconds. Set to 0 to keep all keys.</property>
+                        <property name="subtitle" translatable="yes">Clear keys if no new key after
+                          how many miliscconds. Set to 0 to keep all keys.</property>
                         <property name="activatable-widget">timeout_entry</property>
                         <child>
                           <object class="GtkSpinButton" id="timeout_entry">
@@ -245,10 +254,10 @@
                             <property name="digits">0</property>
                             <property name="text">0</property>
                             <signal
-                                name="notify::value"
-                                handler="smtk_app_win_on_timeout_value"
-                                object="SmtkAppWin"
-                                swapped="yes" />
+                              name="notify::value"
+                              handler="smtk_app_win_on_timeout_value"
+                              object="SmtkAppWin"
+                              swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -294,14 +303,15 @@
                       <object class="AdwComboRow" id="keymap_selector">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Keymap</property>
-                        <property name="subtitle" translatable="yes">Choose your keyboard layout and variant.</property>
+                        <property name="subtitle" translatable="yes">Choose your keyboard layout and
+                          variant.</property>
                         <!-- <property name="enable-search">true</property> -->
                         <property name="selected">0</property>
                         <signal
-                            name="notify::selected"
-                            handler="smtk_app_win_on_keymap_selector_selected"
-                            object="SmtkAppWin"
-                            swapped="yes" />
+                          name="notify::selected"
+                          handler="smtk_app_win_on_keymap_selector_selected"
+                          object="SmtkAppWin"
+                          swapped="yes" />
                       </object>
                     </child>
                   </object>
