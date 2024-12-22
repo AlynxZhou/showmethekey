@@ -6,6 +6,7 @@
 #endif
 
 #include "smtk.h"
+#include "gtk4-layer-shell.h"
 #include "smtk-keys-win.h"
 
 struct _SmtkKeysWin {
@@ -334,8 +335,16 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
 			 G_CALLBACK(smtk_keys_win_on_map), NULL);
-}
 
+	GtkWindow* gtk_window = GTK_WINDOW(win);
+	// Create a layer shell surface instead of a normal floating window
+	gtk_layer_init_for_window(gtk_window);
+	// Make the layer appear on top of normal windows
+	gtk_layer_set_layer(gtk_window, GTK_LAYER_SHELL_LAYER_TOP);
+	gtk_layer_set_anchor(gtk_window, GTK_LAYER_SHELL_EDGE_BOTTOM, true);
+	gtk_layer_set_anchor(gtk_window, GTK_LAYER_SHELL_EDGE_RIGHT, true);
+	gtk_layer_set_anchor(gtk_window, GTK_LAYER_SHELL_EDGE_LEFT, true);
+}
 static void smtk_keys_win_constructed(GObject *object)
 {
 	// Seems we can only get constructor properties here.
@@ -344,16 +353,6 @@ static void smtk_keys_win_constructed(GObject *object)
 	win->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	adw_window_set_content(ADW_WINDOW(win), win->box);
 
-	// Allow user to choose position by drag this.
-	win->header_bar = adw_header_bar_new();
-	adw_header_bar_set_show_start_title_buttons(
-		ADW_HEADER_BAR(win->header_bar), false);
-	adw_header_bar_set_show_end_title_buttons(
-		ADW_HEADER_BAR(win->header_bar), false);
-	win->handle = adw_window_title_new(_("Clickable"), NULL);
-	adw_header_bar_set_title_widget(ADW_HEADER_BAR(win->header_bar),
-					win->handle);
-	gtk_box_append(GTK_BOX(win->box), win->header_bar);
 
 	win->emitter = smtk_keys_emitter_new(win->show_shift,
 					     win->show_keyboard,
@@ -381,7 +380,6 @@ static void smtk_keys_win_constructed(GObject *object)
 	win->area = smtk_keys_area_new(win->mode, win->alignment,
 				       win->draw_border, win->timeout);
 	gtk_box_append(GTK_BOX(win->box), win->area);
-
 out:
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
 }
