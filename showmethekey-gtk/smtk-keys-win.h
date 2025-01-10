@@ -13,13 +13,13 @@ G_BEGIN_DECLS
 #define SMTK_TYPE_KEYS_WIN smtk_keys_win_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeysWin, smtk_keys_win, SMTK, KEYS_WIN, AdwWindow)
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
-			     bool show_keyboard, bool show_mouse,
-			     bool draw_border, bool hide_visible,
-			     SmtkKeyMode mode, SmtkKeyAlignment alignment,
-			     int width, int height, int timeout,
-			     const char *layout, const char *variant,
-			     GError **error);
+GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
+			     bool show_shift, bool show_keyboard,
+			     bool show_mouse, bool draw_border,
+			     bool hide_visible, SmtkKeyMode mode,
+			     SmtkKeyAlignment alignment, int width, int height,
+			     int timeout, const char *layout,
+			     const char *variant, GError **error);
 void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable);
 void smtk_keys_win_pause(SmtkKeysWin *win);
 void smtk_keys_win_resume(SmtkKeysWin *win);

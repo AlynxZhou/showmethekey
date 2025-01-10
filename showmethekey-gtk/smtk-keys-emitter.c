@@ -59,7 +59,7 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	// address we hold is invalid, it might point to other objects, and
 	// still not NULL. To solve this problem we hold a reference to this
 	// callback to prevent the emitter to be disposed and manually drop it.
-	g_debug("smtk_keys_emitter_cli_on_complete() called.");
+	g_debug("Calling smtk_keys_emitter_cli_on_complete().");
 
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
 	// Cli may already released normally, and this function only cares about
@@ -69,7 +69,7 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 		// Better to close thread here to prevent a lot of error.
 		emitter->polling = false;
 		if (emitter->poller != NULL) {
-			g_debug("Stop poller because cli exitted.");
+			g_debug("Stopping poller because cli exitted.");
 			g_thread_join(emitter->poller);
 			emitter->poller = NULL;
 		}
@@ -416,7 +416,6 @@ SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_keyboard,
 	return emitter;
 }
 
-// Check if user is on "input" group
 static bool is_group(const char *group_name)
 {
 	gid_t *groups;
@@ -425,8 +424,11 @@ static bool is_group(const char *group_name)
 	gid_t gid;
 
 	ngroups = getgroups(0, NULL);
-	groups = g_malloc(ngroups * sizeof(gid_t));
-	getgroups(ngroups, groups);
+	groups = g_malloc(ngroups * sizeof(*groups));
+	if (getgroups(ngroups, groups) < 0) {
+		g_free(groups);
+		return false;
+	}
 
 	grp = getgrnam(group_name);
 	if (!grp) {
@@ -455,7 +457,7 @@ static bool is_group(const char *group_name)
 // and let the caller stop the cli before dispose.
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 {
-	g_debug("smtk_keys_emitter_start_async() called.");
+	g_debug("Calling smtk_keys_emitter_start_async().");
 	g_return_if_fail(emitter != NULL);
 
 	if (is_group("input"))
@@ -496,7 +498,7 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *emitter, GError **error)
 
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 {
-	g_debug("smtk_keys_emitter_stop_async() called.");
+	g_debug("Calling smtk_keys_emitter_stop_async().");
 	g_return_if_fail(emitter != NULL);
 
 	// Don't know why but I need to stop cli before poller.

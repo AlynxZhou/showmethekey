@@ -354,6 +354,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	adw_header_bar_set_title_widget(ADW_HEADER_BAR(win->header_bar),
 					win->handle);
 	gtk_box_append(GTK_BOX(win->box), win->header_bar);
+	gtk_widget_set_visible(win->handle, win->clickable);
 
 	win->emitter = smtk_keys_emitter_new(win->show_shift,
 					     win->show_keyboard,
@@ -467,13 +468,13 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
-			     bool show_keyboard, bool show_mouse,
-			     bool draw_border, bool hide_visible,
-			     SmtkKeyMode mode, SmtkKeyAlignment alignment,
-			     int width, int height, int timeout,
-			     const char *layout, const char *variant,
-			     GError **error)
+GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
+			     bool show_shift, bool show_keyboard,
+			     bool show_mouse, bool draw_border,
+			     bool hide_visible, SmtkKeyMode mode,
+			     SmtkKeyAlignment alignment, int width, int height,
+			     int timeout, const char *layout,
+			     const char *variant, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -485,8 +486,7 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool show_shift,
 		"hexpand-set", true, "focusable", false, "resizable", true,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
-		// Window should not be click through by default.
-		"clickable", true, "mode", mode, "alignment", alignment,
+		"clickable", clickable, "mode", mode, "alignment", alignment,
 		"show-shift", show_shift, "show-keyboard", show_keyboard,
 		"show-mouse", show_mouse, "draw-border", draw_border,
 		"hide-visible", hide_visible, "timeout", timeout, "layout",

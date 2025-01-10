@@ -51,7 +51,7 @@ static SmtkKeyMode smtk_app_win_get_mode(SmtkAppWin *win)
 	}
 }
 
-static SmtkKeyMode smtk_app_win_get_alignment(SmtkAppWin *win)
+static SmtkKeyAlignment smtk_app_win_get_alignment(SmtkAppWin *win)
 {
 	int alignment_id = adw_combo_row_get_selected(
 		ADW_COMBO_ROW(win->alignment_selector));
@@ -78,7 +78,6 @@ static void smtk_app_win_get_keymap(SmtkAppWin *win, const char **layout,
 
 static void smtk_app_win_enable(SmtkAppWin *win)
 {
-	gtk_widget_set_sensitive(win->clickable_switch, false);
 	gtk_widget_set_sensitive(win->pause_switch, false);
 	gtk_widget_set_sensitive(win->width_entry, true);
 	gtk_widget_set_sensitive(win->height_entry, true);
@@ -86,7 +85,6 @@ static void smtk_app_win_enable(SmtkAppWin *win)
 
 static void smtk_app_win_disable(SmtkAppWin *win)
 {
-	gtk_widget_set_sensitive(win->clickable_switch, true);
 	gtk_widget_set_sensitive(win->pause_switch, true);
 	gtk_widget_set_sensitive(win->width_entry, false);
 	gtk_widget_set_sensitive(win->height_entry, false);
@@ -110,6 +108,8 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 
 void smtk_app_win_activate(SmtkAppWin *win)
 {
+	const bool clickable =
+		gtk_switch_get_active(GTK_SWITCH(win->clickable_switch));
 	const bool show_shift =
 		gtk_switch_get_active(GTK_SWITCH(win->shift_switch));
 	const bool show_keyboard =
@@ -141,10 +141,11 @@ void smtk_app_win_activate(SmtkAppWin *win)
 	smtk_app_win_get_keymap(win, &layout, &variant);
 
 	GError *error = NULL;
-	win->keys_win = smtk_keys_win_new(win, show_shift, show_keyboard,
-					  show_mouse, draw_border, hide_visible,
-					  mode, alignment, width, height,
-					  timeout, layout, variant, &error);
+	win->keys_win = smtk_keys_win_new(win, clickable, show_shift,
+					  show_keyboard, show_mouse,
+					  draw_border, hide_visible, mode,
+					  alignment, width, height, timeout,
+					  layout, variant, &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);

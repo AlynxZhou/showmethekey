@@ -9,7 +9,9 @@
 struct _SmtkApp {
 	AdwApplication parent_instance;
 	GtkWidget *win;
-	bool active;
+	bool keys_win_opt;
+	bool app_win_opt;
+	bool clickable_opt;
 };
 G_DEFINE_TYPE(SmtkApp, smtk_app, ADW_TYPE_APPLICATION)
 
@@ -101,7 +103,9 @@ static void quit_action(GSimpleAction *action, GVariant *parameter,
 static void smtk_app_init(SmtkApp *app)
 {
 	app->win = NULL;
-	app->active = false;
+	app->keys_win_opt = false;
+	app->app_win_opt = true;
+	app->clickable_opt = true;
 
 	g_set_application_name(_("Show Me The Key"));
 	gtk_window_set_default_icon_name("one.alynx.showmethekey");
@@ -109,8 +113,17 @@ static void smtk_app_init(SmtkApp *app)
 	const GOptionEntry options[] = {
 		{ "version", 'v', 0, G_OPTION_ARG_NONE, NULL,
 		  N_("Display version then exit."), NULL },
+		// Keep this option because I don't want to break CLI.
 		{ "active", 'a', 0, G_OPTION_ARG_NONE, NULL,
-		  N_("Activate keys window on start up."), NULL },
+		  N_("Show keys window on start up (deprecated by `-k, --show-keys-win`)."),
+		  NULL },
+		{ "keys-win", 'k', 0, G_OPTION_ARG_NONE, NULL,
+		  N_("Show keys window on start up."), NULL },
+		{ "no-app-win", 'A', 0, G_OPTION_ARG_NONE, NULL,
+		  N_("Hide app window and show keys window on start up."),
+		  NULL },
+		{ "no-clickable", 'C', 0, G_OPTION_ARG_NONE, NULL,
+		  N_("Make keys window unclickable on start up."), NULL },
 		{ NULL, 0, 0, 0, NULL, NULL, NULL }
 	};
 
@@ -125,8 +138,17 @@ static void smtk_app_activate(GApplication *g_app)
 
 	if (app->win == NULL) {
 		app->win = smtk_app_win_new(SMTK_APP(app));
-		gtk_window_present(GTK_WINDOW(app->win));
-		if (app->active)
+		g_debug("Keys win: %s.", app->keys_win_opt ? "true" : "false");
+		g_debug("App win: %s.", app->app_win_opt ? "true" : "false");
+		g_debug("Clickable: %s.",
+			app->clickable_opt ? "true" : "false");
+		// By default keys win is clickable.
+		if (!app->clickable_opt)
+			smtk_app_win_toggle_clickable_switch(
+				SMTK_APP_WIN(app->win));
+		if (app->app_win_opt)
+			gtk_window_present(GTK_WINDOW(app->win));
+		if (app->keys_win_opt)
 			smtk_app_win_activate(SMTK_APP_WIN(app->win));
 	}
 }
@@ -193,9 +215,22 @@ static int smtk_app_handle_local_options(GApplication *application,
 	if (g_variant_dict_contains(options, "version")) {
 		g_print(PROJECT_VERSION "\n");
 		return 0;
-	} else if (g_variant_dict_contains(options, "active")) {
-		app->active = true;
 	}
+
+	if (g_variant_dict_contains(options, "active")) {
+		g_warning("`-a, --active` is deprecated by `-k, --keys-win`.");
+		app->keys_win_opt = true;
+	}
+	if (g_variant_dict_contains(options, "keys-win"))
+		app->keys_win_opt = true;
+	if (g_variant_dict_contains(options, "no-app-win")) {
+		app->app_win_opt = false;
+		// No one wants to run it with no window, hiding app window
+		// means they want keys window directly.
+		app->keys_win_opt = true;
+	}
+	if (g_variant_dict_contains(options, "no-clickable"))
+		app->clickable_opt = false;
 
 	return -1;
 }

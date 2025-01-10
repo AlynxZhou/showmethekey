@@ -15,7 +15,7 @@ struct _SmtkKeymapItem {
 	char *variant;
 	char *name;
 };
-G_DEFINE_TYPE(SmtkKeymapItem, smtk_keymap_item, G_TYPE_OBJECT);
+G_DEFINE_TYPE(SmtkKeymapItem, smtk_keymap_item, G_TYPE_OBJECT)
 
 enum { PROP_0, PROP_LAYOUT, PROP_VARIANT, PROP_NAME, N_PROPS };
 
