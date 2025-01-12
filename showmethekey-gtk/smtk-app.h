@@ -10,6 +10,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(SmtkApp, smtk_app, SMTK, APP, AdwApplication)
 
 SmtkApp *smtk_app_new(void);
+void smtk_app_quit(SmtkApp *app);
 
 G_END_DECLS
 

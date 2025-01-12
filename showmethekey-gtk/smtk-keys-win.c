@@ -364,16 +364,14 @@ static void smtk_keys_win_constructed(GObject *object)
 	// `win->error` is set so just return.
 	if (win->emitter == NULL)
 		goto out;
-	g_signal_connect_object(
+	g_signal_connect_swapped(
 		win->emitter, "error-cli-exit",
-		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win,
-		G_CONNECT_SWAPPED);
-	g_signal_connect_object(win->emitter, "key",
-				G_CALLBACK(smtk_keys_win_emitter_on_key), win,
-				G_CONNECT_SWAPPED);
-	g_signal_connect_object(win->emitter, "pause",
-				G_CALLBACK(smtk_keys_win_emitter_on_pause), win,
-				G_CONNECT_SWAPPED);
+		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win);
+	g_signal_connect_swapped(win->emitter, "key",
+				 G_CALLBACK(smtk_keys_win_emitter_on_key), win);
+	g_signal_connect_swapped(win->emitter, "pause",
+				 G_CALLBACK(smtk_keys_win_emitter_on_pause),
+				 win);
 
 	smtk_keys_emitter_start_async(win->emitter, &win->error);
 	if (win->error != NULL)

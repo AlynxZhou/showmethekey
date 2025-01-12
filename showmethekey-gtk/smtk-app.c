@@ -1,3 +1,4 @@
+#include "glib-object.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
@@ -92,12 +93,7 @@ static void quit_action(GSimpleAction *action, GVariant *parameter,
 {
 	SmtkApp *app = SMTK_APP(user_data);
 
-	if (app->win != NULL) {
-		gtk_window_destroy(GTK_WINDOW(app->win));
-		app->win = NULL;
-	}
-
-	g_application_quit(G_APPLICATION(app));
+	smtk_app_quit(app);
 }
 
 static void smtk_app_init(SmtkApp *app)
@@ -146,8 +142,13 @@ static void smtk_app_activate(GApplication *g_app)
 		if (!app->clickable_opt)
 			smtk_app_win_toggle_clickable_switch(
 				SMTK_APP_WIN(app->win));
+		// Quit if no visible window left.
 		if (app->app_win_opt)
 			gtk_window_present(GTK_WINDOW(app->win));
+		else
+			g_signal_connect_swapped(app->win, "keys-win-destroy",
+						 G_CALLBACK(smtk_app_quit),
+						 app);
 		if (app->keys_win_opt)
 			smtk_app_win_activate(SMTK_APP_WIN(app->win));
 	}
@@ -250,4 +251,16 @@ SmtkApp *smtk_app_new(void)
 {
 	return g_object_new(SMTK_TYPE_APP, "application-id",
 			    "one.alynx.showmethekey", NULL);
+}
+
+void smtk_app_quit(SmtkApp *app)
+{
+	g_return_if_fail(app != NULL);
+
+	if (app->win != NULL) {
+		gtk_window_destroy(GTK_WINDOW(app->win));
+		app->win = NULL;
+	}
+
+	g_application_quit(G_APPLICATION(app));
 }

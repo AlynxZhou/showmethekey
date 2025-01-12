@@ -1,3 +1,4 @@
+#include "glib-object.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
@@ -33,6 +34,10 @@ struct _SmtkAppWin {
 	GtkWidget *keys_win;
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
+
+enum { SIG_KEYS_WIN_DESTROY, N_SIGNALS };
+
+static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
 static SmtkKeyMode smtk_app_win_get_mode(SmtkAppWin *win)
 {
@@ -103,6 +108,8 @@ static void smtk_app_win_keys_win_on_destroy(SmtkAppWin *win,
 		gtk_switch_set_active(GTK_SWITCH(win->clickable_switch), true);
 		gtk_switch_set_active(GTK_SWITCH(win->pause_switch), false);
 		smtk_app_win_enable(win);
+
+		g_signal_emit_by_name(win, "keys-win-destroy");
 	}
 }
 
@@ -152,12 +159,12 @@ void smtk_app_win_activate(SmtkAppWin *win)
 		gtk_switch_set_active(GTK_SWITCH(win->keys_win_switch), false);
 		return;
 	}
-	g_signal_connect_object(win->keys_win, "pause",
-				G_CALLBACK(smtk_app_win_toggle_pause_switch),
-				win, G_CONNECT_SWAPPED);
-	g_signal_connect_object(win->keys_win, "destroy",
-				G_CALLBACK(smtk_app_win_keys_win_on_destroy),
-				win, G_CONNECT_SWAPPED);
+	g_signal_connect_swapped(win->keys_win, "pause",
+				 G_CALLBACK(smtk_app_win_toggle_pause_switch),
+				 win);
+	g_signal_connect_swapped(win->keys_win, "destroy",
+				 G_CALLBACK(smtk_app_win_keys_win_on_destroy),
+				 win);
 
 	gtk_window_present(GTK_WINDOW(win->keys_win));
 
@@ -548,6 +555,10 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_keymap_selector_selected);
+
+	obj_signals[SIG_KEYS_WIN_DESTROY] = g_signal_new(
+		"keys-win-destroy", SMTK_TYPE_APP_WIN, G_SIGNAL_RUN_LAST, 0,
+		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)
