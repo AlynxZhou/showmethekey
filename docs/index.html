@@ -122,6 +122,10 @@
         <p>
           A possible workaround is <a href="https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959" target="_blank" rel="external nofollow noreferrer noopener">https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959</a>, actually you can use any agents, not only the gnome one.
         </p>
+        <h2>I have remapped <tt>Caps Lock</tt> to <tt>Control</tt>, but this program shows <tt>Caps_Lock U</tt> instead of <tt>^u</tt>!</h2>
+        <p>
+          Keys which are remapped via the Desktop Environment/X11 tools (for example, <code>setxkb</code>, GNOME Tweaks, KDE settings, or other high-level tools) are not visible to Show Me The Key. A workaround is to remap keys using <strong>udev</strong> rules. This has the added benefit of working identically in the Linux console (TTY), Wayland, and X11 alike. See <a href="https://wiki.archlinux.org/title/Map_scancodes_to_keycodes#Using_udev" target="_blank" rel="external nofollow noreferrer noopener">here</a>.
+        </p>
         <h1>Screenshots</h1>
         <div class="screenshots">
           <img class="screenshot" src="/images/screenshot.gif" alt="screenshot.gif">

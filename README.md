@@ -159,7 +159,7 @@ A possible workaround is <https://github.com/AlynxZhou/showmethekey/issues/2#iss
 
 ## I have remapped <tt>Caps Lock</tt> to <tt>Control</tt>, but this program shows <tt>Caps_Lock U</tt> instead of <tt>^u</tt>!
 
-Keys which are remapped via the Desktop Environment (for example, `setxkb`, Gnome Tweaks, KDE settings, or other high-level tools) are not visible to ShowMeTheKey. A workaround is to instead remap keys using **udev**. This has the added benefit of working identically in the Linux console, Wayland, and X11 alike. See <https://wiki.archlinux.org/title/Map_scancodes_to_keycodes#Using_udev>.
+Keys which are remapped via the Desktop Environment/X11 tools (for example, `setxkb`, GNOME Tweaks, KDE settings, or other high-level tools) are not visible to Show Me The Key. A workaround is to remap keys using **udev** rules. This has the added benefit of working identically in the Linux console (TTY), Wayland, and X11 alike. See <https://wiki.archlinux.org/title/Map_scancodes_to_keycodes#Using_udev>.
 
 # Translate
 
