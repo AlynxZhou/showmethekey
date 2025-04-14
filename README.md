@@ -157,6 +157,10 @@ This is a pkexec bug that it's tty authentication does not work, see <https://gi
 
 A possible workaround is <https://github.com/AlynxZhou/showmethekey/issues/2#issuecomment-1019439959>, actually you can use any agents, not only the gnome one.
 
+## I have remapped <tt>Caps Lock</tt> to <tt>Control</tt>, but this program shows <tt>Caps_Lock U</tt> instead of <tt>^u</tt>!
+
+Keys which are remapped via the Desktop Environment (for example, `setxkb`, Gnome Tweaks, KDE settings, or other high-level tools) are not visible to ShowMeTheKey. A workaround is to instead remap keys using **udev**. This has the added benefit of working identically in the Linux console, Wayland, and X11 alike. See <https://wiki.archlinux.org/title/Map_scancodes_to_keycodes#Using_udev>.
+
 # Translate
 
 If you changed translatable strings, don't forget to run `meson compile showmethekey-update-po` in build directory and then edit po files, and please check if there are `fuzzy` tag in comment, you should remove them and make translation exact, otherwise it will not work.
