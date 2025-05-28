@@ -8,6 +8,27 @@
 #define KEY_CODE_EV_TO_XKB(key_code) ((key_code) + 8)
 #define XKB_KEY_SYM_NAME_LENGTH 64
 
+// Adapt to virtual modifier changes in XKBcommon v1.8.
+//
+// See <https://github.com/xkbcommon/libxkbcommon/pull/759/files>.
+#ifdef XKB_VMOD_NAME_SUPER
+#	define MOD_SUPER XKB_VMOD_NAME_SUPER
+#else
+#	define MOD_SUPER XKB_MOD_NAME_LOGO
+#endif
+#define MOD_CTRL XKB_MOD_NAME_CTRL
+#ifdef XKB_VMOD_NAME_ALT
+#	define MOD_ALT XKB_VMOD_NAME_ALT
+#else
+#	define MOD_ALT XKB_MOD_NAME_ALT
+#endif
+#define MOD_SHIFT XKB_MOD_NAME_SHIFT
+#ifdef XKB_VMOD_NAME_LEVEL3
+#	define MOD_ALTGR XKB_VMOD_NAME_LEVEL3
+#else
+#	define MOD_ALTGR XKB_MOD_NAME_MOD5
+#endif
+
 struct _SmtkKeysMapper {
 	GObject parent_instance;
 	bool show_shift;
@@ -191,6 +212,18 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Alt_R"));
 	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_L"));
 	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_R"));
+	// See <https://github.com/AlynxZhou/showmethekey/issues/83>.
+	// A more common name is AltGr, and it is a modifier.
+	g_hash_table_add(mapper->xkb_mod_names, g_strdup("ISO_Level3_Shift"));
+	// I believe nowadays there is no keyboard that has those keys,
+	// Shift+Alt will get Meta_L and Meta_R, but why not show Shift+Alt
+	// then? I am a Emacs user but I even don't know how to input Hyper, and
+	// in Emacs Meta is just Alt. I will ignore those virtual keys unless
+	// you show me some keyboards with real keys for Meta and Hyper.
+	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Meta_L"));
+	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Meta_R"));
+	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Hyper_L"));
+	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Hyper_R"));
 
 	// Some key names I don't like, replace them. There is no need to
 	// replace modifiers here because they are handled differently.
@@ -200,10 +233,6 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	// Shift modified key raw. For example ISO_Left_Tab here.
 	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("ISO_Left_Tab"), g_strdup("Shift+Tab"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Meta_L"),
-			    g_strdup("Meta"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Meta_R"),
-			    g_strdup("Meta"));
 	g_hash_table_insert(mapper->composed_replace_names,
 			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
 	g_hash_table_insert(mapper->composed_replace_names,
@@ -510,6 +539,25 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 	return g_strdup(smtk_event_get_key_name(event));
 }
 
+// Shift is a little bit complex, it can be consumed by capitalization
+// transformation, so we check it here. This prevents text like Shift+! but
+// allows text like Shift+PrintScreen. However, if user sets `show_shift`,
+// always append it even consumed.
+//
+// AltGr == ISO_Level3_Shift == XKB_MOD_NAME_MOD5, handle it like Shift.
+// See <https://xkbcommon.org/doc/current/keymap-text-format-v1.html#terminology>.
+static bool check_show(SmtkKeysMapper *mapper, char *modifier,
+			      xkb_keycode_t xkb_key_code)
+{
+	return xkb_state_mod_name_is_active(mapper->xkb_state, modifier,
+					    XKB_STATE_MODS_EFFECTIVE) > 0 &&
+	       (mapper->show_shift ||
+		!xkb_state_mod_index_is_consumed(
+			mapper->xkb_state, xkb_key_code,
+			xkb_keymap_mod_get_index(mapper->xkb_keymap,
+						 modifier)));
+}
+
 static char *smtk_keys_mapper_concat_key(SmtkKeysMapper *mapper,
 					 SmtkKeyMode mode, char *main_key,
 					 xkb_keycode_t xkb_key_code)
@@ -517,38 +565,23 @@ static char *smtk_keys_mapper_concat_key(SmtkKeysMapper *mapper,
 	// Use a GString for easior mods concat.
 	GString *buffer = g_string_new(NULL);
 	// I'd like to call it "Super".
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_LOGO,
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_SUPER,
 					 XKB_STATE_MODS_EFFECTIVE) > 0)
 		g_string_append(buffer,
 				mode == SMTK_KEY_MODE_COMPACT ? "⌘" : "Super+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_CTRL,
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_CTRL,
 					 XKB_STATE_MODS_EFFECTIVE) > 0)
 		g_string_append(buffer,
 				mode == SMTK_KEY_MODE_COMPACT ? "⌃" : "Ctrl+");
-	// Shift+Alt will get Meta_L and Meta_R,
-	// and we should not add Alt for it.
-	// I think Meta should be a modifier, but Xkbcommon does not.
-	// Sounds like a bug.
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_ALT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0 &&
-	    strcmp(main_key, "Meta") != 0)
+	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_ALT,
+					 XKB_STATE_MODS_EFFECTIVE) > 0)
 		g_string_append(buffer,
 				mode == SMTK_KEY_MODE_COMPACT ? "⌥" : "Alt+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, XKB_MOD_NAME_SHIFT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		// Shift is a little bit complex, it can be consumed by
-		// capitalization transformation, so we check it here. This
-		// prevents text like Shift+! but allows text like
-		// Shift+PrintScreen. However, if user sets `show_shift`, always
-		// append it even consumed.
-		if (mapper->show_shift ||
-		    !xkb_state_mod_index_is_consumed(
-			    mapper->xkb_state, xkb_key_code,
-			    xkb_keymap_mod_get_index(mapper->xkb_keymap,
-						     XKB_MOD_NAME_SHIFT)))
-			g_string_append(buffer, mode == SMTK_KEY_MODE_COMPACT ?
-							"⇧" :
-							"Shift+");
+	if (check_show(mapper, MOD_SHIFT, xkb_key_code))
+		g_string_append(buffer,
+				mode == SMTK_KEY_MODE_COMPACT ? "⇧" : "Shift+");
+	if (check_show(mapper, MOD_ALTGR, xkb_key_code))
+		g_string_append(buffer, "AltGr+");
 	g_string_append(buffer, main_key);
 	g_free(main_key);
 	return g_string_free(buffer, FALSE);
