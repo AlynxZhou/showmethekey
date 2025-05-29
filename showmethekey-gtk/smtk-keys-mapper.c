@@ -11,22 +11,29 @@
 // Adapt to virtual modifier changes in XKBcommon v1.8.
 //
 // See <https://github.com/xkbcommon/libxkbcommon/pull/759/files>.
-#ifdef XKB_VMOD_NAME_SUPER
+#if defined(XKB_VMOD_NAME_SUPER)
 #	define MOD_SUPER XKB_VMOD_NAME_SUPER
 #else
 #	define MOD_SUPER XKB_MOD_NAME_LOGO
 #endif
+
 #define MOD_CTRL XKB_MOD_NAME_CTRL
-#ifdef XKB_VMOD_NAME_ALT
+
+#if defined(XKB_VMOD_NAME_ALT)
 #	define MOD_ALT XKB_VMOD_NAME_ALT
 #else
 #	define MOD_ALT XKB_MOD_NAME_ALT
 #endif
+
 #define MOD_SHIFT XKB_MOD_NAME_SHIFT
-#ifdef XKB_VMOD_NAME_LEVEL3
+
+// Old XKBcommon does not define `XKB_MOD_NAME_MOD5`.
+#if defined(XKB_VMOD_NAME_LEVEL3)
 #	define MOD_ALTGR XKB_VMOD_NAME_LEVEL3
-#else
+#elif defined(XKB_MOD_NAME_MOD5)
 #	define MOD_ALTGR XKB_MOD_NAME_MOD5
+#else
+#	define MOD_ALTGR "Mod5"
 #endif
 
 struct _SmtkKeysMapper {
