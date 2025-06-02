@@ -81,7 +81,7 @@ Please help package showmethekey to your distribution!
 - libevdev
 - udev (or systemd)
 - libinput
-- glib2
+- glib2 (the dev package may also be needed)
 - gtk4
 - libadwaita
 - json-glib
@@ -125,6 +125,16 @@ for_window [app_id="one.alynx.showmethekey" title="Floating Window - Show Me The
   floating enable
   sticky enable
 }
+```
+
+For Hyprland, you can use window rules to achieve the same effect. The config should be at `~/.config/hypr/hyprland.conf` or an extension of it. 
+Example config:
+
+```
+# To get more information about a window’s class, title, XWayland status or its size, you can use `hyprctl clients`. (From Hyprland Wiki)
+windowrulev2 = float,class:^(one.alynx.showmethekey)$
+windowrulev2 = float,class:^(showmethekey-gtk)$ # make window floating
+windowrulev2 = pin,class:^(showmethekey-gtk)$ # pin window
 ```
 
 # Feature
