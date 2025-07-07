@@ -21,8 +21,8 @@ void smtk_app_win_toggle_mouse_switch(SmtkAppWin *win);
 void smtk_app_win_toggle_border_switch(SmtkAppWin *win);
 void smtk_app_win_toggle_hide_visible_switch(SmtkAppWin *win);
 void smtk_app_win_set_size(SmtkAppWin *win, int width, int height);
-void smtk_app_win_show_usage_dialog(SmtkAppWin *win);
-void smtk_app_win_show_about_dialog(SmtkAppWin *win);
+void smtk_app_win_show_usage(SmtkAppWin *win);
+void smtk_app_win_show_about(SmtkAppWin *win);
 
 G_END_DECLS
 

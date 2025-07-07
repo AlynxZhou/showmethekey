@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-10 22:15+0800\n"
+"POT-Creation-Date: 2025-07-07 14:04+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,37 +16,206 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:110 showmethekey-gtk/smtk-app-win.c:735
-#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
+#: showmethekey-gtk/smtk-app.c:106 showmethekey-gtk/smtk-app-win.c:686
+#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:16
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:115
+#: showmethekey-gtk/smtk-app.c:111
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app.c:118
+#: showmethekey-gtk/smtk-app.c:114
 msgid "Show keys window on start up (deprecated by `-k, --show-keys-win`)."
 msgstr "在启动时显示按键窗口（已废弃，请使用 `-k, --show-keys-win`）。"
 
-#: showmethekey-gtk/smtk-app.c:121
+#: showmethekey-gtk/smtk-app.c:117
 msgid "Show keys window on start up."
 msgstr "在启动时显示按键窗口。"
 
-#: showmethekey-gtk/smtk-app.c:123
+#: showmethekey-gtk/smtk-app.c:119
 msgid "Hide app window and show keys window on start up."
 msgstr "在启动时隐藏配置窗口并显示按键窗口。"
 
-#: showmethekey-gtk/smtk-app.c:126
+#: showmethekey-gtk/smtk-app.c:122
 msgid "Make keys window unclickable on start up."
 msgstr "在启动时令按键窗口不接收输入事件。"
 
-#: showmethekey-gtk/smtk-app-win.c:632 showmethekey-gtk/smtk-app-win.c:635
-msgid "Usage"
+#: showmethekey-gtk/smtk-app-win.c:684
+msgid "translator-credits"
+msgstr "Alynx Zhou"
+
+#: showmethekey-gtk/smtk-app-win.c:685
+msgid "About Show Me The Key"
+msgstr "关于让我看键"
+
+#: showmethekey-gtk/smtk-app-win.c:687
+msgid "Show keys you typed on screen."
+msgstr "在屏幕上显示你按的键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:34
+msgid "Menu"
+msgstr "菜单"
+
+#: showmethekey-gtk/smtk-app-win.ui:37
+msgid "Primary menu"
+msgstr "主菜单"
+
+#: showmethekey-gtk/smtk-app-win.ui:55
+msgid "General"
+msgstr "常规"
+
+#: showmethekey-gtk/smtk-app-win.ui:59
+msgid "_Clickable"
+msgstr "接收输入事件（_C)"
+
+#: showmethekey-gtk/smtk-app-win.ui:60
+msgid ""
+"Turning off will pass input event to other apps under the floating window."
+msgstr "关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。"
+
+#: showmethekey-gtk/smtk-app-win.ui:78
+msgid "_Pause"
+msgstr "暂停（_P）"
+
+#: showmethekey-gtk/smtk-app-win.ui:79
+msgid ""
+"Temporary hide input like password. Press both alt anywhere to toggle this."
+msgstr "临时隐藏输入，比如密码。可以随时通过同时按下两个 alt 键切换该选项。"
+
+#: showmethekey-gtk/smtk-app-win.ui:98
+msgid "Show _Shift Separately"
+msgstr "单独显示 Shift（_S）"
+
+#: showmethekey-gtk/smtk-app-win.ui:99
+msgid "Show Ctrl+Shift+A or Ctrl+A."
+msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
+
+#: showmethekey-gtk/smtk-app-win.ui:117
+msgid "Show _Keyboard Key"
+msgstr "显示键盘按键（_K）"
+
+#: showmethekey-gtk/smtk-app-win.ui:118
+msgid "Maybe some users don't want keyboard keys."
+msgstr "也许一些用户不想看见键盘按键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:136
+msgid "Show _Mouse Button"
+msgstr "显示鼠标按钮（_M）"
+
+#: showmethekey-gtk/smtk-app-win.ui:137
+msgid "Mouse buttons can be very annoying."
+msgstr "鼠标按钮有时候会太占地方。"
+
+#: showmethekey-gtk/smtk-app-win.ui:155
+msgid "Draw Keys _Border"
+msgstr "绘制按键边框（_B）"
+
+#: showmethekey-gtk/smtk-app-win.ui:156
+msgid "In case keys and key combos are hard to distinguish."
+msgstr "以防按键和组合键难以区分。"
+
+#: showmethekey-gtk/smtk-app-win.ui:174
+msgid "Hide _Visible Keys"
+msgstr "隐藏可见按键（_V）"
+
+#: showmethekey-gtk/smtk-app-win.ui:175
+msgid "Only show keys with modifiers."
+msgstr "只显示包含修饰键的组合键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:192
+msgid "Display Mode"
+msgstr "显示模式"
+
+#: showmethekey-gtk/smtk-app-win.ui:193
+msgid "Raw is Linux kernel's scancode and maybe not so useful."
+msgstr "按键名是 Linux 内核的扫描码，可能不会特别有用。"
+
+#: showmethekey-gtk/smtk-app-win.ui:199
+msgid "Composed"
+msgstr "组合键"
+
+#: showmethekey-gtk/smtk-app-win.ui:200
+msgid "Raw"
+msgstr "按键名"
+
+#: showmethekey-gtk/smtk-app-win.ui:201
+msgid "Compact"
+msgstr "紧凑"
+
+#: showmethekey-gtk/smtk-app-win.ui:214
+msgid "Alignment Mode"
+msgstr "对齐方向"
+
+#: showmethekey-gtk/smtk-app-win.ui:215
+msgid "Some users prefer to display keys in center."
+msgstr "有些用户希望居中显示按键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:221
+msgid "End"
+msgstr "末尾"
+
+#: showmethekey-gtk/smtk-app-win.ui:222
+msgid "Center"
+msgstr "居中"
+
+#: showmethekey-gtk/smtk-app-win.ui:236
+msgid "Timeout (ms)"
+msgstr "超时（毫秒）"
+
+#: showmethekey-gtk/smtk-app-win.ui:237
+msgid ""
+"Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
+"keys."
+msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
+
+#: showmethekey-gtk/smtk-app-win.ui:257
+msgid "Width (px)"
+msgstr "宽度（像素）"
+
+#: showmethekey-gtk/smtk-app-win.ui:258
+msgid "Width of keys window."
+msgstr "按键窗口的宽度。"
+
+#: showmethekey-gtk/smtk-app-win.ui:273
+msgid "Height (px)"
+msgstr "高度（像素）"
+
+#: showmethekey-gtk/smtk-app-win.ui:274
+msgid "Height of keys window."
+msgstr "按键窗口的高度。"
+
+#: showmethekey-gtk/smtk-app-win.ui:290
+msgid "Keyboard"
+msgstr "键盘"
+
+#: showmethekey-gtk/smtk-app-win.ui:294
+msgid "Keymap"
+msgstr "键位"
+
+#: showmethekey-gtk/smtk-app-win.ui:295
+msgid "Choose your keyboard layout and variant."
+msgstr "选择您的键盘布局和变体。"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:7
+msgid "_Usage"
 msgstr "使用说明（_U）"
 
-#: showmethekey-gtk/smtk-app-win.c:637
+#: showmethekey-gtk/smtk-app-win-menu.ui:11
+msgid "_About Show Me The Key"
+msgstr "关于让我看键（_A）"
+
+#: showmethekey-gtk/smtk-app-win-menu.ui:17
+msgid "_Quit"
+msgstr "退出（_Q）"
+
+#: showmethekey-gtk/smtk-usage-win.ui:5 showmethekey-gtk/smtk-usage-win.ui:12
+msgid "Usage"
+msgstr "使用说明"
+
+#: showmethekey-gtk/smtk-usage-win.ui:23
 msgid ""
+"\n"
 "1. Please input admin password after toggling the switch, because it needs "
 "superuser permission to read input events, and Wayland does not allow "
 "running graphics program with superuser permission, so it uses polkit to run "
@@ -54,9 +223,9 @@ msgid ""
 "your password. Users in `wheel` group can skip password authentication.\n"
 "\n"
 "2. After you toggle the switch to show the floating window, you need to drag "
-"it manually to anywhere you want, because Wayland does not allow window to "
-"set its position. The \"Clickable\" label on titlebar can be dragged as a "
-"handle.\n"
+"it manually to anywhere you want,\n"
+"because Wayland does not allow window to set its position. The \"Clickable\" "
+"label on titlebar can be dragged as a handle.\n"
 "\n"
 "3. Because Wayland does not allow a window to set \"Always on Top\" and "
 "\"Always on Visible Workspace\" by itself, you should set it manually if you "
@@ -66,10 +235,11 @@ msgid ""
 "on Top\" and \"Always on Visible Workspace\" in it.\n"
 "If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
 "- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
-"Desktops\" and \"More Actions\" -> \"Keep Above Others\".\n"
+"Desktops\" and \"More Actions\" -> \"Keep Above Other\".\n"
 "You can check this project's <a href=\"https://github.com/AlynxZhou/"
-"showmethekey#special-notice-for-wayland-session-users\">README</a> to see if "
-"there are configurations for your compositor.\n"
+"showmethekey#special-\n"
+"notice-for-wayland-session-users\">README</a> to see if there are "
+"configurations for your compositor.\n"
 "\n"
 "4. To allow user move or resize the keys window, it is not click through by "
 "default, after moving it to the location you want, turn off \"Clickable\" "
@@ -80,8 +250,10 @@ msgid ""
 "\n"
 "6. Set Timeout to 0 if you want to keep all keys.\n"
 "\n"
-"You can open this dialog again via menu icon on title bar -> \"Usage\"."
+"You can open this dialog again via menu icon on title bar -> \"Usage\".\n"
+"                "
 msgstr ""
+"\n"
 "1. 请在打开开关之后输入管理员密码，因为读取输入事件需要超级用户权限，并且 "
 "Wayland 不允许图形程序以超级用户权限运行，所以这个程序使用 polkit 来运行一个"
 "具有超级用户权限的后端。这个程序并不处理或储存您的密码。wheel 组的用户可以跳"
@@ -92,8 +264,8 @@ msgstr ""
 "\n"
 "3. 因为 Wayland 不允许窗口自行设置“置顶”和“总在可见工作区”，所以如果您在使用 "
 "Wayland 会话，您需要手动设置这两种功能，如果您的窗口管理器支持的话。\n"
-"例如如果您在使用 GNOME Shell (Wayland)，您可以右键点击标题栏上的“可点击区"
-"域”来显示窗口管理器菜单并勾选“置顶”和“总在可见工作区”。\n"
+"例如如果您在使用 GNOME Shell (Wayland)，您可以右键点击标题栏上的“可点击区域”"
+"来显示窗口管理器菜单并勾选“置顶”和“总在可见工作区”。\n"
 "如果您在使用 KDE Plasma (Wayland)，您可以右键点击任务栏上的“Floating Window "
 "- Show Me The Key”，勾选“移动到桌面”->“全部桌面”和“更多动作”->“常居顶端”。\n"
 "您可以访问项目的 <a href=\"https://github.com/AlynxZhou/showmethekey#special-"
@@ -111,178 +283,9 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-app-win.c:678 showmethekey-gtk/smtk-app-win.c:687
-msgid "Close"
-msgstr "关闭"
-
-#: showmethekey-gtk/smtk-app-win.c:733
-msgid "translator-credits"
-msgstr "Alynx Zhou"
-
-#: showmethekey-gtk/smtk-app-win.c:734
-msgid "About Show Me The Key"
-msgstr "关于让我看键"
-
-#: showmethekey-gtk/smtk-app-win.c:736
-msgid "Show keys you typed on screen."
-msgstr "在屏幕上显示你按的键。"
-
-#: showmethekey-gtk/smtk-app-win.ui:35
-msgid "Menu"
-msgstr "菜单"
-
-#: showmethekey-gtk/smtk-app-win.ui:38
-msgid "Primary menu"
-msgstr "主菜单"
-
-#: showmethekey-gtk/smtk-app-win.ui:56
-msgid "General"
-msgstr "常规"
-
-#: showmethekey-gtk/smtk-app-win.ui:60
-msgid "_Clickable"
-msgstr "接收输入事件（_C)"
-
-#: showmethekey-gtk/smtk-app-win.ui:61
-msgid ""
-"Turning off will pass input event to other apps under the floating window."
-msgstr "关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。"
-
-#: showmethekey-gtk/smtk-app-win.ui:79
-msgid "_Pause"
-msgstr "暂停（_P）"
-
-#: showmethekey-gtk/smtk-app-win.ui:80
-msgid ""
-"Temporary hide input like password. Press both alt anywhere to toggle this."
-msgstr "临时隐藏输入，比如密码。可以随时通过同时按下两个 alt 键切换该选项。"
-
-#: showmethekey-gtk/smtk-app-win.ui:99
-msgid "Show _Shift Separately"
-msgstr "单独显示 Shift（_S）"
-
-#: showmethekey-gtk/smtk-app-win.ui:100
-msgid "Show Ctrl+Shift+A or Ctrl+A."
-msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
-
-#: showmethekey-gtk/smtk-app-win.ui:118
-msgid "Show _Keyboard Key"
-msgstr "显示键盘按键（_K）"
-
-#: showmethekey-gtk/smtk-app-win.ui:119
-msgid "Maybe some users don't want keyboard keys."
-msgstr "也许一些用户不想看见键盘按键。"
-
-#: showmethekey-gtk/smtk-app-win.ui:137
-msgid "Show _Mouse Button"
-msgstr "显示鼠标按钮（_M）"
-
-#: showmethekey-gtk/smtk-app-win.ui:138
-msgid "Mouse buttons can be very annoying."
-msgstr "鼠标按钮有时候会太占地方。"
-
-#: showmethekey-gtk/smtk-app-win.ui:156
-msgid "Draw Keys _Border"
-msgstr "绘制按键边框（_B）"
-
-#: showmethekey-gtk/smtk-app-win.ui:157
-msgid "In case keys and key combos are hard to distinguish."
-msgstr "以防按键和组合键难以区分。"
-
-#: showmethekey-gtk/smtk-app-win.ui:175
-msgid "Hide _Visible Keys"
-msgstr "隐藏可见按键（_V）"
-
-#: showmethekey-gtk/smtk-app-win.ui:176
-msgid "Only show keys with modifiers."
-msgstr "只显示包含修饰键的组合键。"
-
-#: showmethekey-gtk/smtk-app-win.ui:193
-msgid "Display Mode"
-msgstr "显示模式"
-
-#: showmethekey-gtk/smtk-app-win.ui:194
-msgid "Raw is Linux kernel's scancode and maybe not so useful."
-msgstr "按键名是 Linux 内核的扫描码，可能不会特别有用。"
-
-#: showmethekey-gtk/smtk-app-win.ui:200
-msgid "Composed"
-msgstr "组合键"
-
-#: showmethekey-gtk/smtk-app-win.ui:201
-msgid "Raw"
-msgstr "按键名"
-
-#: showmethekey-gtk/smtk-app-win.ui:202
-msgid "Compact"
-msgstr "紧凑"
-
-#: showmethekey-gtk/smtk-app-win.ui:215
-msgid "Alignment Mode"
-msgstr "对齐方向"
-
-#: showmethekey-gtk/smtk-app-win.ui:216
-msgid "Some users prefer to display keys in center."
-msgstr "有些用户希望居中显示按键。"
-
-#: showmethekey-gtk/smtk-app-win.ui:222
-msgid "End"
-msgstr "末尾"
-
-#: showmethekey-gtk/smtk-app-win.ui:223
-msgid "Center"
-msgstr "居中"
-
-#: showmethekey-gtk/smtk-app-win.ui:237
-msgid "Timeout (ms)"
-msgstr "超时（毫秒）"
-
-#: showmethekey-gtk/smtk-app-win.ui:238
-msgid ""
-"Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
-"keys."
-msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
-
-#: showmethekey-gtk/smtk-app-win.ui:258
-msgid "Width (px)"
-msgstr "宽度（像素）"
-
-#: showmethekey-gtk/smtk-app-win.ui:259
-msgid "Width of keys window."
-msgstr "按键窗口的宽度。"
-
-#: showmethekey-gtk/smtk-app-win.ui:274
-msgid "Height (px)"
-msgstr "高度（像素）"
-
-#: showmethekey-gtk/smtk-app-win.ui:275
-msgid "Height of keys window."
-msgstr "按键窗口的高度。"
-
-#: showmethekey-gtk/smtk-app-win.ui:291
-msgid "Keyboard"
-msgstr "键盘"
-
-#: showmethekey-gtk/smtk-app-win.ui:295
-msgid "Keymap"
-msgstr "键位"
-
-#: showmethekey-gtk/smtk-app-win.ui:296
-msgid "Choose your keyboard layout and variant."
-msgstr "选择您的键盘布局和变体。"
-
-#: showmethekey-gtk/smtk-app-win-menu.ui:7
-msgid "_Usage"
-msgstr "使用说明（_U）"
-
-#: showmethekey-gtk/smtk-app-win-menu.ui:11
-msgid "_About Show Me The Key"
-msgstr "关于让我看键（_A）"
-
-#: showmethekey-gtk/smtk-app-win-menu.ui:17
-msgid "_Quit"
-msgstr "退出（_Q）"
-
 #: showmethekey-gtk/smtk-keys-win.c:353
 msgid "Clickable"
 msgstr "可点击"
+
+#~ msgid "Close"
+#~ msgstr "关闭"

@@ -8,9 +8,8 @@
     <property name="icon-name">one.alynx.showmethekey</property>
     <property name="title" translatable="yes">Show Me The Key</property>
     <property name="content">
-      <object class="GtkBox">
-        <property name="orientation">vertical</property>
-        <child>
+      <object class="AdwToolbarView">
+        <child type="top">
           <object class="AdwHeaderBar" id="header">
             <property name="title-widget">
               <object class="AdwWindowTitle">
@@ -41,7 +40,7 @@
             </child>
           </object>
         </child>
-        <child>
+        <property name="content">
           <object class="AdwClamp">
             <property name="child">
               <object class="GtkBox">
@@ -308,7 +307,7 @@
               </object>
             </property>
           </object>
-        </child>
+        </property>
       </object>
     </property>
   </template>

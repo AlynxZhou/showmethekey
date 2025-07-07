@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-10 22:15+0800\n"
+"POT-Creation-Date: 2025-07-07 14:04+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,230 +17,184 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:110 showmethekey-gtk/smtk-app-win.c:735
-#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:17
+#: showmethekey-gtk/smtk-app.c:106 showmethekey-gtk/smtk-app-win.c:686
+#: showmethekey-gtk/smtk-app-win.ui:9 showmethekey-gtk/smtk-app-win.ui:16
 msgid "Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:115
+#: showmethekey-gtk/smtk-app.c:111
 msgid "Display version then exit."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:118
+#: showmethekey-gtk/smtk-app.c:114
 msgid "Show keys window on start up (deprecated by `-k, --show-keys-win`)."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:121
+#: showmethekey-gtk/smtk-app.c:117
 msgid "Show keys window on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:123
+#: showmethekey-gtk/smtk-app.c:119
 msgid "Hide app window and show keys window on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:126
+#: showmethekey-gtk/smtk-app.c:122
 msgid "Make keys window unclickable on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:632 showmethekey-gtk/smtk-app-win.c:635
-msgid "Usage"
-msgstr ""
-
-#: showmethekey-gtk/smtk-app-win.c:637
-msgid ""
-"1. Please input admin password after toggling the switch, because it needs "
-"superuser permission to read input events, and Wayland does not allow "
-"running graphics program with superuser permission, so it uses polkit to run "
-"a backend with superuser permission. This program does not handle or store "
-"your password. Users in `wheel` group can skip password authentication.\n"
-"\n"
-"2. After you toggle the switch to show the floating window, you need to drag "
-"it manually to anywhere you want, because Wayland does not allow window to "
-"set its position. The \"Clickable\" label on titlebar can be dragged as a "
-"handle.\n"
-"\n"
-"3. Because Wayland does not allow a window to set \"Always on Top\" and "
-"\"Always on Visible Workspace\" by itself, you should set it manually if you "
-"are in a Wayland session and your window manager support it.\n"
-"For example if you are using GNOME Shell (Wayland), you can right click the "
-"\"Clickable\" on title bar to show a window manager menu and check \"Always "
-"on Top\" and \"Always on Visible Workspace\" in it.\n"
-"If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
-"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
-"Desktops\" and \"More Actions\" -> \"Keep Above Others\".\n"
-"You can check this project's <a href=\"https://github.com/AlynxZhou/"
-"showmethekey#special-notice-for-wayland-session-users\">README</a> to see if "
-"there are configurations for your compositor.\n"
-"\n"
-"4. To allow user move or resize the keys window, it is not click through by "
-"default, after moving it to the location you want, turn off \"Clickable\" "
-"switch so it won't block your other operations.\n"
-"\n"
-"5. If you want to pause it (for example you need to insert password), you "
-"can use the \"Pause\" switch, it will not record your keys when paused.\n"
-"\n"
-"6. Set Timeout to 0 if you want to keep all keys.\n"
-"\n"
-"You can open this dialog again via menu icon on title bar -> \"Usage\"."
-msgstr ""
-
-#: showmethekey-gtk/smtk-app-win.c:678 showmethekey-gtk/smtk-app-win.c:687
-msgid "Close"
-msgstr ""
-
-#: showmethekey-gtk/smtk-app-win.c:733
+#: showmethekey-gtk/smtk-app-win.c:684
 msgid "translator-credits"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:734
+#: showmethekey-gtk/smtk-app-win.c:685
 msgid "About Show Me The Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:736
+#: showmethekey-gtk/smtk-app-win.c:687
 msgid "Show keys you typed on screen."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:35
+#: showmethekey-gtk/smtk-app-win.ui:34
 msgid "Menu"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:38
+#: showmethekey-gtk/smtk-app-win.ui:37
 msgid "Primary menu"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:56
+#: showmethekey-gtk/smtk-app-win.ui:55
 msgid "General"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:60
+#: showmethekey-gtk/smtk-app-win.ui:59
 msgid "_Clickable"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:61
+#: showmethekey-gtk/smtk-app-win.ui:60
 msgid ""
 "Turning off will pass input event to other apps under the floating window."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:79
+#: showmethekey-gtk/smtk-app-win.ui:78
 msgid "_Pause"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:80
+#: showmethekey-gtk/smtk-app-win.ui:79
 msgid ""
 "Temporary hide input like password. Press both alt anywhere to toggle this."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:99
+#: showmethekey-gtk/smtk-app-win.ui:98
 msgid "Show _Shift Separately"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:100
+#: showmethekey-gtk/smtk-app-win.ui:99
 msgid "Show Ctrl+Shift+A or Ctrl+A."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:118
+#: showmethekey-gtk/smtk-app-win.ui:117
 msgid "Show _Keyboard Key"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:119
+#: showmethekey-gtk/smtk-app-win.ui:118
 msgid "Maybe some users don't want keyboard keys."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:137
+#: showmethekey-gtk/smtk-app-win.ui:136
 msgid "Show _Mouse Button"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:138
+#: showmethekey-gtk/smtk-app-win.ui:137
 msgid "Mouse buttons can be very annoying."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:156
+#: showmethekey-gtk/smtk-app-win.ui:155
 msgid "Draw Keys _Border"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:157
+#: showmethekey-gtk/smtk-app-win.ui:156
 msgid "In case keys and key combos are hard to distinguish."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:175
+#: showmethekey-gtk/smtk-app-win.ui:174
 msgid "Hide _Visible Keys"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:176
+#: showmethekey-gtk/smtk-app-win.ui:175
 msgid "Only show keys with modifiers."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:193
+#: showmethekey-gtk/smtk-app-win.ui:192
 msgid "Display Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:194
+#: showmethekey-gtk/smtk-app-win.ui:193
 msgid "Raw is Linux kernel's scancode and maybe not so useful."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:200
+#: showmethekey-gtk/smtk-app-win.ui:199
 msgid "Composed"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:201
+#: showmethekey-gtk/smtk-app-win.ui:200
 msgid "Raw"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:202
+#: showmethekey-gtk/smtk-app-win.ui:201
 msgid "Compact"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:215
+#: showmethekey-gtk/smtk-app-win.ui:214
 msgid "Alignment Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:216
+#: showmethekey-gtk/smtk-app-win.ui:215
 msgid "Some users prefer to display keys in center."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:222
+#: showmethekey-gtk/smtk-app-win.ui:221
 msgid "End"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:223
+#: showmethekey-gtk/smtk-app-win.ui:222
 msgid "Center"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:237
+#: showmethekey-gtk/smtk-app-win.ui:236
 msgid "Timeout (ms)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:238
+#: showmethekey-gtk/smtk-app-win.ui:237
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:258
+#: showmethekey-gtk/smtk-app-win.ui:257
 msgid "Width (px)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:259
+#: showmethekey-gtk/smtk-app-win.ui:258
 msgid "Width of keys window."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:274
+#: showmethekey-gtk/smtk-app-win.ui:273
 msgid "Height (px)"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:275
+#: showmethekey-gtk/smtk-app-win.ui:274
 msgid "Height of keys window."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:291
+#: showmethekey-gtk/smtk-app-win.ui:290
 msgid "Keyboard"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:295
+#: showmethekey-gtk/smtk-app-win.ui:294
 msgid "Keymap"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:296
+#: showmethekey-gtk/smtk-app-win.ui:295
 msgid "Choose your keyboard layout and variant."
 msgstr ""
 
@@ -254,6 +208,51 @@ msgstr ""
 
 #: showmethekey-gtk/smtk-app-win-menu.ui:17
 msgid "_Quit"
+msgstr ""
+
+#: showmethekey-gtk/smtk-usage-win.ui:5 showmethekey-gtk/smtk-usage-win.ui:12
+msgid "Usage"
+msgstr ""
+
+#: showmethekey-gtk/smtk-usage-win.ui:23
+msgid ""
+"\n"
+"1. Please input admin password after toggling the switch, because it needs "
+"superuser permission to read input events, and Wayland does not allow "
+"running graphics program with superuser permission, so it uses polkit to run "
+"a backend with superuser permission. This program does not handle or store "
+"your password. Users in `wheel` group can skip password authentication.\n"
+"\n"
+"2. After you toggle the switch to show the floating window, you need to drag "
+"it manually to anywhere you want,\n"
+"because Wayland does not allow window to set its position. The \"Clickable\" "
+"label on titlebar can be dragged as a handle.\n"
+"\n"
+"3. Because Wayland does not allow a window to set \"Always on Top\" and "
+"\"Always on Visible Workspace\" by itself, you should set it manually if you "
+"are in a Wayland session and your window manager support it.\n"
+"For example if you are using GNOME Shell (Wayland), you can right click the "
+"\"Clickable\" on title bar to show a window manager menu and check \"Always "
+"on Top\" and \"Always on Visible Workspace\" in it.\n"
+"If you are using KDE Plasma (Wayland), you can right click \"Floating Window "
+"- Show Me The Key\" on task bar, check \"Move to Desktop\" -> \"All "
+"Desktops\" and \"More Actions\" -> \"Keep Above Other\".\n"
+"You can check this project's <a href=\"https://github.com/AlynxZhou/"
+"showmethekey#special-\n"
+"notice-for-wayland-session-users\">README</a> to see if there are "
+"configurations for your compositor.\n"
+"\n"
+"4. To allow user move or resize the keys window, it is not click through by "
+"default, after moving it to the location you want, turn off \"Clickable\" "
+"switch so it won't block your other operations.\n"
+"\n"
+"5. If you want to pause it (for example you need to insert password), you "
+"can use the \"Pause\" switch, it will not record your keys when paused.\n"
+"\n"
+"6. Set Timeout to 0 if you want to keep all keys.\n"
+"\n"
+"You can open this dialog again via menu icon on title bar -> \"Usage\".\n"
+"                "
 msgstr ""
 
 #: showmethekey-gtk/smtk-keys-win.c:353

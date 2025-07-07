@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0" />
+  <template class="SmtkUsageWin" parent="AdwWindow">
+    <property name="title" translatable="yes">Usage</property>
+    <property name="content">
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <property name="title" translatable="yes">Usage</property>
+              </object>
+            </property>
+          </object>
+        </child>
+        <property name="content">
+          <object class="AdwClamp">
+            <property name="child">
+              <object class="GtkLabel">
+                <property name="wrap">true</property>
+                <property name="use-markup">true</property>
+                <property name="label" translatable="yes">
+1. Please input admin password after toggling the switch, because it needs superuser permission to read input events, and Wayland does not allow running graphics program with superuser permission, so it uses polkit to run a backend with superuser permission. This program does not handle or store your password. Users in `wheel` group can skip password authentication.
+
+2. After you toggle the switch to show the floating window, you need to drag it manually to anywhere you want,
+because Wayland does not allow window to set its position. The "Clickable" label on titlebar can be dragged as a handle.
+
+3. Because Wayland does not allow a window to set "Always on Top" and "Always on Visible Workspace" by itself, you should set it manually if you are in a Wayland session and your window manager support it.
+For example if you are using GNOME Shell (Wayland), you can right click the "Clickable" on title bar to show a window manager menu and check "Always on Top" and "Always on Visible Workspace" in it.
+If you are using KDE Plasma (Wayland), you can right click "Floating Window - Show Me The Key" on task bar, check "Move to Desktop" -> "All Desktops" and "More Actions" -> "Keep Above Other".
+You can check this project's &lt;a href="https://github.com/AlynxZhou/showmethekey#special-
+notice-for-wayland-session-users"&gt;README&lt;/a&gt; to see if there are configurations for your compositor.
+
+4. To allow user move or resize the keys window, it is not click through by default, after moving it to the location you want, turn off "Clickable" switch so it won't block your other operations.
+
+5. If you want to pause it (for example you need to insert password), you can use the "Pause" switch, it will not record your keys when paused.
+
+6. Set Timeout to 0 if you want to keep all keys.
+
+You can open this dialog again via menu icon on title bar -> "Usage".
+                </property>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </property>
+  </template>
+</interface>

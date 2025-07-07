@@ -76,7 +76,7 @@ static void usage_action(GSimpleAction *action, GVariant *parameter,
 	SmtkApp *app = SMTK_APP(user_data);
 
 	if (app->win != NULL)
-		smtk_app_win_show_usage_dialog(SMTK_APP_WIN(app->win));
+		smtk_app_win_show_usage(SMTK_APP_WIN(app->win));
 }
 
 static void about_action(GSimpleAction *action, GVariant *parameter,
@@ -85,7 +85,7 @@ static void about_action(GSimpleAction *action, GVariant *parameter,
 	SmtkApp *app = SMTK_APP(user_data);
 
 	if (app->win != NULL)
-		smtk_app_win_show_about_dialog(SMTK_APP_WIN(app->win));
+		smtk_app_win_show_about(SMTK_APP_WIN(app->win));
 }
 
 static void quit_action(GSimpleAction *action, GVariant *parameter,

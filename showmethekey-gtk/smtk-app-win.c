@@ -1,4 +1,3 @@
-#include "glib-object.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
@@ -7,6 +6,7 @@
 #include "smtk.h"
 #include "smtk-app.h"
 #include "smtk-app-win.h"
+#include "smtk-usage-win.h"
 #include "smtk-keys-win.h"
 #include "smtk-keys-area.h"
 #include "smtk-keys-mapper.h"
@@ -459,7 +459,7 @@ static void smtk_app_win_init(SmtkAppWin *win)
 				     win, NULL);
 
 	if (g_settings_get_boolean(win->settings, "first-time")) {
-		smtk_app_win_show_usage_dialog(win);
+		smtk_app_win_show_usage(win);
 		g_settings_set_boolean(win->settings, "first-time", false);
 	}
 }
@@ -634,75 +634,15 @@ void smtk_app_win_set_size(SmtkAppWin *win, int width, int height)
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(win->height_entry), height);
 }
 
-void smtk_app_win_show_usage_dialog(SmtkAppWin *win)
+void smtk_app_win_show_usage(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
-#if ADW_CHECK_VERSION(1, 5, 0)
-	AdwDialog *dialog = adw_alert_dialog_new(
-		_("Usage"),
-#else
-	GtkWidget *dialog = adw_message_dialog_new(
-		GTK_WINDOW(win), _("Usage"),
-#endif
-		_("1. Please input admin password after toggling the switch, "
-		  "because it needs superuser permission to read input events, "
-		  "and Wayland does not allow running graphics program with "
-		  "superuser permission, so it uses polkit to run a backend "
-		  "with superuser permission. This program does not handle or "
-		  "store your password. Users in `wheel` group can skip "
-		  "password authentication.\n\n"
-		  "2. After you toggle the switch to show the floating window, "
-		  "you need to drag it manually to anywhere you want, "
-		  "because Wayland does not allow window to set its position. "
-		  "The \"Clickable\" label on titlebar can be dragged as a "
-		  "handle.\n\n"
-		  "3. Because Wayland does not allow a window to set "
-		  "\"Always on Top\" and \"Always on Visible Workspace\" "
-		  "by itself, you should set it manually if you are in a "
-		  "Wayland session and your window manager support it.\n"
-		  "For example if you are using GNOME Shell (Wayland), you can "
-		  "right click the \"Clickable\" on title bar to show a window "
-		  "manager menu and check \"Always on Top\" and \"Always on "
-		  "Visible Workspace\" in it.\n"
-		  "If you are using KDE Plasma (Wayland), you can right click "
-		  "\"Floating Window - Show Me The Key\" on task bar, check "
-		  "\"Move to Desktop\" -> \"All Desktops\" and "
-		  "\"More Actions\" -> \"Keep Above Others\".\n"
-		  "You can check this project's <a "
-		  "href=\"https://github.com/AlynxZhou/showmethekey#special-"
-		  "notice-for-wayland-session-users\">README</a> to see if "
-		  "there are configurations for your compositor.\n\n"
-		  "4. To allow user move or resize the keys window, it is not "
-		  "click through by default, after moving it to the location "
-		  "you want, turn off \"Clickable\" switch so it won't block "
-		  "your other operations.\n\n"
-		  "5. If you want to pause it (for example you need to insert "
-		  "password), you can use the \"Pause\" switch, it will not "
-		  "record your keys when paused.\n\n"
-		  "6. Set Timeout to 0 if you want to keep all keys.\n\n"
-		  "You can open this dialog again via menu icon on title bar "
-		  "-> \"Usage\"."));
-#if ADW_CHECK_VERSION(1, 5, 0)
-	adw_alert_dialog_set_body_use_markup(ADW_ALERT_DIALOG(dialog), true);
-	adw_alert_dialog_add_response(ADW_ALERT_DIALOG(dialog), "close",
-				      _("Close"));
-	adw_alert_dialog_set_default_response(ADW_ALERT_DIALOG(dialog),
-					      "close");
-	adw_alert_dialog_set_close_response(ADW_ALERT_DIALOG(dialog), "close");
-	adw_dialog_present(dialog, GTK_WIDGET(win));
-#else
-	adw_message_dialog_set_body_use_markup(ADW_MESSAGE_DIALOG(dialog),
-					       true);
-	adw_message_dialog_add_response(ADW_MESSAGE_DIALOG(dialog), "close",
-					_("Close"));
-	g_signal_connect_swapped(dialog, "response",
-				 G_CALLBACK(gtk_window_destroy), dialog);
-	gtk_window_present(GTK_WINDOW(dialog));
-#endif
+	GtkWidget *usage_win = smtk_usage_win_new();
+	gtk_window_present(GTK_WINDOW(usage_win));
 }
 
-void smtk_app_win_show_about_dialog(SmtkAppWin *win)
+void smtk_app_win_show_about(SmtkAppWin *win)
 {
 	g_return_if_fail(win != NULL);
 
