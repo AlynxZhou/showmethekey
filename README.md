@@ -22,17 +22,7 @@ Just run following command to install from official repository:
 
 ### Arch Linux
 
-#### Install From AUR
-
-```
-$ paru showmethekey
-```
-
-Or use other AUR helpers.
-
-#### Install From `archlinuxcn`
-
-First [add archlinuxcn repo to your system](ttps://www.archlinuxcn.org/archlinux-cn-repo-and-mirror/).
+Just run following command to install from official repository:
 
 ```
 # pacman -S showmethekey
