@@ -84,7 +84,25 @@ Please help package showmethekey to your distribution!
 - gcc
 
 ### Build
-
+#### ubuntu
+```
+  sudo apt install \
+    meson \
+    ninja-build \
+    gcc \
+    libev-dev \
+    libinput-dev \
+    libudev-dev \
+    pkg-config \
+    libgtk-4-dev \
+    libadwaita-1-dev \
+    libjson-glib-dev \
+    libxkbcommon-dev \
+    libxkbcommon-x11-dev \
+    libpolkit-gobject-1-dev \
+    libcairo2-dev \
+    libpango1.0-dev
+```
 ```
 $ git clone https://github.com/AlynxZhou/showmethekey.git
 $ cd showmethekey
