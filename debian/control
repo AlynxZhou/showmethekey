@@ -1,0 +1,31 @@
+Source: showmethekey
+Section: graphics
+Priority: optional
+Maintainer: Alynx Zhou <alynx.zhou@gmail.com>
+Homepage: https://showmethekey.alynx.one/
+Vcs-Git: https://github.com/AlynxZhou/showmethekey/
+Vcs-Browser: https://github.com/AlynxZhou/showmethekey/
+Standards-Version: 4.7.0
+Build-Depends: meson,
+	debhelper-compat (= 13),
+	ninja-build,
+	pkgconf,
+	libevdev-dev,
+	libudev-dev,
+	libinput-dev,
+	libgtk-4-dev,
+	libadwaita-1-dev,
+	libjson-glib-dev,
+	libxkbcommon-dev,
+	libxkbregistry-dev,
+	libpolkit-gobject-1-0,
+
+Package: showmethekey
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends},
+	libjson-glib-1.0-0,
+	libgtk-4-1,
+	libadwaita-1-0,
+	libxkbcommon0,
+Description: Show keys you typed on screen.
+	For X11 / Wayland

@@ -1,0 +1,5 @@
+showmethekey (1.18.4) questing; urgency=medium
+
+  * Updated to display usage with window instead of dialog.
+
+ -- Alynx Zhou <alynx.zhou@gmail.com>  Mon, 7 Jul 2025 00:00:00 +0000
