@@ -1,4 +1,5 @@
 #include <xkbcommon/xkbcommon.h>
+#include <glib.h>
 
 #include "smtk.h"
 #include "smtk-keys-mapper.h"
@@ -554,7 +555,7 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 // AltGr == ISO_Level3_Shift == XKB_MOD_NAME_MOD5, handle it like Shift.
 // See <https://xkbcommon.org/doc/current/keymap-text-format-v1.html#terminology>.
 static bool check_show(SmtkKeysMapper *mapper, char *modifier,
-			      xkb_keycode_t xkb_key_code)
+		       xkb_keycode_t xkb_key_code)
 {
 	return xkb_state_mod_name_is_active(mapper->xkb_state, modifier,
 					    XKB_STATE_MODS_EFFECTIVE) > 0 &&
@@ -594,17 +595,26 @@ static char *smtk_keys_mapper_concat_key(SmtkKeysMapper *mapper,
 	return g_string_free(buffer, FALSE);
 }
 
-static bool is_visible_key(struct xkb_state *xkb_state,
-			   xkb_keysym_t xkb_key_sym)
+static bool is_visible_key(struct xkb_state *xkb_state)
 {
 	// Ideally we should check whether a key is insertable to editor, but
 	// xkbcommon does not provide such a function, and it is hard to
 	// implement by ourselves, because keysyms are not continuous and cannot
 	// be simply filtered out by range, so we only check modifiers. Shift
 	// always generates insertable keys so don't check it here.
-	return !xkb_state_mod_names_are_active(
-		xkb_state, XKB_STATE_MODS_EFFECTIVE, XKB_STATE_MATCH_ANY,
-		XKB_MOD_NAME_LOGO, XKB_MOD_NAME_CTRL, XKB_MOD_NAME_ALT, NULL);
+	g_debug("Super: %d, Ctrl: %d, Alt: %d.",
+		xkb_state_mod_name_is_active(xkb_state, MOD_SUPER,
+					     XKB_STATE_MODS_EFFECTIVE),
+		xkb_state_mod_name_is_active(xkb_state, MOD_CTRL,
+					     XKB_STATE_MODS_EFFECTIVE),
+		xkb_state_mod_name_is_active(xkb_state, MOD_ALT,
+					     XKB_STATE_MODS_EFFECTIVE));
+	return !(xkb_state_mod_name_is_active(xkb_state, MOD_SUPER,
+					      XKB_STATE_MODS_EFFECTIVE) ||
+		 xkb_state_mod_name_is_active(xkb_state, MOD_CTRL,
+					      XKB_STATE_MODS_EFFECTIVE) ||
+		 xkb_state_mod_name_is_active(xkb_state, MOD_ALT,
+					      XKB_STATE_MODS_EFFECTIVE));
 }
 
 static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
@@ -627,8 +637,10 @@ static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			mapper->xkb_state, xkb_key_code);
 		if (mapper->hide_visible &&
-		    is_visible_key(mapper->xkb_state, xkb_key_sym))
+		    is_visible_key(mapper->xkb_state)) {
+			g_debug("Hide visible key.");
 			return NULL;
+		}
 		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
 		xkb_keysym_get_name(xkb_key_sym, main_key,
 				    XKB_KEY_SYM_NAME_LENGTH);
@@ -637,6 +649,7 @@ static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
 	}
 	// Just ignore mods so we can prevent text like mod+mod.
 	if (g_hash_table_contains(mapper->xkb_mod_names, main_key)) {
+		g_debug("Ignore pure mod.");
 		g_free(main_key);
 		return NULL;
 	}
