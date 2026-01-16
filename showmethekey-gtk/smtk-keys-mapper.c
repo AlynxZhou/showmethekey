@@ -46,6 +46,7 @@ struct _SmtkKeysMapper {
 	struct xkb_context *xkb_context;
 	struct xkb_keymap *xkb_keymap;
 	struct xkb_state *xkb_state;
+	struct xkb_state *xkb_state_empty;
 	GHashTable *xkb_mod_names;
 	GHashTable *composed_replace_names;
 	GHashTable *compact_replace_names;
@@ -146,12 +147,21 @@ static bool smtk_keys_mapper_refresh_keymap(SmtkKeysMapper *mapper)
 
 	if (mapper->xkb_state != NULL)
 		xkb_state_unref(mapper->xkb_state);
+	if (mapper->xkb_state_empty != NULL)
+		xkb_state_unref(mapper->xkb_state_empty);
 
 	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
 	if (mapper->xkb_state == NULL) {
 		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
 			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
 			    "Failed to create XKB state.");
+		return false;
+	}
+	mapper->xkb_state_empty = xkb_state_new(mapper->xkb_keymap);
+	if (mapper->xkb_state_empty == NULL) {
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			    "Failed to create empty XKB state.");
 		return false;
 	}
 
@@ -173,6 +183,7 @@ static void smtk_keys_mapper_dispose(GObject *object)
 	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
 
 	g_clear_pointer(&mapper->xkb_state, xkb_state_unref);
+	g_clear_pointer(&mapper->xkb_state_empty, xkb_state_unref);
 	g_clear_pointer(&mapper->xkb_keymap, xkb_keymap_unref);
 	g_clear_pointer(&mapper->xkb_context, xkb_context_unref);
 
@@ -554,7 +565,7 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 //
 // AltGr == ISO_Level3_Shift == XKB_MOD_NAME_MOD5, handle it like Shift.
 // See <https://xkbcommon.org/doc/current/keymap-text-format-v1.html#terminology>.
-static bool check_show(SmtkKeysMapper *mapper, char *modifier,
+static bool check_show(SmtkKeysMapper *mapper, const char *modifier,
 		       xkb_keycode_t xkb_key_code)
 {
 	return xkb_state_mod_name_is_active(mapper->xkb_state, modifier,
@@ -636,8 +647,12 @@ static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
 					     XKB_KEY_UP);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			mapper->xkb_state, xkb_key_code);
-		if (mapper->hide_visible &&
-		    is_visible_key(mapper->xkb_state)) {
+		// Always get the unshifted key if show shift.
+		if (check_show(mapper, MOD_SHIFT, xkb_key_code) ||
+		    check_show(mapper, MOD_ALTGR, xkb_key_code))
+			xkb_key_sym = xkb_state_key_get_one_sym(
+				mapper->xkb_state_empty, xkb_key_code);
+		if (mapper->hide_visible && is_visible_key(mapper->xkb_state)) {
 			g_debug("Hide visible key.");
 			return NULL;
 		}

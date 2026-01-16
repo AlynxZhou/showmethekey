@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-07 14:04+0800\n"
+"POT-Creation-Date: 2026-01-16 19:44+0800\n"
 "PO-Revision-Date: 2024-08-02 10:16-0600\n"
 "Last-Translator: ItzSelenux\n"
 "Language-Team: none\n"
@@ -92,8 +92,8 @@ msgid "Show _Shift Separately"
 msgstr "Mostrar _Shift Separadamente"
 
 #: showmethekey-gtk/smtk-app-win.ui:99
-msgid "Show Ctrl+Shift+A or Ctrl+A."
-msgstr "Mostrar Ctrl+Shift+A o Ctrl+A."
+msgid "Show Ctrl+Shift+a or Ctrl+A."
+msgstr "Mostrar Ctrl+Shift+a o Ctrl+A."
 
 #: showmethekey-gtk/smtk-app-win.ui:117
 #, fuzzy

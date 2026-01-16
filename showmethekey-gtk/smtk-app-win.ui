@@ -96,7 +96,7 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">Show _Shift Separately</property>
-                        <property name="subtitle" translatable="yes">Show Ctrl+Shift+A or Ctrl+A.</property>
+                        <property name="subtitle" translatable="yes">Show Ctrl+Shift+a or Ctrl+A.</property>
                         <property name="activatable-widget">shift_switch</property>
                         <child>
                           <object class="GtkSwitch" id="shift_switch">

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-07 14:04+0800\n"
+"POT-Creation-Date: 2026-01-16 19:44+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,7 +89,7 @@ msgid "Show _Shift Separately"
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:99
-msgid "Show Ctrl+Shift+A or Ctrl+A."
+msgid "Show Ctrl+Shift+a or Ctrl+A."
 msgstr ""
 
 #: showmethekey-gtk/smtk-app-win.ui:117

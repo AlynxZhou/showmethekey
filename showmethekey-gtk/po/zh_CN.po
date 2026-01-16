@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-07 14:04+0800\n"
+"POT-Creation-Date: 2026-01-16 19:44+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -88,8 +88,8 @@ msgid "Show _Shift Separately"
 msgstr "单独显示 Shift（_S）"
 
 #: showmethekey-gtk/smtk-app-win.ui:99
-msgid "Show Ctrl+Shift+A or Ctrl+A."
-msgstr "显示 Ctrl+Shift+A 还是 Ctrl+A。"
+msgid "Show Ctrl+Shift+a or Ctrl+A."
+msgstr "显示 Ctrl+Shift+a 还是 Ctrl+A。"
 
 #: showmethekey-gtk/smtk-app-win.ui:117
 msgid "Show _Keyboard Key"
