@@ -2,7 +2,7 @@
 // without entering a password.
 polkit.addRule(function (action, subject) {
   if (action.id === "one.alynx.showmethekey.cli" &&
-      subject.isInGroup("wheel")) {
+      subject.isInGroup("wheel") && subject.local && subject.active) {
     return polkit.Result.YES;
   }
 });
