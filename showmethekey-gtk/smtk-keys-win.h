@@ -17,14 +17,16 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
 			     bool show_shift, bool show_keyboard,
 			     bool show_mouse, bool draw_border,
 			     bool hide_visible, SmtkKeyMode mode,
-			     SmtkKeyAlignment alignment, int width, int height,
-			     int timeout, const char *layout,
-			     const char *variant, GError **error);
+			     SmtkKeyAlignment alignment, double margin_ratio,
+			     int width, int height, int timeout,
+			     const char *layout, const char *variant,
+			     GError **error);
 void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable);
 void smtk_keys_win_pause(SmtkKeysWin *win);
 void smtk_keys_win_resume(SmtkKeysWin *win);
 void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode);
 void smtk_keys_win_set_alignment(SmtkKeysWin *win, SmtkKeyAlignment alignment);
+void smtk_keys_win_set_margin_ratio(SmtkKeysWin *win, double margin_ratio);
 void smtk_keys_win_set_show_shift(SmtkKeysWin *win, bool show_shift);
 void smtk_keys_win_set_show_keyboard(SmtkKeysWin *win, bool show_keyboard);
 void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse);

@@ -25,6 +25,7 @@ struct _SmtkKeysArea {
 	int height;
 	int string_height;
 	int counter_height;
+	double margin_ratio;
 	int margin;
 	int padding;
 	int last_key_x;
@@ -42,6 +43,7 @@ enum {
 	PROP_MODE,
 	PROP_ALIGNMENT,
 	PROP_DRAW_BORDER,
+	PROP_MARGIN_RATIO,
 	PROP_TIMEOUT,
 	N_PROPS
 };
@@ -64,6 +66,10 @@ static void smtk_keys_area_set_property(GObject *object,
 	case PROP_DRAW_BORDER:
 		smtk_keys_area_set_draw_border(area,
 					       g_value_get_boolean(value));
+		break;
+	case PROP_MARGIN_RATIO:
+		smtk_keys_area_set_margin_ratio(area,
+						g_value_get_double(value));
 		break;
 	case PROP_TIMEOUT:
 		smtk_keys_area_set_timeout(area, g_value_get_int(value));
@@ -90,6 +96,9 @@ static void smtk_keys_area_get_property(GObject *object,
 		break;
 	case PROP_DRAW_BORDER:
 		g_value_set_boolean(value, area->draw_border);
+		break;
+	case PROP_MARGIN_RATIO:
+		g_value_set_double(value, area->margin_ratio);
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, area->timeout);
@@ -126,10 +135,11 @@ static int smtk_keys_area_calculate_width(SmtkKeysArea *area)
 					      -1);
 			pango_layout_get_pixel_extents(area->counter_layout,
 						       &c_ink, NULL);
-			result += (area->padding + c_ink.width);
+			result += (c_ink.width + area->padding * 2);
 		}
 
-		result += area->margin;
+		if (iter->next != NULL)
+			result += area->margin;
 
 		g_free(string);
 		g_free(counter);
@@ -165,7 +175,7 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, cairo_t *cr,
 	int border_height = area->string_height;
 	int border_width = s_ink.width + area->padding * 2;
 	int border_y = (area->height - area->string_height) / 2;
-	int border_x = area->last_key_x - (area->margin + border_width);
+	int border_x = area->last_key_x - border_width;
 
 	PangoRectangle c_ink;
 	if (key_data->counter > 1) {
@@ -174,7 +184,7 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, cairo_t *cr,
 					       NULL);
 
 		// Don't forget to leave space for counter.
-		border_x -= (area->padding + c_ink.width);
+		border_x -= (c_ink.width + area->padding * 2);
 	}
 
 	g_debug("Border: x is %d, y is %d, width is %d, height is %d.",
@@ -248,7 +258,7 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, cairo_t *cr,
 		pango_cairo_show_layout(cr, area->counter_layout);
 	}
 
-	area->last_key_x = border_x;
+	area->last_key_x = border_x - area->margin;
 
 	g_free(string);
 	g_free(counter);
@@ -271,7 +281,7 @@ static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 	}
 
 	area->string_height = area->height * 0.8;
-	const int string_font_size = area->string_height * 0.8;
+	const int string_font_size = area->string_height * 0.9;
 	g_debug("String font size: %d.", string_font_size);
 	pango_font_description_set_absolute_size(
 		area->string_font, string_font_size * PANGO_SCALE);
@@ -294,7 +304,7 @@ static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 	pango_layout_set_font_description(area->counter_layout,
 					  area->counter_font);
 
-	area->margin = area->string_height * 0.4;
+	area->margin = area->string_height * area->margin_ratio;
 	area->padding = (area->string_height - string_font_size) / 2;
 
 	// To align to center, we need to first calculate total width.
@@ -451,22 +461,26 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 		"alignment", "Alignment", "Key Alignment",
 		SMTK_TYPE_KEY_ALIGNMENT, SMTK_KEY_ALIGNMENT_END,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
+		"draw-border", "Draw Border", "Draw Key Border", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_MARGIN_RATIO] = g_param_spec_double(
+		"margin-ratio", "Margin Ratio", "Key Margin Ratio", 0, 10, 0.4,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_TIMEOUT] = g_param_spec_int(
 		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
-		"draw-border", "Draw Border", "Draw Keys Border", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
 GtkWidget *smtk_keys_area_new(SmtkKeyMode mode, SmtkKeyAlignment alignment,
-			      bool draw_border, int timeout)
+			      bool draw_border, double margin_ratio,
+			      int timeout)
 {
-	SmtkKeysArea *area =
-		g_object_new(SMTK_TYPE_KEYS_AREA, "mode", mode, "alignment",
-			     alignment, "draw-border", draw_border, "timeout",
-			     timeout, "vexpand", true, "hexpand", true, NULL);
+	SmtkKeysArea *area = g_object_new(
+		SMTK_TYPE_KEYS_AREA, "mode", mode, "alignment", alignment,
+		"draw-border", draw_border, "margin-ratio", margin_ratio,
+		"timeout", timeout, "vexpand", true, "hexpand", true, NULL);
 	return GTK_WIDGET(area);
 }
 
@@ -493,6 +507,17 @@ void smtk_keys_area_set_draw_border(SmtkKeysArea *area, bool draw_border)
 	g_return_if_fail(area != NULL);
 
 	area->draw_border = draw_border;
+
+	// Trigger re-draw because border changed.
+	gtk_widget_queue_draw(GTK_WIDGET(area));
+}
+
+void smtk_keys_area_set_margin_ratio(SmtkKeysArea *area, double margin_ratio)
+{
+	g_return_if_fail(area != NULL);
+	g_return_if_fail(margin_ratio >= 0);
+
+	area->margin_ratio = margin_ratio;
 
 	// Trigger re-draw because border changed.
 	gtk_widget_queue_draw(GTK_WIDGET(area));

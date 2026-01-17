@@ -1,3 +1,4 @@
+#include "smtk-keys-area.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
@@ -18,6 +19,7 @@ struct _SmtkKeysWin {
 	SmtkKeysEmitter *emitter;
 	SmtkKeyMode mode;
 	SmtkKeyAlignment alignment;
+	double margin_ratio;
 	bool clickable;
 	bool paused;
 	bool show_shift;
@@ -46,6 +48,7 @@ enum {
 	PROP_HIDE_VISIBLE,
 	PROP_MODE,
 	PROP_ALIGNMENT,
+	PROP_MARGIN_RATIO,
 	PROP_TIMEOUT,
 	PROP_LAYOUT,
 	PROP_VARIANT,
@@ -85,6 +88,9 @@ static void smtk_keys_win_set_property(GObject *object,
 		break;
 	case PROP_ALIGNMENT:
 		smtk_keys_win_set_alignment(win, g_value_get_enum(value));
+		break;
+	case PROP_MARGIN_RATIO:
+		smtk_keys_win_set_margin_ratio(win, g_value_get_double(value));
 		break;
 	case PROP_TIMEOUT:
 		smtk_keys_win_set_timeout(win, g_value_get_int(value));
@@ -132,6 +138,9 @@ static void smtk_keys_win_get_property(GObject *object,
 		break;
 	case PROP_ALIGNMENT:
 		g_value_set_enum(value, win->alignment);
+		break;
+	case PROP_MARGIN_RATIO:
+		g_value_set_enum(value, win->margin_ratio);
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, win->timeout);
@@ -378,7 +387,8 @@ static void smtk_keys_win_constructed(GObject *object)
 		goto out;
 
 	win->area = smtk_keys_area_new(win->mode, win->alignment,
-				       win->draw_border, win->timeout);
+				       win->draw_border, win->margin_ratio,
+				       win->timeout);
 	gtk_box_append(GTK_BOX(win->box), win->area);
 
 out:
@@ -448,7 +458,10 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
-		"draw-border", "Draw Border", "Draw Keys Border", true,
+		"draw-border", "Draw Border", "Draw Key Border", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_MARGIN_RATIO] = g_param_spec_double(
+		"margin-ratio", "Margin Ratio", "Key Margin Ratio", 0, 10, 0.4,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
 		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
@@ -470,9 +483,10 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
 			     bool show_shift, bool show_keyboard,
 			     bool show_mouse, bool draw_border,
 			     bool hide_visible, SmtkKeyMode mode,
-			     SmtkKeyAlignment alignment, int width, int height,
-			     int timeout, const char *layout,
-			     const char *variant, GError **error)
+			     SmtkKeyAlignment alignment, double margin_ratio,
+			     int width, int height, int timeout,
+			     const char *layout, const char *variant,
+			     GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
@@ -485,10 +499,10 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
 		"clickable", clickable, "mode", mode, "alignment", alignment,
-		"show-shift", show_shift, "show-keyboard", show_keyboard,
-		"show-mouse", show_mouse, "draw-border", draw_border,
-		"hide-visible", hide_visible, "timeout", timeout, "layout",
-		layout, "variant", variant, NULL);
+		"margin-ratio", margin_ratio, "show-shift", show_shift,
+		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
+		"draw-border", draw_border, "hide-visible", hide_visible,
+		"timeout", timeout, "layout", layout, "variant", variant, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
@@ -620,6 +634,19 @@ void smtk_keys_win_set_alignment(SmtkKeysWin *win, SmtkKeyAlignment alignment)
 					     alignment);
 	// Sync self property.
 	win->alignment = alignment;
+}
+
+void smtk_keys_win_set_margin_ratio(SmtkKeysWin *win, double margin_ratio)
+{
+	g_return_if_fail(win != NULL);
+	g_return_if_fail(margin_ratio >= 0);
+
+	// Pass property to area.
+	if (win->area != NULL)
+		smtk_keys_area_set_margin_ratio(SMTK_KEYS_AREA(win->area),
+						margin_ratio);
+	// Sync self property.
+	win->margin_ratio = margin_ratio;
 }
 
 void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout)

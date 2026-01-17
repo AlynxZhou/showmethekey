@@ -29,6 +29,7 @@ struct _SmtkAppWin {
 	GtkWidget *alignment_selector;
 	GtkWidget *width_entry;
 	GtkWidget *height_entry;
+	GtkWidget *margin_slider;
 	GtkWidget *timeout_entry;
 	GtkWidget *keymap_selector;
 	GtkWidget *keys_win;
@@ -142,17 +143,20 @@ void smtk_app_win_activate(SmtkAppWin *win)
 		GTK_SPIN_BUTTON(win->height_entry));
 	height = height <= 0 ? 200 : height;
 	g_debug("Size: %d×%d.", width, height);
+	double margin_ratio =
+		gtk_range_get_value(GTK_RANGE(win->margin_slider));
+	margin_ratio = margin_ratio < 0 ? 0.4 : margin_ratio;
+	g_debug("Margin ratio: %f.", margin_ratio);
 
 	const char *layout = NULL;
 	const char *variant = NULL;
 	smtk_app_win_get_keymap(win, &layout, &variant);
 
 	GError *error = NULL;
-	win->keys_win = smtk_keys_win_new(win, clickable, show_shift,
-					  show_keyboard, show_mouse,
-					  draw_border, hide_visible, mode,
-					  alignment, width, height, timeout,
-					  layout, variant, &error);
+	win->keys_win = smtk_keys_win_new(
+		win, clickable, show_shift, show_keyboard, show_mouse,
+		draw_border, hide_visible, mode, alignment, margin_ratio, width,
+		height, timeout, layout, variant, &error);
 	if (win->keys_win == NULL) {
 		g_warning("%s", error->message);
 		g_error_free(error);
@@ -323,6 +327,22 @@ static void smtk_app_win_on_timeout_value(SmtkAppWin *win, GParamSpec *prop,
 	smtk_keys_win_set_timeout(SMTK_KEYS_WIN(win->keys_win), timeout);
 }
 
+static void smtk_app_win_on_margin_value(SmtkAppWin *win, GParamSpec *prop,
+					 GtkScale *margin_slider)
+{
+	// This only works when keys_win is open.
+	if (win->keys_win == NULL)
+		return;
+
+	double margin_ratio =
+		gtk_range_get_value(GTK_RANGE(win->margin_slider));
+	margin_ratio = margin_ratio < 0 ? 0.4 : margin_ratio;
+	g_debug("Margin ratio: %f.", margin_ratio);
+
+	smtk_keys_win_set_margin_ratio(SMTK_KEYS_WIN(win->keys_win),
+				       margin_ratio);
+}
+
 static void
 smtk_app_win_on_keymap_selector_selected(SmtkAppWin *win, GParamSpec *prop,
 					 AdwComboRow *keymap_selector)
@@ -397,19 +417,6 @@ static void smtk_app_win_init(SmtkAppWin *win)
 	gtk_window_set_focus(GTK_WINDOW(win), NULL);
 	gtk_window_set_default_widget(GTK_WINDOW(win), win->keys_win_switch);
 
-	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->timeout_entry), 0,
-				  30000);
-	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->timeout_entry), 100,
-				       1000);
-	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->width_entry), 0,
-				  INT_MAX);
-	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->width_entry), 100,
-				       500);
-	gtk_spin_button_set_range(GTK_SPIN_BUTTON(win->height_entry), 0,
-				  INT_MAX);
-	gtk_spin_button_set_increments(GTK_SPIN_BUTTON(win->height_entry), 100,
-				       500);
-
 	SmtkKeymapList *keymap_list = smtk_keymap_list_new();
 	GtkExpression *name_expression = gtk_property_expression_new(
 		SMTK_TYPE_KEYMAP_ITEM, NULL, "name");
@@ -449,6 +456,9 @@ static void smtk_app_win_init(SmtkAppWin *win)
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "height", win->height_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "margin-ratio",
+			gtk_range_get_adjustment(GTK_RANGE(win->margin_slider)),
+			"value", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "timeout", win->timeout_entry, "value",
 			G_SETTINGS_BIND_DEFAULT);
 
@@ -517,6 +527,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, height_entry);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
+					     SmtkAppWin, margin_slider);
+	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, timeout_entry);
 	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
 					     SmtkAppWin, keymap_selector);
@@ -552,6 +564,8 @@ static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
 		smtk_app_win_on_alignment_selector_selected);
 	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
 						smtk_app_win_on_timeout_value);
+	gtk_widget_class_bind_template_callback(GTK_WIDGET_CLASS(win_class),
+						smtk_app_win_on_margin_value);
 	gtk_widget_class_bind_template_callback(
 		GTK_WIDGET_CLASS(win_class),
 		smtk_app_win_on_keymap_selector_selected);

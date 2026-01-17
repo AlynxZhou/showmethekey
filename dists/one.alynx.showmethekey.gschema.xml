@@ -54,6 +54,12 @@
       <default>200</default>
       <range min="0" />
     </key>
+    <key type="d" name="margin-ratio">
+      <summary>Margin Ratio</summary>
+      <description>Key margin ratio of keys window.</description>
+      <default>0.4</default>
+      <range min="0" />
+    </key>
     <key type="d" name="timeout">
       <summary>Text Timeout</summary>
       <description>The inactive timeout after which text disappears, in milliseconds.</description>
