@@ -26,8 +26,8 @@ msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
 #: showmethekey-gtk/smtk-app.c:114
-msgid "Show keys window on start up (deprecated by `-k, --show-keys-win`)."
-msgstr "在启动时显示按键窗口（已废弃，请使用 `-k, --show-keys-win`）。"
+msgid "Show keys window on start up (deprecated by `-k, --keys-win`)."
+msgstr "在启动时显示按键窗口（已废弃，请使用 `-k, --keys-win`）。"
 
 #: showmethekey-gtk/smtk-app.c:117
 msgid "Show keys window on start up."

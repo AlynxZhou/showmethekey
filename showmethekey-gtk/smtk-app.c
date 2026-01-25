@@ -111,7 +111,7 @@ static void smtk_app_init(SmtkApp *app)
 		  N_("Display version then exit."), NULL },
 		// Keep this option because I don't want to break CLI.
 		{ "active", 'a', 0, G_OPTION_ARG_NONE, NULL,
-		  N_("Show keys window on start up (deprecated by `-k, --show-keys-win`)."),
+		  N_("Show keys window on start up (deprecated by `-k, --keys-win`)."),
 		  NULL },
 		{ "keys-win", 'k', 0, G_OPTION_ARG_NONE, NULL,
 		  N_("Show keys window on start up."), NULL },
