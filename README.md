@@ -111,7 +111,7 @@ If you are using KDE Plasma (Wayland), you can right click "Floating Window - Sh
 For Sway users, you can add following configurations into `~/.config/sway/config` to enable floating and sticky (thanks to [haxibami's blog post](https://zenn.dev/haxibami/articles/wayland-sway-install#%E3%82%A6%E3%82%A3%E3%83%B3%E3%83%89%E3%82%A6%E8%A8%AD%E5%AE%9A):
 
 ```
-for_window [app_id="one.alynx.showmethekey" title="Floating Window - Show Me The Key"] {
+for_window [app_id="showmethekey-gtk" title="Floating Window - Show Me The Key"] {
   floating enable
   sticky enable
 }
