@@ -30,17 +30,10 @@ typedef enum {
 } SmtkKeyMode;
 // clang-format on
 
-SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, bool hide_visible,
-				     const char *layout, const char *variant,
-				     GError **error);
+SmtkKeysMapper *smtk_keys_mapper_new(GError **error);
 char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event);
 char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event);
 char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event);
-void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift);
-void smtk_keys_mapper_set_hide_visible(SmtkKeysMapper *mapper,
-				       bool hide_visible);
-void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper, const char *layout);
-void smtk_keys_mapper_set_variant(SmtkKeysMapper *mapper, const char *variant);
 
 G_END_DECLS
 

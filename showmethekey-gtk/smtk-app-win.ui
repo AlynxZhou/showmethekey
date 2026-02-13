@@ -50,11 +50,11 @@
               <object class="GtkSwitch" id="keys_win_switch">
                 <property name="hexpand">false</property>
                 <property name="halign">center</property>
-                <signal
-                    name="notify::active"
-                    handler="smtk_app_win_on_keys_win_switch_active"
-                    object="SmtkAppWin"
-                    swapped="yes" />
+                <!-- <signal -->
+                <!--     name="notify::active" -->
+                <!--     handler="smtk_app_win_on_keys_win_switch_active" -->
+                <!--     object="SmtkAppWin" -->
+                <!--     swapped="yes" /> -->
               </object>
             </child>
             <child type="end">
@@ -91,11 +91,6 @@
                           <object class="GtkSwitch" id="clickable_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_clickable_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -109,13 +104,8 @@
                         <child>
                           <object class="GtkSwitch" id="pause_switch">
                             <property name="valign">center</property>
-                            <property name="sensitive">false</property>
+                            <!-- <property name="sensitive">false</property> -->
                             <property name="active">false</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_pause_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -130,11 +120,6 @@
                           <object class="GtkSwitch" id="shift_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_shift_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -149,11 +134,6 @@
                           <object class="GtkSwitch" id="keyboard_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_keyboard_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -168,11 +148,6 @@
                           <object class="GtkSwitch" id="mouse_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_mouse_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -187,11 +162,6 @@
                           <object class="GtkSwitch" id="border_switch">
                             <property name="valign">center</property>
                             <property name="active">true</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_border_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -206,11 +176,6 @@
                           <object class="GtkSwitch" id="hide_visible_switch">
                             <property name="valign">center</property>
                             <property name="active">false</property>
-                            <signal
-                                name="notify::active"
-                                handler="smtk_app_win_on_hide_visible_switch_active"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -230,11 +195,6 @@
                             </items>
                           </object>
                         </property>
-                        <signal
-                            name="notify::selected"
-                            handler="smtk_app_win_on_mode_selector_selected"
-                            object="SmtkAppWin"
-                            swapped="yes" />
                       </object>
                     </child>
                     <child>
@@ -251,11 +211,6 @@
                             </items>
                           </object>
                         </property>
-                        <signal
-                            name="notify::selected"
-                            handler="smtk_app_win_on_alignment_selector_selected"
-                            object="SmtkAppWin"
-                            swapped="yes" />
                       </object>
                     </child>
                     <child>
@@ -271,11 +226,6 @@
                             <property name="digits">0</property>
                             <property name="text">0</property>
                             <property name="adjustment">timeout_adjustment</property>
-                            <signal
-                                name="notify::value"
-                                handler="smtk_app_win_on_timeout_value"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -333,11 +283,6 @@
                               <mark translatable="yes" comments="default" context="none" value="0.4" position="top">Default</mark>
                               <mark translatable="yes" comments="default" context="none" value="1" position="top"></mark>
                             </marks>
-                            <signal
-                                name="value-changed"
-                                handler="smtk_app_win_on_margin_value"
-                                object="SmtkAppWin"
-                                swapped="yes" />
                           </object>
                         </child>
                       </object>
@@ -354,11 +299,6 @@
                         <property name="subtitle" translatable="yes">Choose your keyboard layout and variant.</property>
                         <!-- <property name="enable-search">true</property> -->
                         <property name="selected">0</property>
-                        <signal
-                            name="notify::selected"
-                            handler="smtk_app_win_on_keymap_selector_selected"
-                            object="SmtkAppWin"
-                            swapped="yes" />
                       </object>
                     </child>
                   </object>

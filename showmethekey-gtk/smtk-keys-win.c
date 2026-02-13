@@ -1,4 +1,3 @@
-#include "smtk-keys-area.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
@@ -6,56 +5,47 @@
 #	include <gdk/x11/gdkx.h>
 #endif
 
-#include "smtk.h"
 #include "smtk-keys-win.h"
+#include "smtk-keys-area.h"
+#include "smtk-keys-emitter.h"
 
 struct _SmtkKeysWin {
-	AdwWindow parent_instance;
-	SmtkAppWin *app_win;
+	AdwApplicationWindow parent_instance;
+	GSettings *settings;
 	GtkWidget *box;
 	GtkWidget *header_bar;
 	GtkWidget *handle;
 	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
-	SmtkKeyMode mode;
-	SmtkKeyAlignment alignment;
-	double margin_ratio;
+	bool active;
 	bool clickable;
 	bool paused;
 	bool show_shift;
 	bool show_keyboard;
 	bool show_mouse;
-	bool draw_border;
 	bool hide_visible;
-	int timeout;
 	char *layout;
 	char *variant;
 	GError *error;
 };
-G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_WINDOW)
+G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_APPLICATION_WINDOW)
 
-enum { SIG_PAUSE, N_SIGNALS };
-
-static unsigned int obj_signals[N_SIGNALS] = { 0 };
-
-enum {
-	PROP_0,
-	PROP_CLICKABLE,
-	PROP_SHOW_SHIFT,
-	PROP_SHOW_KEYBOARD,
-	PROP_SHOW_MOUSE,
-	PROP_DRAW_BORDER,
-	PROP_HIDE_VISIBLE,
-	PROP_MODE,
-	PROP_ALIGNMENT,
-	PROP_MARGIN_RATIO,
-	PROP_TIMEOUT,
-	PROP_LAYOUT,
-	PROP_VARIANT,
-	N_PROPS
-};
+enum { PROP_0, PROP_ACTIVE, PROP_CLICKABLE, PROP_PAUSED, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
+
+static void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable)
+{
+	// We don't need the handle if click through. But the handle might not
+	// be there during init.
+	if (win->handle != NULL)
+		gtk_widget_set_visible(win->handle, clickable);
+
+	// NOTE: We don't handle input region here, I don't know why we can't.
+	// We just save property and handle the input region in
+	// `size_allocate()`.
+	win->clickable = clickable;
+}
 
 static void smtk_keys_win_set_property(GObject *object,
 				       unsigned int property_id,
@@ -64,42 +54,14 @@ static void smtk_keys_win_set_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
+	case PROP_ACTIVE:
+		win->active = g_value_get_boolean(value);
+		break;
 	case PROP_CLICKABLE:
 		smtk_keys_win_set_clickable(win, g_value_get_boolean(value));
 		break;
-	case PROP_SHOW_SHIFT:
-		smtk_keys_win_set_show_shift(win, g_value_get_boolean(value));
-		break;
-	case PROP_SHOW_KEYBOARD:
-		smtk_keys_win_set_show_keyboard(win,
-						g_value_get_boolean(value));
-		break;
-	case PROP_SHOW_MOUSE:
-		smtk_keys_win_set_show_mouse(win, g_value_get_boolean(value));
-		break;
-	case PROP_DRAW_BORDER:
-		smtk_keys_win_set_draw_border(win, g_value_get_boolean(value));
-		break;
-	case PROP_HIDE_VISIBLE:
-		smtk_keys_win_set_hide_visible(win, g_value_get_boolean(value));
-		break;
-	case PROP_MODE:
-		smtk_keys_win_set_mode(win, g_value_get_enum(value));
-		break;
-	case PROP_ALIGNMENT:
-		smtk_keys_win_set_alignment(win, g_value_get_enum(value));
-		break;
-	case PROP_MARGIN_RATIO:
-		smtk_keys_win_set_margin_ratio(win, g_value_get_double(value));
-		break;
-	case PROP_TIMEOUT:
-		smtk_keys_win_set_timeout(win, g_value_get_int(value));
-		break;
-	case PROP_LAYOUT:
-		smtk_keys_win_set_layout(win, g_value_get_string(value));
-		break;
-	case PROP_VARIANT:
-		smtk_keys_win_set_variant(win, g_value_get_string(value));
+	case PROP_PAUSED:
+		win->paused = g_value_get_boolean(value);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -115,41 +77,14 @@ static void smtk_keys_win_get_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
+	case PROP_ACTIVE:
+		g_value_set_boolean(value, win->active);
+		break;
 	case PROP_CLICKABLE:
 		g_value_set_boolean(value, win->clickable);
 		break;
-	case PROP_SHOW_SHIFT:
-		g_value_set_boolean(value, win->show_shift);
-		break;
-	case PROP_SHOW_KEYBOARD:
-		g_value_set_boolean(value, win->show_keyboard);
-		break;
-	case PROP_SHOW_MOUSE:
-		g_value_set_boolean(value, win->show_mouse);
-		break;
-	case PROP_DRAW_BORDER:
-		g_value_set_boolean(value, win->draw_border);
-		break;
-	case PROP_HIDE_VISIBLE:
-		g_value_set_boolean(value, win->hide_visible);
-		break;
-	case PROP_MODE:
-		g_value_set_enum(value, win->mode);
-		break;
-	case PROP_ALIGNMENT:
-		g_value_set_enum(value, win->alignment);
-		break;
-	case PROP_MARGIN_RATIO:
-		g_value_set_enum(value, win->margin_ratio);
-		break;
-	case PROP_TIMEOUT:
-		g_value_set_int(value, win->timeout);
-		break;
-	case PROP_LAYOUT:
-		g_value_set_string(value, smtk_keys_win_get_layout(win));
-		break;
-	case PROP_VARIANT:
-		g_value_set_string(value, smtk_keys_win_get_variant(win));
+	case PROP_PAUSED:
+		g_value_set_boolean(value, win->paused);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -171,13 +106,8 @@ static void smtk_keys_win_emitter_on_key(SmtkKeysWin *win, char key[])
 
 	// It seems that GObject closure will free string argument.
 	// See <http://garfileo.is-programmer.com/2011/3/25/gobject-signal-extra-1.25576.html>.
-	// void (*callback)(gpointer instance, const gchar *arg1, gpointer user_data)
+	// void (*callback)(void *instance, const gchar *arg1, void *data)
 	smtk_keys_area_add_key(SMTK_KEYS_AREA(win->area), g_strdup(key));
-}
-
-static void smtk_keys_win_emitter_on_pause(SmtkKeysWin *win)
-{
-	g_signal_emit_by_name(win, "pause");
 }
 
 #ifdef GDK_WINDOWING_X11
@@ -241,7 +171,7 @@ static void gdk_x11_surface_wmspec_change_desktop(GdkSurface *surface,
 }
 #endif
 
-static void smtk_keys_win_on_map(SmtkKeysWin *win, gpointer user_data)
+static void smtk_keys_win_on_map(SmtkKeysWin *win, void *data)
 {
 	// GTK4 dropped those API, so we need to implement those by ourselves
 	// via X11 WMSpec.
@@ -294,8 +224,6 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 
 	g_debug("Allocated size: %d×%d.", width, height);
 
-	smtk_app_win_set_size(win->app_win, width, height);
-
 	GtkNative *native = gtk_widget_get_native(widget);
 	if (native != NULL) {
 		GdkSurface *surface = gtk_native_get_surface(native);
@@ -314,14 +242,24 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 	}
 }
 
+static int on_close_request(SmtkKeysWin *win, void *data)
+{
+	// Sync state on close.
+	g_settings_set_boolean(win->settings, "active", false);
+	return 0;
+}
+
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
 	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
+	win->active = false;
+	win->clickable = false;
 	win->paused = false;
 
+	win->settings = NULL;
 	win->handle = NULL;
 	win->emitter = NULL;
 	win->area = NULL;
@@ -343,6 +281,9 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
 			 G_CALLBACK(smtk_keys_win_on_map), NULL);
+
+	g_signal_connect(GTK_WINDOW(win), "close-request",
+			 G_CALLBACK(on_close_request), NULL);
 }
 
 static void smtk_keys_win_constructed(GObject *object)
@@ -351,7 +292,8 @@ static void smtk_keys_win_constructed(GObject *object)
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	win->box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	adw_window_set_content(ADW_WINDOW(win), win->box);
+	adw_application_window_set_content(ADW_APPLICATION_WINDOW(win),
+					   win->box);
 
 	// Allow user to choose position by drag this.
 	win->header_bar = adw_header_bar_new();
@@ -365,11 +307,7 @@ static void smtk_keys_win_constructed(GObject *object)
 	gtk_box_append(GTK_BOX(win->box), win->header_bar);
 	gtk_widget_set_visible(win->handle, win->clickable);
 
-	win->emitter = smtk_keys_emitter_new(win->show_shift,
-					     win->show_keyboard,
-					     win->show_mouse, win->hide_visible,
-					     win->mode, win->layout,
-					     win->variant, &win->error);
+	win->emitter = smtk_keys_emitter_new(&win->error);
 	// `win->error` is set so just return.
 	if (win->emitter == NULL)
 		goto out;
@@ -378,18 +316,25 @@ static void smtk_keys_win_constructed(GObject *object)
 		G_CALLBACK(smtk_keys_win_emitter_on_error_cli_exit), win);
 	g_signal_connect_swapped(win->emitter, "key",
 				 G_CALLBACK(smtk_keys_win_emitter_on_key), win);
-	g_signal_connect_swapped(win->emitter, "pause",
-				 G_CALLBACK(smtk_keys_win_emitter_on_pause),
-				 win);
 
 	smtk_keys_emitter_start_async(win->emitter, &win->error);
 	if (win->error != NULL)
 		goto out;
 
-	win->area = smtk_keys_area_new(win->mode, win->alignment,
-				       win->draw_border, win->margin_ratio,
-				       win->timeout);
+	win->area = smtk_keys_area_new();
 	gtk_box_append(GTK_BOX(win->box), win->area);
+
+	win->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(win->settings, "active", win, "active",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "clickable", win, "clickable",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "paused", win, "paused",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "width", win, "default-width",
+			G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind(win->settings, "height", win, "default-height",
+			G_SETTINGS_BIND_DEFAULT);
 
 out:
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(object);
@@ -399,6 +344,7 @@ static void smtk_keys_win_dispose(GObject *object)
 {
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
+	g_clear_object(&win->settings);
 	if (win->emitter != NULL) {
 		smtk_keys_emitter_stop_async(win->emitter);
 		g_object_unref(win->emitter);
@@ -414,6 +360,8 @@ static void smtk_keys_win_finalize(GObject *object)
 
 	g_clear_pointer(&win->layout, g_free);
 	g_clear_pointer(&win->variant, g_free);
+
+	G_OBJECT_CLASS(smtk_keys_win_parent_class)->finalize(object);
 }
 
 static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
@@ -433,76 +381,33 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
 
-	obj_signals[SIG_PAUSE] = g_signal_new("pause", SMTK_TYPE_KEYS_WIN,
-					      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-					      g_cclosure_marshal_VOID__VOID,
-					      G_TYPE_NONE, 0);
-
+	obj_props[PROP_ACTIVE] = g_param_spec_boolean(
+		"active", "Active", "Keys Win Active", true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_CLICKABLE] = g_param_spec_boolean(
 		"clickable", "Clickable", "Clickable or Click Through", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_MODE] = g_param_spec_enum(
-		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
-		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_ALIGNMENT] = g_param_spec_enum(
-		"alignment", "Alignment", "Key Alignment",
-		SMTK_TYPE_KEY_ALIGNMENT, SMTK_KEY_ALIGNMENT_END,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
-		"show-shift", "Show Shift", "Show Shift Separately", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_SHOW_KEYBOARD] = g_param_spec_boolean(
-		"show-keyboard", "Show Keyboard", "Show keyboard key", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_SHOW_MOUSE] = g_param_spec_boolean(
-		"show-mouse", "Show Mouse", "Show Mouse Button", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_DRAW_BORDER] = g_param_spec_boolean(
-		"draw-border", "Draw Border", "Draw Key Border", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_MARGIN_RATIO] = g_param_spec_double(
-		"margin-ratio", "Margin Ratio", "Key Margin Ratio", 0, 10, 0.4,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
-		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_TIMEOUT] = g_param_spec_int(
-		"timeout", "Text Timeout", "Text Timeout", 0, 30000, 1000,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_LAYOUT] =
-		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
-				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_VARIANT] = g_param_spec_string(
-		"variant", "Variant", "Keymap Variant", NULL,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+	obj_props[PROP_PAUSED] =
+		g_param_spec_boolean("paused", "Paused", "Paused keys", true,
+				     G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
-			     bool show_shift, bool show_keyboard,
-			     bool show_mouse, bool draw_border,
-			     bool hide_visible, SmtkKeyMode mode,
-			     SmtkKeyAlignment alignment, double margin_ratio,
-			     int width, int height, int timeout,
-			     const char *layout, const char *variant,
-			     GError **error)
+GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable, GError **error)
 {
 	SmtkKeysWin *win = g_object_new(
 		// Don't translate floating window's title, maybe users have
 		// window rules for it.
-		SMTK_TYPE_KEYS_WIN, "visible", true, "title",
+		SMTK_TYPE_KEYS_WIN, "application", app, "title",
 		"Floating Window - Show Me The Key", "icon-name",
 		"one.alynx.showmethekey", "can-focus", false, "focus-on-click",
 		false, "vexpand", false, "vexpand-set", true, "hexpand", false,
 		"hexpand-set", true, "focusable", false, "resizable", true,
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
-		"clickable", clickable, "mode", mode, "alignment", alignment,
-		"margin-ratio", margin_ratio, "show-shift", show_shift,
-		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
-		"draw-border", draw_border, "hide-visible", hide_visible,
-		"timeout", timeout, "layout", layout, "variant", variant, NULL);
+		// Reset state on keys win start.
+		"active", true, "clickable", clickable, "paused", false, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);
@@ -513,187 +418,10 @@ GtkWidget *smtk_keys_win_new(SmtkAppWin *app_win, bool clickable,
 		return NULL;
 	}
 
-	win->app_win = app_win;
-
-	gtk_window_set_default_size(GTK_WINDOW(win), width, height);
+	// gtk_window_set_default_size(GTK_WINDOW(win), width, height);
 	// Setting transient will block showing on all desktop so don't use it.
 	// gtk_window_set_transient_for(GTK_WINDOW(win), GTK_WINDOW(parent));
 
 	// GTK always return GtkWidget, so do I.
 	return GTK_WIDGET(win);
-}
-
-void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable)
-{
-	g_return_if_fail(win != NULL);
-
-	// We don't need the handle if click through. But the handle might not
-	// be there during init.
-	if (win->handle != NULL)
-		gtk_widget_set_visible(win->handle, clickable);
-
-	// NOTE: We don't handle input region here, I don't know why we can't.
-	// We just save property and handle the input region in
-	// `size_allocate()`.
-	// Sync self property.
-	win->clickable = clickable;
-}
-
-void smtk_keys_win_pause(SmtkKeysWin *win)
-{
-	g_return_if_fail(win != NULL);
-
-	win->paused = true;
-}
-
-void smtk_keys_win_resume(SmtkKeysWin *win)
-{
-	g_return_if_fail(win != NULL);
-
-	win->paused = false;
-}
-
-void smtk_keys_win_set_show_shift(SmtkKeysWin *win, bool show_shift)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to emitter.
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_show_shift(win->emitter, show_shift);
-	// Sync self property.
-	win->show_shift = show_shift;
-}
-
-void smtk_keys_win_set_show_keyboard(SmtkKeysWin *win, bool show_keyboard)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to emitter.
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_show_keyboard(win->emitter,
-						    show_keyboard);
-	// Sync self property.
-	win->show_keyboard = show_keyboard;
-}
-
-void smtk_keys_win_set_show_mouse(SmtkKeysWin *win, bool show_mouse)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to emitter.
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_show_mouse(win->emitter, show_mouse);
-	// Sync self property.
-	win->show_mouse = show_mouse;
-}
-
-void smtk_keys_win_set_draw_border(SmtkKeysWin *win, bool draw_border)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to area.
-	if (win->area != NULL)
-		smtk_keys_area_set_draw_border(SMTK_KEYS_AREA(win->area),
-					       draw_border);
-	// Sync self property.
-	win->draw_border = draw_border;
-}
-
-void smtk_keys_win_set_hide_visible(SmtkKeysWin *win, bool hide_visible)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to emitter.
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_hide_visible(win->emitter, hide_visible);
-	// Sync self property.
-	win->hide_visible = hide_visible;
-}
-
-void smtk_keys_win_set_mode(SmtkKeysWin *win, SmtkKeyMode mode)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to emitter.
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_mode(win->emitter, mode);
-	// Pass property to area.
-	if (win->area != NULL)
-		smtk_keys_area_set_mode(SMTK_KEYS_AREA(win->area), mode);
-	// Sync self property.
-	win->mode = mode;
-}
-
-void smtk_keys_win_set_alignment(SmtkKeysWin *win, SmtkKeyAlignment alignment)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to area.
-	if (win->area != NULL)
-		smtk_keys_area_set_alignment(SMTK_KEYS_AREA(win->area),
-					     alignment);
-	// Sync self property.
-	win->alignment = alignment;
-}
-
-void smtk_keys_win_set_margin_ratio(SmtkKeysWin *win, double margin_ratio)
-{
-	g_return_if_fail(win != NULL);
-	g_return_if_fail(margin_ratio >= 0);
-
-	// Pass property to area.
-	if (win->area != NULL)
-		smtk_keys_area_set_margin_ratio(SMTK_KEYS_AREA(win->area),
-						margin_ratio);
-	// Sync self property.
-	win->margin_ratio = margin_ratio;
-}
-
-void smtk_keys_win_set_timeout(SmtkKeysWin *win, int timeout)
-{
-	g_return_if_fail(win != NULL);
-
-	// Pass property to area.
-	if (win->area != NULL)
-		smtk_keys_area_set_timeout(SMTK_KEYS_AREA(win->area), timeout);
-	// Sync self property.
-	win->timeout = timeout;
-}
-
-const char *smtk_keys_win_get_layout(SmtkKeysWin *win)
-{
-	g_return_val_if_fail(win != NULL, NULL);
-
-	return win->layout;
-}
-
-void smtk_keys_win_set_layout(SmtkKeysWin *win, const char *layout)
-{
-	g_return_if_fail(win != NULL);
-
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_layout(win->emitter, layout);
-
-	if (win->layout != NULL)
-		g_free(win->layout);
-	win->layout = g_strdup(layout);
-}
-
-const char *smtk_keys_win_get_variant(SmtkKeysWin *win)
-{
-	g_return_val_if_fail(win != NULL, NULL);
-
-	return win->variant;
-}
-
-void smtk_keys_win_set_variant(SmtkKeysWin *win, const char *variant)
-{
-	g_return_if_fail(win != NULL);
-
-	if (win->emitter != NULL)
-		smtk_keys_emitter_set_variant(win->emitter, variant);
-
-	if (win->variant != NULL)
-		g_free(win->variant);
-	win->variant = g_strdup(variant);
 }

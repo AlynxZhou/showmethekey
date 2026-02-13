@@ -2,7 +2,6 @@
 #include <adwaita.h>
 #include <glib/gi18n.h>
 
-#include "smtk.h"
 #include "smtk-usage-win.h"
 
 struct _SmtkUsageWin {

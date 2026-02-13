@@ -6,6 +6,21 @@
       <description>The program is running for the first time.</description>
       <default>true</default>
     </key>
+    <key type="b" name="active">
+      <summary>Show Keys Win or Not</summary>
+      <description>Whether keys win is active.</description>
+      <default>false</default>
+    </key>
+    <key type="b" name="clickable">
+      <summary>Clickable or Not</summary>
+      <description>Whether keys win is clickable.</description>
+      <default>true</default>
+    </key>
+    <key type="b" name="paused">
+      <summary>Paused or Not</summary>
+      <description>Whether keys win is paused.</description>
+      <default>false</default>
+    </key>
     <key type="b" name="show-shift">
       <summary>Show Shift or Not</summary>
       <description>Show shift separately or only when not consumed.</description>
@@ -31,15 +46,15 @@
       <description>Hide visible keys or show all keys.</description>
       <default>false</default>
     </key>
-    <key type="u" name="mode">
+    <key enum="one.alynx.showmethekey.SmtkKeyMode" name="mode">
       <summary>Keys Display Mode</summary>
       <description>Display keys in composed, raw or compact mode.</description>
-      <default>0</default>
+      <default>"composed"</default>
     </key>
-    <key type="u" name="alignment">
+    <key enum="one.alynx.showmethekey.SmtkKeyAlignment" name="alignment">
       <summary>Keys Display Alignment</summary>
       <description>Align keys to end or center.</description>
-      <default>0</default>
+      <default>"end"</default>
     </key>
     <!-- GtkSpinButton only support double, not int. -->
     <key type="d" name="width">
@@ -66,10 +81,15 @@
       <default>0</default>
       <range min="0" />
     </key>
-    <key type="s" name="keymap">
-      <summary>Keymap</summary>
-      <description>Keyboard layout and variant.</description>
+    <key type="s" name="layout">
+      <summary>Keyboard Layout</summary>
+      <description>Keyboard layout.</description>
       <default>"us"</default>
+    </key>
+    <key type="s" name="variant">
+      <summary>Keymap</summary>
+      <description>Keyboard variant.</description>
+      <default>""</default>
     </key>
   </schema>
 </schemalist>

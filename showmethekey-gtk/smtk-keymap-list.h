@@ -6,7 +6,7 @@
 
 G_BEGIN_DECLS
 
-bool keymap_is_default(const char *string);
+bool smtk_keymap_is_default(const char *string);
 
 #define SMTK_TYPE_KEYMAP_ITEM smtk_keymap_item_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeymapItem, smtk_keymap_item, SMTK, KEYMAP_ITEM,
@@ -29,7 +29,8 @@ SmtkKeymapList *smtk_keymap_list_new(void);
 void smtk_keymap_list_append(SmtkKeymapList *keymap_list, const char *layout,
 			     const char *variant);
 void smtk_keymap_list_sort(SmtkKeymapList *keymap_list);
-int smtk_keymap_list_find(SmtkKeymapList *keymap_list, const char *name);
+int smtk_keymap_list_find(SmtkKeymapList *keymap_list, const char *layout,
+			  const char *variant);
 
 G_END_DECLS
 

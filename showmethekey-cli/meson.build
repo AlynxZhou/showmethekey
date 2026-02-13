@@ -15,7 +15,6 @@ cli_include_directories += include_directories('../')
 executable(
   'showmethekey-cli',
   sources: cli_sources,
-  c_args: c_args,
   dependencies: cli_dependencies,
   include_directories: cli_include_directories,
   install: true

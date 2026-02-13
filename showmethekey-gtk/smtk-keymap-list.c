@@ -2,7 +2,7 @@
 
 #include "smtk-keymap-list.h"
 
-bool keymap_is_default(const char *string)
+bool smtk_keymap_is_default(const char *string)
 {
 	return string == NULL || strlen(string) == 0 ||
 	       g_strcmp0(string, "(null)") == 0 ||
@@ -21,16 +21,11 @@ enum { PROP_0, PROP_LAYOUT, PROP_VARIANT, PROP_NAME, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
-static void smtk_keymap_item_build_name(SmtkKeymapItem *keymap_item)
+static char *build_name(const char *layout, const char *variant)
 {
-	if (keymap_item->name != NULL)
-		g_free(keymap_item->name);
-
-	if (keymap_is_default(keymap_item->variant))
-		keymap_item->name = g_strdup(keymap_item->layout);
-	else
-		keymap_item->name = g_strdup_printf(
-			"%s (%s)", keymap_item->layout, keymap_item->variant);
+	if (smtk_keymap_is_default(variant))
+		return g_strdup(layout);
+	return g_strdup_printf("%s (%s)", layout, variant);
 }
 
 static void smtk_keymap_item_set_property(GObject *object,
@@ -131,11 +126,12 @@ void smtk_keymap_item_set_layout(SmtkKeymapItem *keymap_item,
 {
 	g_return_if_fail(keymap_item != NULL);
 
-	if (keymap_item->layout != NULL)
-		g_free(keymap_item->layout);
+	g_clear_pointer(&keymap_item->layout, g_free);
 	keymap_item->layout = g_strdup(layout);
 
-	smtk_keymap_item_build_name(keymap_item);
+	g_clear_pointer(&keymap_item->name, g_free);
+	keymap_item->name =
+		build_name(keymap_item->layout, keymap_item->variant);
 }
 
 const char *smtk_keymap_item_get_variant(SmtkKeymapItem *keymap_item)
@@ -150,11 +146,12 @@ void smtk_keymap_item_set_variant(SmtkKeymapItem *keymap_item,
 {
 	g_return_if_fail(keymap_item != NULL);
 
-	if (keymap_item->variant != NULL)
-		g_free(keymap_item->variant);
+	g_clear_pointer(&keymap_item->variant, g_free);
 	keymap_item->variant = g_strdup(variant);
 
-	smtk_keymap_item_build_name(keymap_item);
+	g_clear_pointer(&keymap_item->name, g_free);
+	keymap_item->name =
+		build_name(keymap_item->layout, keymap_item->variant);
 }
 
 const char *smtk_keymap_item_get_name(SmtkKeymapItem *keymap_item)
@@ -181,8 +178,7 @@ static unsigned int smtk_keymap_list_get_n_items(GListModel *list)
 	return keymap_list->items->len;
 }
 
-static gpointer smtk_keymap_list_get_item(GListModel *list,
-					  unsigned int position)
+static void *smtk_keymap_list_get_item(GListModel *list, unsigned int position)
 {
 	SmtkKeymapList *keymap_list = SMTK_KEYMAP_LIST(list);
 
@@ -243,14 +239,14 @@ static int _compare(gconstpointer a, gconstpointer b)
 {
 #if GLIB_CHECK_VERSION(2, 76, 0)
 	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((gpointer)a));
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)a));
 	const char *name2 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((gpointer)b));
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)b));
 #else
 	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(gpointer *)a));
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(void **)a));
 	const char *name2 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(gpointer *)b));
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(void **)b));
 #endif
 	// Most people use US (QWERTY) layout, so make it first to be the
 	// default value.
@@ -277,16 +273,18 @@ void smtk_keymap_list_sort(SmtkKeymapList *keymap_list)
 static int _equal(gconstpointer a, gconstpointer b)
 {
 	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((gpointer)a));
+		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)a));
 	const char *name2 = b;
 
 	return g_strcmp0(name1, name2) == 0;
 }
 
-int smtk_keymap_list_find(SmtkKeymapList *keymap_list, const char *name)
+int smtk_keymap_list_find(SmtkKeymapList *keymap_list, const char *layout,
+			  const char *variant)
 {
 	g_return_val_if_fail(keymap_list != NULL, -1);
 
+	g_autofree char *name = build_name(layout, variant);
 	unsigned int position;
 
 	if (g_ptr_array_find_with_equal_func(keymap_list->items, name, _equal,

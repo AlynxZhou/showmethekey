@@ -14,7 +14,6 @@ gtk_sources = files(
 )
 
 gtk_headers = files(
-  'smtk.h',
   'smtk-app.h',
   'smtk-app-win.h',
   'smtk-usage-win.h',
@@ -51,12 +50,22 @@ resources = gnome.compile_resources(
   c_name: 'smtk'
 )
 
+gnome.mkenums('one.alynx.showmethekey.enums.gschema.xml',
+  comments: '<!-- @comment@ -->',
+  fhead: '<schemalist>',
+  vhead: '  <@type@ id="one.alynx.showmethekey.@EnumName@">',
+  vprod: '    <value nick="@valuenick@" value="@valuenum@" />',
+  vtail: '  </@type@>',
+  ftail: '</schemalist>',
+  sources: gtk_headers,
+  install_header: true,
+  install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
+)
 enum_types = gnome.mkenums_simple('smtk-enum-types', sources: gtk_headers)
 
 executable(
   'showmethekey-gtk',
   sources: gtk_sources + resources + enum_types,
-  c_args: c_args,
   dependencies: gtk_dependencies,
   include_directories: gtk_include_directories,
   install: true

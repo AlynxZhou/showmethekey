@@ -1,7 +1,8 @@
 #include <xkbcommon/xkbcommon.h>
 #include <glib.h>
+#include <gio/gio.h>
 
-#include "smtk.h"
+#include "smtk-enum-types.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-event.h"
 #include "smtk-keymap-list.h"
@@ -39,6 +40,7 @@
 
 struct _SmtkKeysMapper {
 	GObject parent_instance;
+	GSettings *settings;
 	bool show_shift;
 	bool hide_visible;
 	char *layout;
@@ -70,6 +72,76 @@ static GParamSpec *obj_props[N_PROPS] = { NULL };
 G_DEFINE_QUARK(smtk-keys-mapper-error-quark, smtk_keys_mapper_error)
 // clang-format on
 
+static bool smtk_keys_mapper_refresh_keymap(SmtkKeysMapper *mapper)
+{
+	if (mapper->xkb_keymap != NULL)
+		xkb_keymap_unref(mapper->xkb_keymap);
+
+	struct xkb_rule_names names = {
+		NULL, NULL,
+		smtk_keymap_is_default(mapper->layout) ? NULL : mapper->layout,
+		smtk_keymap_is_default(mapper->variant) ? NULL :
+							  mapper->variant,
+		NULL
+	};
+	mapper->xkb_keymap = xkb_keymap_new_from_names(
+		mapper->xkb_context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+	if (mapper->xkb_keymap == NULL) {
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
+			    "Failed to create XKB keymap.");
+		return false;
+	}
+
+	if (mapper->xkb_state != NULL)
+		xkb_state_unref(mapper->xkb_state);
+	if (mapper->xkb_state_empty != NULL)
+		xkb_state_unref(mapper->xkb_state_empty);
+
+	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
+	if (mapper->xkb_state == NULL) {
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			    "Failed to create XKB state.");
+		return false;
+	}
+	mapper->xkb_state_empty = xkb_state_new(mapper->xkb_keymap);
+	if (mapper->xkb_state_empty == NULL) {
+		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
+			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			    "Failed to create empty XKB state.");
+		return false;
+	}
+
+	return true;
+}
+
+static void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper,
+					const char *layout)
+{
+	g_return_if_fail(mapper != NULL);
+
+	if (mapper->layout != NULL)
+		g_free(mapper->layout);
+	mapper->layout = g_strdup(layout);
+
+	// If we first change layout then change variant, we may get error
+	// between two function calls, it is safe to ignore it.
+	smtk_keys_mapper_refresh_keymap(mapper);
+}
+
+static void smtk_keys_mapper_set_variant(SmtkKeysMapper *mapper,
+					 const char *variant)
+{
+	g_return_if_fail(mapper != NULL);
+
+	if (mapper->variant != NULL)
+		g_free(mapper->variant);
+	mapper->variant = g_strdup(variant);
+
+	smtk_keys_mapper_refresh_keymap(mapper);
+}
+
 static void smtk_keys_mapper_set_property(GObject *object,
 					  unsigned int property_id,
 					  const GValue *value,
@@ -79,12 +151,10 @@ static void smtk_keys_mapper_set_property(GObject *object,
 
 	switch (property_id) {
 	case PROP_SHOW_SHIFT:
-		smtk_keys_mapper_set_show_shift(mapper,
-						g_value_get_boolean(value));
+		mapper->show_shift = g_value_get_boolean(value);
 		break;
 	case PROP_HIDE_VISIBLE:
-		smtk_keys_mapper_set_hide_visible(mapper,
-						  g_value_get_boolean(value));
+		mapper->hide_visible = g_value_get_boolean(value);
 		break;
 	case PROP_LAYOUT:
 		smtk_keys_mapper_set_layout(mapper, g_value_get_string(value));
@@ -125,52 +195,19 @@ static void smtk_keys_mapper_get_property(GObject *object,
 	}
 }
 
-static bool smtk_keys_mapper_refresh_keymap(SmtkKeysMapper *mapper)
-{
-	if (mapper->xkb_keymap != NULL)
-		xkb_keymap_unref(mapper->xkb_keymap);
-
-	struct xkb_rule_names names = {
-		NULL, NULL,
-		keymap_is_default(mapper->layout) ? NULL : mapper->layout,
-		keymap_is_default(mapper->variant) ? NULL : mapper->variant,
-		NULL
-	};
-	mapper->xkb_keymap = xkb_keymap_new_from_names(
-		mapper->xkb_context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
-	if (mapper->xkb_keymap == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
-			    "Failed to create XKB keymap.");
-		return false;
-	}
-
-	if (mapper->xkb_state != NULL)
-		xkb_state_unref(mapper->xkb_state);
-	if (mapper->xkb_state_empty != NULL)
-		xkb_state_unref(mapper->xkb_state_empty);
-
-	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
-	if (mapper->xkb_state == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			    "Failed to create XKB state.");
-		return false;
-	}
-	mapper->xkb_state_empty = xkb_state_new(mapper->xkb_keymap);
-	if (mapper->xkb_state_empty == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			    "Failed to create empty XKB state.");
-		return false;
-	}
-
-	return true;
-}
-
 static void smtk_keys_mapper_constructed(GObject *object)
 {
 	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+
+	mapper->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(mapper->settings, "show-shift", mapper, "show-shift",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(mapper->settings, "hide-visible", mapper,
+			"hide-visible", G_SETTINGS_BIND_GET);
+	g_settings_bind(mapper->settings, "layout", mapper, "layout",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(mapper->settings, "variant", mapper, "variant",
+			G_SETTINGS_BIND_GET);
 
 	if (!smtk_keys_mapper_refresh_keymap(mapper))
 		return;
@@ -181,6 +218,8 @@ static void smtk_keys_mapper_constructed(GObject *object)
 static void smtk_keys_mapper_dispose(GObject *object)
 {
 	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+
+	g_clear_object(&mapper->settings);
 
 	g_clear_pointer(&mapper->xkb_state, xkb_state_unref);
 	g_clear_pointer(&mapper->xkb_state_empty, xkb_state_unref);
@@ -206,6 +245,7 @@ static void smtk_keys_mapper_finalize(GObject *object)
 static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 {
 	mapper->error = NULL;
+	mapper->settings = NULL;
 	mapper->layout = NULL;
 	mapper->variant = NULL;
 
@@ -523,13 +563,9 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-SmtkKeysMapper *smtk_keys_mapper_new(bool show_shift, bool hide_visible,
-				     const char *layout, const char *variant,
-				     GError **error)
+SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
 {
-	SmtkKeysMapper *mapper = g_object_new(
-		SMTK_TYPE_KEYS_MAPPER, "show-shift", show_shift, "hide-visible",
-		hide_visible, "layout", layout, "variant", variant, NULL);
+	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
 
 	if (mapper->error != NULL) {
 		g_propagate_error(error, mapper->error);
@@ -696,43 +732,4 @@ char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event)
 	g_return_val_if_fail(event != NULL, NULL);
 
 	return smtk_keys_mapper_get_key(mapper, SMTK_KEY_MODE_COMPACT, event);
-}
-
-void smtk_keys_mapper_set_show_shift(SmtkKeysMapper *mapper, bool show_shift)
-{
-	g_return_if_fail(mapper != NULL);
-
-	mapper->show_shift = show_shift;
-}
-
-void smtk_keys_mapper_set_hide_visible(SmtkKeysMapper *mapper,
-				       bool hide_visible)
-{
-	g_return_if_fail(mapper != NULL);
-
-	mapper->hide_visible = hide_visible;
-}
-
-void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper, const char *layout)
-{
-	g_return_if_fail(mapper != NULL);
-
-	if (mapper->layout != NULL)
-		g_free(mapper->layout);
-	mapper->layout = g_strdup(layout);
-
-	// If we first change layout then change variant, we may get error
-	// between two function calls, it is safe to ignore it.
-	smtk_keys_mapper_refresh_keymap(mapper);
-}
-
-void smtk_keys_mapper_set_variant(SmtkKeysMapper *mapper, const char *variant)
-{
-	g_return_if_fail(mapper != NULL);
-
-	if (mapper->variant != NULL)
-		g_free(mapper->variant);
-	mapper->variant = g_strdup(variant);
-
-	smtk_keys_mapper_refresh_keymap(mapper);
 }

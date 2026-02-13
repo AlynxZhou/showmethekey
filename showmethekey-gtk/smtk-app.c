@@ -1,15 +1,17 @@
-#include "glib-object.h"
 #include <gtk/gtk.h>
 #include <adwaita.h>
 #include <glib/gi18n.h>
 
-#include "smtk.h"
+#include "config.h"
 #include "smtk-app.h"
 #include "smtk-app-win.h"
+#include "smtk-keys-win.h"
 
 struct _SmtkApp {
 	AdwApplication parent_instance;
-	GtkWidget *win;
+	GSettings *settings;
+	GtkWidget *app_win;
+	GtkWidget *keys_win;
 	bool keys_win_opt;
 	bool app_win_opt;
 	bool clickable_opt;
@@ -17,88 +19,145 @@ struct _SmtkApp {
 G_DEFINE_TYPE(SmtkApp, smtk_app, ADW_TYPE_APPLICATION)
 
 static void clickable_action(GSimpleAction *action, GVariant *parameter,
-			     gpointer user_data)
+			     void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_clickable_switch(SMTK_APP_WIN(app->win));
+	const char *key = "clickable";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
-static void pause_action(GSimpleAction *action, GVariant *parameter,
-			 gpointer user_data)
+static void pause_action(GSimpleAction *action, GVariant *parameter, void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_pause_switch(SMTK_APP_WIN(app->win));
+	const char *key = "paused";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
-static void shift_action(GSimpleAction *action, GVariant *parameter,
-			 gpointer user_data)
+static void shift_action(GSimpleAction *action, GVariant *parameter, void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_shift_switch(SMTK_APP_WIN(app->win));
+	const char *key = "show-shift";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
-static void mouse_action(GSimpleAction *action, GVariant *parameter,
-			 gpointer user_data)
+static void keyboard_action(GSimpleAction *action, GVariant *parameter,
+			    void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_mouse_switch(SMTK_APP_WIN(app->win));
+	const char *key = "show-keyboard";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
+}
+
+static void mouse_action(GSimpleAction *action, GVariant *parameter, void *data)
+{
+	SmtkApp *app = data;
+
+	const char *key = "show-mouse";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
 static void border_action(GSimpleAction *action, GVariant *parameter,
-			  gpointer user_data)
+			  void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_border_switch(SMTK_APP_WIN(app->win));
+	const char *key = "show-border";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
 static void hide_visible_action(GSimpleAction *action, GVariant *parameter,
-				gpointer user_data)
+				void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_toggle_hide_visible_switch(SMTK_APP_WIN(app->win));
+	const char *key = "hide-visible";
+	const bool value = g_settings_get_boolean(app->settings, key);
+	g_settings_set_boolean(app->settings, key, !value);
 }
 
-static void usage_action(GSimpleAction *action, GVariant *parameter,
-			 gpointer user_data)
+static void usage_action(GSimpleAction *action, GVariant *parameter, void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_show_usage(SMTK_APP_WIN(app->win));
+	if (app->app_win != NULL)
+		smtk_app_win_show_usage(SMTK_APP_WIN(app->app_win));
 }
 
-static void about_action(GSimpleAction *action, GVariant *parameter,
-			 gpointer user_data)
+static void about_action(GSimpleAction *action, GVariant *parameter, void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
-	if (app->win != NULL)
-		smtk_app_win_show_about(SMTK_APP_WIN(app->win));
+	if (app->app_win != NULL)
+		smtk_app_win_show_about(SMTK_APP_WIN(app->app_win));
 }
 
-static void quit_action(GSimpleAction *action, GVariant *parameter,
-			gpointer user_data)
+static void quit_action(GSimpleAction *action, GVariant *parameter, void *data)
 {
-	SmtkApp *app = SMTK_APP(user_data);
+	SmtkApp *app = data;
 
 	smtk_app_quit(app);
 }
 
+static void on_app_win_destroy(SmtkApp *app, GtkWidget *app_win)
+{
+	app->app_win = NULL;
+}
+
+static void on_keys_win_destroy(SmtkApp *app, GtkWidget *keys_win)
+{
+	app->keys_win = NULL;
+}
+
+static void show_keys_win(SmtkApp *app)
+{
+	if (app->keys_win == NULL) {
+		g_autoptr(GError) error = NULL;
+		app->keys_win =
+			smtk_keys_win_new(app, app->clickable_opt, &error);
+		if (error != NULL) {
+			g_warning("Failed to create keys win: %s.",
+				  error->message);
+			return;
+		}
+		g_signal_connect_swapped(app->keys_win, "destroy",
+					 G_CALLBACK(on_keys_win_destroy), app);
+		gtk_window_present(GTK_WINDOW(app->keys_win));
+	}
+}
+
+static void show_app_win(SmtkApp *app)
+{
+	if (app->app_win == NULL) {
+		app->app_win = smtk_app_win_new(app);
+		g_signal_connect_swapped(app->app_win, "destroy",
+					 G_CALLBACK(on_app_win_destroy), app);
+		gtk_window_present(GTK_WINDOW(app->app_win));
+	}
+}
+
+static void on_active_changed(SmtkApp *app, char *key, GSettings *settings)
+{
+	if (g_settings_get_boolean(app->settings, "active"))
+		show_keys_win(app);
+	else if (app->keys_win != NULL)
+		gtk_window_destroy(GTK_WINDOW(app->keys_win));
+}
+
 static void smtk_app_init(SmtkApp *app)
 {
-	app->win = NULL;
+	app->settings = NULL;
+	app->keys_win = NULL;
+	app->app_win = NULL;
 	app->keys_win_opt = false;
 	app->app_win_opt = true;
 	app->clickable_opt = true;
@@ -128,30 +187,18 @@ static void smtk_app_init(SmtkApp *app)
 
 static void smtk_app_activate(GApplication *g_app)
 {
-	// Application is already single instance.
-	// We use this to prevent mutliply windows.
+	// Application is already single instance, and we use this to prevent
+	// mutliply windows.
 	SmtkApp *app = SMTK_APP(g_app);
 
-	if (app->win == NULL) {
-		app->win = smtk_app_win_new(SMTK_APP(app));
-		g_debug("Keys win: %s.", app->keys_win_opt ? "true" : "false");
-		g_debug("App win: %s.", app->app_win_opt ? "true" : "false");
-		g_debug("Clickable: %s.",
-			app->clickable_opt ? "true" : "false");
-		// By default keys win is clickable.
-		if (!app->clickable_opt)
-			smtk_app_win_toggle_clickable_switch(
-				SMTK_APP_WIN(app->win));
-		// Quit if no visible window left.
-		if (app->app_win_opt)
-			gtk_window_present(GTK_WINDOW(app->win));
-		else
-			g_signal_connect_swapped(app->win, "keys-win-destroy",
-						 G_CALLBACK(smtk_app_quit),
-						 app);
-		if (app->keys_win_opt)
-			smtk_app_win_activate(SMTK_APP_WIN(app->win));
-	}
+	g_debug("Keys win: %s.", app->keys_win_opt ? "true" : "false");
+	g_debug("App win: %s.", app->app_win_opt ? "true" : "false");
+	g_debug("Clickable: %s.", app->clickable_opt ? "true" : "false");
+
+	if (app->keys_win_opt)
+		show_keys_win(app);
+	if (app->app_win_opt)
+		show_app_win(app);
 }
 
 static void smtk_app_startup(GApplication *g_app)
@@ -164,6 +211,7 @@ static void smtk_app_startup(GApplication *g_app)
 		{ "clickable", clickable_action, NULL, NULL, NULL },
 		{ "pause", pause_action, NULL, NULL, NULL },
 		{ "shift", shift_action, NULL, NULL, NULL },
+		{ "keyboard", keyboard_action, NULL, NULL, NULL },
 		{ "mouse", mouse_action, NULL, NULL, NULL },
 		{ "border", border_action, NULL, NULL, NULL },
 		{ "hide-visible", hide_visible_action, NULL, NULL, NULL },
@@ -176,6 +224,7 @@ static void smtk_app_startup(GApplication *g_app)
 	const char *clickable_accels[] = { "<Ctrl>C", NULL };
 	const char *pause_accels[] = { "<Ctrl>P", NULL };
 	const char *shift_accels[] = { "<Ctrl>S", NULL };
+	const char *keyboard_accels[] = { "<Ctrl>K", NULL };
 	const char *mouse_accels[] = { "<Ctrl>M", NULL };
 	const char *border_accels[] = { "<Ctrl>B", NULL };
 	const char *hide_visible_accels[] = { "<Ctrl>V", NULL };
@@ -191,6 +240,8 @@ static void smtk_app_startup(GApplication *g_app)
 					      pause_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.shift",
 					      shift_accels);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(app),
+					      "app.keyboard", keyboard_accels);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(app), "app.mouse",
 					      mouse_accels);
 	gtk_application_set_accels_for_action(
@@ -236,9 +287,33 @@ static int smtk_app_handle_local_options(GApplication *application,
 	return -1;
 }
 
+static void smtk_app_constructed(GObject *object)
+{
+	SmtkApp *app = SMTK_APP(object);
+
+	app->settings = g_settings_new("one.alynx.showmethekey");
+	g_signal_connect_swapped(app->settings, "changed::active",
+				 G_CALLBACK(on_active_changed), app);
+
+	G_OBJECT_CLASS(smtk_app_parent_class)->constructed(object);
+}
+
+static void smtk_app_dispose(GObject *object)
+{
+	SmtkApp *app = SMTK_APP(object);
+
+	g_clear_object(&app->settings);
+
+	G_OBJECT_CLASS(smtk_app_parent_class)->dispose(object);
+}
+
 static void smtk_app_class_init(SmtkAppClass *app_class)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(app_class);
 	GApplicationClass *g_app_class = G_APPLICATION_CLASS(app_class);
+
+	object_class->constructed = smtk_app_constructed;
+	object_class->dispose = smtk_app_dispose;
 
 	g_app_class->activate = smtk_app_activate;
 	g_app_class->startup = smtk_app_startup;
@@ -257,9 +332,14 @@ void smtk_app_quit(SmtkApp *app)
 {
 	g_return_if_fail(app != NULL);
 
-	if (app->win != NULL) {
-		gtk_window_destroy(GTK_WINDOW(app->win));
-		app->win = NULL;
+	if (app->app_win != NULL) {
+		gtk_window_destroy(GTK_WINDOW(app->app_win));
+		app->app_win = NULL;
+	}
+
+	if (app->keys_win != NULL) {
+		gtk_window_destroy(GTK_WINDOW(app->keys_win));
+		app->keys_win = NULL;
 	}
 
 	g_application_quit(G_APPLICATION(app));

@@ -1,6 +1,5 @@
 #include <json-glib/json-glib.h>
 
-#include "smtk.h"
 #include "smtk-event.h"
 
 struct _SmtkEvent {

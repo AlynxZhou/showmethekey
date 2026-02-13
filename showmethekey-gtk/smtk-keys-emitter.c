@@ -2,7 +2,8 @@
 #include <json-glib/json-glib.h>
 #include <grp.h>
 
-#include "smtk.h"
+#include "config.h"
+#include "smtk-enum-types.h"
 #include "smtk-keys-emitter.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-event.h"
@@ -11,6 +12,7 @@
 
 struct _SmtkKeysEmitter {
 	GObject parent_instance;
+	GSettings *settings;
 	SmtkKeysMapper *mapper;
 	GSubprocess *cli;
 	GDataInputStream *cli_out;
@@ -19,39 +21,24 @@ struct _SmtkKeysEmitter {
 	bool polling;
 
 	SmtkKeyMode mode;
-	bool show_shift;
 	bool show_keyboard;
 	bool show_mouse;
-	bool hide_visible;
 	bool alt_pressed;
-	char *layout;
-	char *variant;
 	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
-enum { SIG_KEY, SIG_ERROR_CLI_EXIT, SIG_PAUSE, N_SIGNALS };
+enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static unsigned int obj_signals[N_SIGNALS] = { 0 };
 
-enum {
-	PROP_0,
-	PROP_MODE,
-	PROP_SHOW_SHIFT,
-	PROP_SHOW_KEYBOARD,
-	PROP_SHOW_MOUSE,
-	PROP_HIDE_VISIBLE,
-	PROP_LAYOUT,
-	PROP_VARIANT,
-	N_PROPS
-};
+enum { PROP_0, PROP_MODE, PROP_SHOW_KEYBOARD, PROP_SHOW_MOUSE, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
 // Check whether user choose cancel for pkexec.
 static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
-					      GAsyncResult *res,
-					      gpointer user_data)
+					      GAsyncResult *res, void *data)
 {
 	// We got a copy of SmtkKeysEmitter's address when setting up this
 	// callback, and there is a condition, that user closes the switch,
@@ -61,7 +48,7 @@ static void smtk_keys_emitter_cli_on_complete(GObject *source_object,
 	// callback to prevent the emitter to be disposed and manually drop it.
 	g_debug("Calling smtk_keys_emitter_cli_on_complete().");
 
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	SmtkKeysEmitter *emitter = data;
 	// Cli may already released normally, and this function only cares about
 	// when cli exited with error, for example user cancelled pkexec.
 	if (emitter->cli != NULL &&
@@ -87,31 +74,13 @@ static void smtk_keys_emitter_set_property(GObject *object,
 
 	switch (property_id) {
 	case PROP_MODE:
-		smtk_keys_emitter_set_mode(emitter, g_value_get_enum(value));
-		break;
-	case PROP_SHOW_SHIFT:
-		smtk_keys_emitter_set_show_shift(emitter,
-						 g_value_get_boolean(value));
+		emitter->mode = g_value_get_enum(value);
 		break;
 	case PROP_SHOW_KEYBOARD:
-		smtk_keys_emitter_set_show_keyboard(emitter,
-						    g_value_get_boolean(value));
+		emitter->show_keyboard = g_value_get_boolean(value);
 		break;
 	case PROP_SHOW_MOUSE:
-		smtk_keys_emitter_set_show_mouse(emitter,
-						 g_value_get_boolean(value));
-		break;
-	case PROP_HIDE_VISIBLE:
-		smtk_keys_emitter_set_hide_visible(emitter,
-						   g_value_get_boolean(value));
-		break;
-	case PROP_LAYOUT:
-		smtk_keys_emitter_set_layout(emitter,
-					     g_value_get_string(value));
-		break;
-	case PROP_VARIANT:
-		smtk_keys_emitter_set_variant(emitter,
-					      g_value_get_string(value));
+		emitter->show_mouse = g_value_get_boolean(value);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -130,23 +99,11 @@ static void smtk_keys_emitter_get_property(GObject *object,
 	case PROP_MODE:
 		g_value_set_enum(value, emitter->mode);
 		break;
-	case PROP_SHOW_SHIFT:
-		g_value_set_boolean(value, emitter->show_shift);
-		break;
 	case PROP_SHOW_KEYBOARD:
 		g_value_set_boolean(value, emitter->show_keyboard);
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, emitter->show_mouse);
-		break;
-	case PROP_HIDE_VISIBLE:
-		g_value_set_boolean(value, emitter->hide_visible);
-		break;
-	case PROP_LAYOUT:
-		g_value_set_string(value, emitter->layout);
-		break;
-	case PROP_VARIANT:
-		g_value_set_string(value, emitter->variant);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -160,9 +117,9 @@ struct key_idle_data {
 	char *key;
 };
 
-static void key_idle_destroy_function(gpointer user_data)
+static void key_idle_destroy_function(void *data)
 {
-	struct key_idle_data *key_idle_data = user_data;
+	struct key_idle_data *key_idle_data = data;
 	SmtkKeysEmitter *emitter = key_idle_data->emitter;
 
 	g_object_unref(emitter);
@@ -170,10 +127,10 @@ static void key_idle_destroy_function(gpointer user_data)
 }
 
 // true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
-static int key_idle_function(gpointer user_data)
+static int key_idle_function(void *data)
 {
 	// Here we back to UI thread.
-	struct key_idle_data *key_idle_data = user_data;
+	struct key_idle_data *key_idle_data = data;
 	SmtkKeysEmitter *emitter = key_idle_data->emitter;
 
 	g_signal_emit_by_name(emitter, "key", key_idle_data->key);
@@ -204,11 +161,13 @@ static void trigger_key_idle_function(SmtkKeysEmitter *emitter,
 			   key_idle_data, key_idle_destroy_function);
 }
 
-static int pause_idle_function(gpointer user_data)
+static int pause_idle_function(void *data)
 {
-	SmtkKeysEmitter *emitter = user_data;
+	SmtkKeysEmitter *emitter = data;
 
-	g_signal_emit_by_name(emitter, "pause");
+	g_settings_set_boolean(emitter->settings, "paused",
+			       !g_settings_get_boolean(emitter->settings,
+						       "paused"));
 
 	return 0;
 }
@@ -219,9 +178,9 @@ static void trigger_pause_idle_function(SmtkKeysEmitter *emitter)
 			   g_object_ref(emitter), g_object_unref);
 }
 
-static gpointer poller_function(gpointer user_data)
+static void *poller_function(void *data)
 {
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(user_data);
+	SmtkKeysEmitter *emitter = data;
 	while (emitter->polling) {
 		GError *read_line_error = NULL;
 		char *line = g_data_input_stream_read_line(
@@ -244,6 +203,8 @@ static gpointer poller_function(gpointer user_data)
 			g_free(line);
 			continue;
 		}
+
+		// TODO: Press both Ctrl to clickable?
 
 		// Press both Alt to pause. Xkbcommon treat left and right alt
 		// as the same one, so we have to do it here.
@@ -302,13 +263,14 @@ static gpointer poller_function(gpointer user_data)
 
 static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 {
+	emitter->settings = NULL;
 	emitter->mapper = NULL;
 	emitter->cli = NULL;
 	emitter->cli_out = NULL;
 	emitter->poller = NULL;
-	emitter->layout = NULL;
-	emitter->variant = NULL;
 	emitter->error = NULL;
+	emitter->show_keyboard = true;
+	emitter->show_mouse = true;
 	emitter->alt_pressed = false;
 }
 
@@ -317,12 +279,18 @@ static void smtk_keys_emitter_constructed(GObject *object)
 	// Seems we can only get constructor properties here.
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
 
-	emitter->mapper = smtk_keys_mapper_new(
-		emitter->show_shift, emitter->hide_visible, emitter->layout,
-		emitter->variant, &emitter->error);
+	emitter->mapper = smtk_keys_mapper_new(&emitter->error);
 	// `emitter->error` is already set, just return.
 	if (emitter->mapper == NULL)
 		goto out;
+
+	emitter->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(emitter->settings, "mode", emitter, "mode",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(emitter->settings, "show-keyboard", emitter,
+			"show-keyboard", G_SETTINGS_BIND_GET);
+	g_settings_bind(emitter->settings, "show-mouse", emitter, "show-mouse",
+			G_SETTINGS_BIND_GET);
 
 out:
 	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->constructed(object);
@@ -332,20 +300,18 @@ static void smtk_keys_emitter_dispose(GObject *object)
 {
 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
 
+	g_clear_object(&emitter->settings);
 	g_clear_object(&emitter->mapper);
 
 	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->dispose(object);
 }
 
-static void smtk_keys_emitter_finalize(GObject *object)
-{
-	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
+// static void smtk_keys_emitter_finalize(GObject *object)
+// {
+// 	SmtkKeysEmitter *emitter = SMTK_KEYS_EMITTER(object);
 
-	g_clear_pointer(&emitter->layout, g_free);
-	g_clear_pointer(&emitter->variant, g_free);
-
-	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->finalize(object);
-}
+// 	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->finalize(object);
+// }
 
 static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 {
@@ -357,7 +323,7 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	object_class->constructed = smtk_keys_emitter_constructed;
 
 	object_class->dispose = smtk_keys_emitter_dispose;
-	object_class->finalize = smtk_keys_emitter_finalize;
+	// object_class->finalize = smtk_keys_emitter_finalize;
 
 	obj_signals[SIG_KEY] = g_signal_new("key", SMTK_TYPE_KEYS_EMITTER,
 					    G_SIGNAL_RUN_LAST, 0, NULL, NULL,
@@ -366,46 +332,23 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *emitter_class)
 	obj_signals[SIG_ERROR_CLI_EXIT] = g_signal_new(
 		"error-cli-exit", SMTK_TYPE_KEYS_EMITTER, G_SIGNAL_RUN_LAST, 0,
 		NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	obj_signals[SIG_PAUSE] = g_signal_new("pause", SMTK_TYPE_KEYS_EMITTER,
-					      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-					      g_cclosure_marshal_VOID__VOID,
-					      G_TYPE_NONE, 0);
 
 	obj_props[PROP_MODE] = g_param_spec_enum(
 		"mode", "Mode", "Key Mode", SMTK_TYPE_KEY_MODE,
 		SMTK_KEY_MODE_COMPOSED, G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
-		"show-shift", "Show Shift", "Show Shift Separately", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_SHOW_KEYBOARD] = g_param_spec_boolean(
 		"show-keyboard", "Show Keyboard", "Show Keyboard Key", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_SHOW_MOUSE] = g_param_spec_boolean(
 		"show-mouse", "Show Mouse", "Show Mouse Button", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
-		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_LAYOUT] =
-		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
-				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_VARIANT] = g_param_spec_string(
-		"variant", "Variant", "Keymap Variant", NULL,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(bool show_shift, bool show_keyboard,
-				       bool show_mouse, bool hide_visible,
-				       SmtkKeyMode mode, const char *layout,
-				       const char *variant, GError **error)
+SmtkKeysEmitter *smtk_keys_emitter_new(GError **error)
 {
-	SmtkKeysEmitter *emitter = g_object_new(
-		SMTK_TYPE_KEYS_EMITTER, "mode", mode, "show-shift", show_shift,
-		"show-keyboard", show_keyboard, "show-mouse", show_mouse,
-		"hide-visible", hide_visible, "layout", layout, "variant",
-		variant, NULL);
+	SmtkKeysEmitter *emitter = g_object_new(SMTK_TYPE_KEYS_EMITTER, NULL);
 
 	if (emitter->error != NULL) {
 		g_propagate_error(error, emitter->error);
@@ -530,74 +473,4 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *emitter)
 		// g_thread_unref(emitter->poller);
 		emitter->poller = NULL;
 	}
-}
-
-void smtk_keys_emitter_set_show_shift(SmtkKeysEmitter *emitter, bool show_shift)
-{
-	g_return_if_fail(emitter != NULL);
-
-	// Pass property to mapper.
-	if (emitter->mapper != NULL)
-		smtk_keys_mapper_set_show_shift(emitter->mapper, show_shift);
-	// Sync self property.
-	emitter->show_shift = show_shift;
-}
-
-void smtk_keys_emitter_set_show_keyboard(SmtkKeysEmitter *emitter,
-					 bool show_keyboard)
-{
-	g_return_if_fail(emitter != NULL);
-
-	emitter->show_keyboard = show_keyboard;
-}
-
-void smtk_keys_emitter_set_show_mouse(SmtkKeysEmitter *emitter, bool show_mouse)
-{
-	g_return_if_fail(emitter != NULL);
-
-	emitter->show_mouse = show_mouse;
-}
-
-void smtk_keys_emitter_set_hide_visible(SmtkKeysEmitter *emitter,
-					bool hide_visible)
-{
-	g_return_if_fail(emitter != NULL);
-
-	if (emitter->mapper != NULL)
-		smtk_keys_mapper_set_hide_visible(emitter->mapper,
-						  hide_visible);
-
-	emitter->hide_visible = hide_visible;
-}
-
-void smtk_keys_emitter_set_mode(SmtkKeysEmitter *emitter, SmtkKeyMode mode)
-{
-	g_return_if_fail(emitter != NULL);
-
-	emitter->mode = mode;
-}
-
-void smtk_keys_emitter_set_layout(SmtkKeysEmitter *emitter, const char *layout)
-{
-	g_return_if_fail(emitter != NULL);
-
-	if (emitter->mapper != NULL)
-		smtk_keys_mapper_set_layout(emitter->mapper, layout);
-
-	if (emitter->layout != NULL)
-		g_free(emitter->layout);
-	emitter->layout = g_strdup(layout);
-}
-
-void smtk_keys_emitter_set_variant(SmtkKeysEmitter *emitter,
-				   const char *variant)
-{
-	g_return_if_fail(emitter != NULL);
-
-	if (emitter->mapper != NULL)
-		smtk_keys_mapper_set_variant(emitter->mapper, variant);
-
-	if (emitter->variant != NULL)
-		g_free(emitter->variant);
-	emitter->variant = g_strdup(variant);
 }

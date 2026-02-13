@@ -1,7 +1,8 @@
 #include <gtk/gtk.h>
 
-#include "smtk.h"
+#include "smtk-enum-types.h"
 #include "smtk-keys-area.h"
+#include "smtk-keys-mapper.h"
 
 struct key_data {
 	char *string;
@@ -10,6 +11,7 @@ struct key_data {
 
 struct _SmtkKeysArea {
 	GtkDrawingArea parent_instance;
+	GSettings *settings;
 
 	SmtkKeyMode mode;
 	SmtkKeyAlignment alignment;
@@ -50,6 +52,13 @@ enum {
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
+void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)
+{
+	g_return_if_fail(area != NULL);
+
+	area->timeout = timeout;
+}
+
 static void smtk_keys_area_set_property(GObject *object,
 					unsigned int property_id,
 					const GValue *value, GParamSpec *pspec)
@@ -58,21 +67,25 @@ static void smtk_keys_area_set_property(GObject *object,
 
 	switch (property_id) {
 	case PROP_MODE:
-		smtk_keys_area_set_mode(area, g_value_get_enum(value));
+		area->mode = g_value_get_enum(value);
 		break;
 	case PROP_ALIGNMENT:
-		smtk_keys_area_set_alignment(area, g_value_get_enum(value));
+		area->alignment = g_value_get_enum(value);
+		// Trigger re-draw because alignment changed.
+		gtk_widget_queue_draw(GTK_WIDGET(area));
 		break;
 	case PROP_DRAW_BORDER:
-		smtk_keys_area_set_draw_border(area,
-					       g_value_get_boolean(value));
+		area->draw_border = g_value_get_boolean(value);
+		// Trigger re-draw because border changed.
+		gtk_widget_queue_draw(GTK_WIDGET(area));
 		break;
 	case PROP_MARGIN_RATIO:
-		smtk_keys_area_set_margin_ratio(area,
-						g_value_get_double(value));
+		area->margin_ratio = g_value_get_double(value);
+		// Trigger re-draw because margin changed.
+		gtk_widget_queue_draw(GTK_WIDGET(area));
 		break;
 	case PROP_TIMEOUT:
-		smtk_keys_area_set_timeout(area, g_value_get_int(value));
+		area->timeout = g_value_get_int(value);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -265,7 +278,7 @@ static void smtk_keys_area_draw_key(SmtkKeysArea *area, cairo_t *cr,
 }
 
 static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
-				int width, int height, gpointer user_data)
+				int width, int height, void *data)
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(drawing_area);
 
@@ -337,16 +350,16 @@ static void smtk_keys_area_draw(GtkDrawingArea *drawing_area, cairo_t *cr,
 	g_mutex_unlock(&area->keys_mutex);
 }
 
-static void idle_destroy_function(gpointer user_data)
+static void idle_destroy_function(void *data)
 {
-	SmtkKeysArea *area = SMTK_KEYS_AREA(user_data);
+	SmtkKeysArea *area = data;
 	g_object_unref(area);
 }
 
 // true and false are C99 _Bool, but GLib expects gboolean, which is C99 int.
-static int idle_function(gpointer user_data)
+static int idle_function(void *data)
 {
-	SmtkKeysArea *area = SMTK_KEYS_AREA(user_data);
+	SmtkKeysArea *area = data;
 
 	// Trigger re-draw because content changed.
 	gtk_widget_queue_draw(GTK_WIDGET(area));
@@ -354,9 +367,9 @@ static int idle_function(gpointer user_data)
 	return 0;
 }
 
-static gpointer timer_function(gpointer user_data)
+static void *timer_function(void *data)
 {
-	SmtkKeysArea *area = SMTK_KEYS_AREA(user_data);
+	SmtkKeysArea *area = data;
 
 	while (area->timer_running) {
 		g_mutex_lock(&area->keys_mutex);
@@ -387,6 +400,7 @@ static gpointer timer_function(gpointer user_data)
 
 static void smtk_keys_area_init(SmtkKeysArea *area)
 {
+	area->settings = NULL;
 	area->width = 0;
 	area->height = 0;
 
@@ -414,9 +428,30 @@ static void smtk_keys_area_init(SmtkKeysArea *area)
 		g_thread_try_new("timer", timer_function, area, NULL);
 }
 
+static void smtk_keys_area_constructed(GObject *object)
+{
+	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
+
+	area->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(area->settings, "mode", area, "mode",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(area->settings, "alignment", area, "alignment",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(area->settings, "draw-border", area, "draw-border",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(area->settings, "margin-ratio", area, "margin-ratio",
+			G_SETTINGS_BIND_GET);
+	g_settings_bind(area->settings, "timeout", area, "timeout",
+			G_SETTINGS_BIND_GET);
+
+	G_OBJECT_CLASS(smtk_keys_area_parent_class)->constructed(object);
+}
+
 static void smtk_keys_area_dispose(GObject *object)
 {
 	SmtkKeysArea *area = SMTK_KEYS_AREA(object);
+
+	g_clear_object(&area->settings);
 
 	g_clear_object(&area->string_layout);
 	g_clear_pointer(&area->string_font, pango_font_description_free);
@@ -448,6 +483,8 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(area_class);
 
+	object_class->constructed = smtk_keys_area_constructed;
+
 	object_class->set_property = smtk_keys_area_set_property;
 	object_class->get_property = smtk_keys_area_get_property;
 
@@ -473,61 +510,11 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *area_class)
 	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
-GtkWidget *smtk_keys_area_new(SmtkKeyMode mode, SmtkKeyAlignment alignment,
-			      bool draw_border, double margin_ratio,
-			      int timeout)
+GtkWidget *smtk_keys_area_new(void)
 {
-	SmtkKeysArea *area = g_object_new(
-		SMTK_TYPE_KEYS_AREA, "mode", mode, "alignment", alignment,
-		"draw-border", draw_border, "margin-ratio", margin_ratio,
-		"timeout", timeout, "vexpand", true, "hexpand", true, NULL);
+	SmtkKeysArea *area = g_object_new(SMTK_TYPE_KEYS_AREA, "vexpand", true,
+					  "hexpand", true, NULL);
 	return GTK_WIDGET(area);
-}
-
-void smtk_keys_area_set_mode(SmtkKeysArea *area, SmtkKeyMode mode)
-{
-	g_return_if_fail(area != NULL);
-
-	area->mode = mode;
-}
-
-void smtk_keys_area_set_alignment(SmtkKeysArea *area,
-				  SmtkKeyAlignment alignment)
-{
-	g_return_if_fail(area != NULL);
-
-	area->alignment = alignment;
-
-	// Trigger re-draw because alignment changed.
-	gtk_widget_queue_draw(GTK_WIDGET(area));
-}
-
-void smtk_keys_area_set_draw_border(SmtkKeysArea *area, bool draw_border)
-{
-	g_return_if_fail(area != NULL);
-
-	area->draw_border = draw_border;
-
-	// Trigger re-draw because border changed.
-	gtk_widget_queue_draw(GTK_WIDGET(area));
-}
-
-void smtk_keys_area_set_margin_ratio(SmtkKeysArea *area, double margin_ratio)
-{
-	g_return_if_fail(area != NULL);
-	g_return_if_fail(margin_ratio >= 0);
-
-	area->margin_ratio = margin_ratio;
-
-	// Trigger re-draw because border changed.
-	gtk_widget_queue_draw(GTK_WIDGET(area));
-}
-
-void smtk_keys_area_set_timeout(SmtkKeysArea *area, int timeout)
-{
-	g_return_if_fail(area != NULL);
-
-	area->timeout = timeout;
 }
 
 void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])

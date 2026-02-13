@@ -2,7 +2,7 @@
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 
-#include "smtk.h"
+#include "config.h"
 #include "smtk-app.h"
 
 int main(int argc, char *argv[])
