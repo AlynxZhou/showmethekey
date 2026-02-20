@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 20:24+0800\n"
+"POT-Creation-Date: 2026-02-20 20:39+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -271,6 +271,14 @@ msgid ""
 "                "
 msgstr ""
 
-#: showmethekey-gtk/smtk-keys-win.c:304
+#: showmethekey-gtk/smtk-keys-win.c:44
+msgid "Clickable Paused"
+msgstr ""
+
+#: showmethekey-gtk/smtk-keys-win.c:47 showmethekey-gtk/smtk-keys-win.c:317
 msgid "Clickable"
+msgstr ""
+
+#: showmethekey-gtk/smtk-keys-win.c:50
+msgid "Paused"
 msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 20:24+0800\n"
+"POT-Creation-Date: 2026-02-20 20:39+0800\n"
 "PO-Revision-Date: 2024-08-02 10:16-0600\n"
 "Last-Translator: ItzSelenux\n"
 "Language-Team: none\n"
@@ -325,9 +325,19 @@ msgstr ""
 "Puede abrir este diálogo nuevamente a través del icono de menú en la barra "
 "de título -> \"Uso\"."
 
-#: showmethekey-gtk/smtk-keys-win.c:304
+#: showmethekey-gtk/smtk-keys-win.c:44
+#, fuzzy
+msgid "Clickable Paused"
+msgstr "Clickeable"
+
+#: showmethekey-gtk/smtk-keys-win.c:47 showmethekey-gtk/smtk-keys-win.c:317
 msgid "Clickable"
 msgstr "Clickeable"
+
+#: showmethekey-gtk/smtk-keys-win.c:50
+#, fuzzy
+msgid "Paused"
+msgstr "_Pausa"
 
 #~ msgid "Close"
 #~ msgstr "Cerrar"

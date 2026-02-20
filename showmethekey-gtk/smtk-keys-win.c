@@ -34,17 +34,28 @@ enum { PROP_0, PROP_ACTIVE, PROP_CLICKABLE, PROP_PAUSED, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
-static void smtk_keys_win_set_clickable(SmtkKeysWin *win, bool clickable)
+static void update_title(SmtkKeysWin *win)
 {
-	// We don't need the handle if click through. But the handle might not
-	// be there during init.
-	if (win->handle != NULL)
-		gtk_widget_set_visible(win->handle, clickable);
+	// The handle might not be there during init.
+	if (win->handle == NULL)
+		return;
 
-	// NOTE: We don't handle input region here, I don't know why we can't.
-	// We just save property and handle the input region in
-	// `size_allocate()`.
-	win->clickable = clickable;
+	if (win->clickable && win->paused) {
+		adw_window_title_set_title(ADW_WINDOW_TITLE(win->handle),
+					   _("Clickable Paused"));
+		gtk_widget_set_visible(win->handle, true);
+	} else if (win->clickable) {
+		adw_window_title_set_title(ADW_WINDOW_TITLE(win->handle),
+					   _("Clickable"));
+		gtk_widget_set_visible(win->handle, true);
+	} else if (win->paused) {
+		adw_window_title_set_title(ADW_WINDOW_TITLE(win->handle),
+					   _("Paused"));
+		gtk_widget_set_visible(win->handle, true);
+	} else {
+		adw_window_title_set_title(ADW_WINDOW_TITLE(win->handle), "");
+		gtk_widget_set_visible(win->handle, false);
+	}
 }
 
 static void smtk_keys_win_set_property(GObject *object,
@@ -58,10 +69,15 @@ static void smtk_keys_win_set_property(GObject *object,
 		win->active = g_value_get_boolean(value);
 		break;
 	case PROP_CLICKABLE:
-		smtk_keys_win_set_clickable(win, g_value_get_boolean(value));
+		// NOTE: We don't handle input region here, I don't know why we
+		// can't do that. We just save property and handle the input
+		// region in `size_allocate()`.
+		win->clickable = g_value_get_boolean(value);
+		update_title(win);
 		break;
 	case PROP_PAUSED:
 		win->paused = g_value_get_boolean(value);
+		update_title(win);
 		break;
 	default:
 		/* We don't have any other property... */

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 20:24+0800\n"
+"POT-Creation-Date: 2026-02-20 20:39+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -73,7 +73,9 @@ msgstr "接收输入事件（_C)"
 msgid ""
 "Turning off will pass input event to other apps under the floating window. "
 "Quickly press Ctrl twice or both Ctrl anywhere to toggle this."
-msgstr "关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。可以通过随时连按两下 Ctrl 或者同时按下两个 Ctrl 切换该选项。"
+msgstr ""
+"关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。可以通过随时连按两下 "
+"Ctrl 或者同时按下两个 Ctrl 切换该选项。"
 
 #: showmethekey-gtk/smtk-app-win.ui:101
 msgid "_Pause"
@@ -83,7 +85,9 @@ msgstr "暂停（_P）"
 msgid ""
 "Temporary hide input like password. Quickly press Alt twice or both Alt "
 "anywhere to toggle this."
-msgstr "临时隐藏输入，比如密码。可以随时通过连按两下 Alt 或者同时按下两个 Alt 切换该选项。"
+msgstr ""
+"临时隐藏输入，比如密码。可以随时通过连按两下 Alt 或者同时按下两个 Alt 切换该"
+"选项。"
 
 #: showmethekey-gtk/smtk-app-win.ui:116
 msgid "Show _Shift Separately"
@@ -299,9 +303,17 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-keys-win.c:304
+#: showmethekey-gtk/smtk-keys-win.c:44
+msgid "Clickable Paused"
+msgstr "可点击 已暂停"
+
+#: showmethekey-gtk/smtk-keys-win.c:47 showmethekey-gtk/smtk-keys-win.c:317
 msgid "Clickable"
 msgstr "可点击"
+
+#: showmethekey-gtk/smtk-keys-win.c:50
+msgid "Paused"
+msgstr "已暂停"
 
 #~ msgid "Close"
 #~ msgstr "关闭"
