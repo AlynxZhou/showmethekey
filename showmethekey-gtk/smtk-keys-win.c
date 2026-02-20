@@ -17,7 +17,6 @@ struct _SmtkKeysWin {
 	GtkWidget *handle;
 	GtkWidget *area;
 	SmtkKeysEmitter *emitter;
-	bool active;
 	bool clickable;
 	bool paused;
 	bool show_shift;
@@ -30,7 +29,7 @@ struct _SmtkKeysWin {
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_APPLICATION_WINDOW)
 
-enum { PROP_0, PROP_ACTIVE, PROP_CLICKABLE, PROP_PAUSED, N_PROPS };
+enum { PROP_0, PROP_CLICKABLE, PROP_PAUSED, N_PROPS };
 
 static GParamSpec *obj_props[N_PROPS] = { NULL };
 
@@ -65,9 +64,6 @@ static void smtk_keys_win_set_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
-	case PROP_ACTIVE:
-		win->active = g_value_get_boolean(value);
-		break;
 	case PROP_CLICKABLE:
 		// NOTE: We don't handle input region here, I don't know why we
 		// can't do that. We just save property and handle the input
@@ -93,9 +89,6 @@ static void smtk_keys_win_get_property(GObject *object,
 	SmtkKeysWin *win = SMTK_KEYS_WIN(object);
 
 	switch (property_id) {
-	case PROP_ACTIVE:
-		g_value_set_boolean(value, win->active);
-		break;
 	case PROP_CLICKABLE:
 		g_value_set_boolean(value, win->clickable);
 		break;
@@ -258,20 +251,12 @@ static void smtk_keys_win_size_allocate(GtkWidget *widget, int width,
 	}
 }
 
-static int on_close_request(SmtkKeysWin *win, void *data)
-{
-	// Sync state on close.
-	g_settings_set_boolean(win->settings, "active", false);
-	return 0;
-}
-
 static void smtk_keys_win_init(SmtkKeysWin *win)
 {
 	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
 	win->error = NULL;
-	win->active = false;
 	win->clickable = false;
 	win->paused = false;
 
@@ -297,9 +282,6 @@ static void smtk_keys_win_init(SmtkKeysWin *win)
 	// Don't know why but realize does not work.
 	g_signal_connect(GTK_WIDGET(win), "map",
 			 G_CALLBACK(smtk_keys_win_on_map), NULL);
-
-	g_signal_connect(GTK_WINDOW(win), "close-request",
-			 G_CALLBACK(on_close_request), NULL);
 }
 
 static void smtk_keys_win_constructed(GObject *object)
@@ -341,8 +323,9 @@ static void smtk_keys_win_constructed(GObject *object)
 	gtk_box_append(GTK_BOX(win->box), win->area);
 
 	win->settings = g_settings_new("one.alynx.showmethekey");
-	g_settings_bind(win->settings, "active", win, "active",
-			G_SETTINGS_BIND_DEFAULT);
+	// Sync settings with initial state.
+	g_settings_set_boolean(win->settings, "clickable", win->clickable);
+	g_settings_set_boolean(win->settings, "paused", win->paused);
 	g_settings_bind(win->settings, "clickable", win, "clickable",
 			G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind(win->settings, "paused", win, "paused",
@@ -397,9 +380,6 @@ static void smtk_keys_win_class_init(SmtkKeysWinClass *win_class)
 	// really need it.
 	widget_class->size_allocate = smtk_keys_win_size_allocate;
 
-	obj_props[PROP_ACTIVE] = g_param_spec_boolean(
-		"active", "Active", "Keys Win Active", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
 	obj_props[PROP_CLICKABLE] = g_param_spec_boolean(
 		"clickable", "Clickable", "Clickable or Click Through", true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
@@ -423,7 +403,7 @@ GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable, GError **error)
 		// Wayland does not support this, it's ok.
 		// "skip-pager-hint", true, "skip-taskbar-hint", true,
 		// Reset state on keys win start.
-		"active", true, "clickable", clickable, "paused", false, NULL);
+		"clickable", clickable, "paused", false, NULL);
 
 	if (win->error != NULL) {
 		g_propagate_error(error, win->error);

@@ -116,6 +116,7 @@ static void on_app_win_destroy(SmtkApp *app, GtkWidget *app_win)
 static void on_keys_win_destroy(SmtkApp *app, GtkWidget *keys_win)
 {
 	app->keys_win = NULL;
+	g_settings_set_boolean(app->settings, "active", false);
 }
 
 static void show_keys_win(SmtkApp *app)
@@ -129,6 +130,7 @@ static void show_keys_win(SmtkApp *app)
 				  error->message);
 			return;
 		}
+		g_settings_set_boolean(app->settings, "active", true);
 		g_signal_connect_swapped(app->keys_win, "destroy",
 					 G_CALLBACK(on_keys_win_destroy), app);
 		gtk_window_present(GTK_WINDOW(app->keys_win));
@@ -138,6 +140,10 @@ static void show_keys_win(SmtkApp *app)
 static void show_app_win(SmtkApp *app)
 {
 	if (app->app_win == NULL) {
+		// Sync settings with current state to prevent inconsistency that
+		// keys win is not shown but keys win switch is on (like SIGINT).
+		g_settings_set_boolean(app->settings, "active",
+				       app->keys_win != NULL);
 		app->app_win = smtk_app_win_new(app);
 		g_signal_connect_swapped(app->app_win, "destroy",
 					 G_CALLBACK(on_app_win_destroy), app);
