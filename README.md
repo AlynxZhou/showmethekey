@@ -8,6 +8,12 @@ Show keys you typed on screen.
 
 A SUSE Hack Week 20 Project: [Show Me The Key: A screenkey alternative that works under Wayland via libinput](https://hackweek.suse.com/20/projects/a-screenkey-alternative-that-works-under-wayland-via-reading-evdev-directly).
 
+# Feature
+
+[screenkey](https://gitlab.com/screenkey/screenkey) is a popular project for streamers or tutorial recorders because it can visualization your typing on screen, but it does not work with Wayland because it uses X11-only functions to get keyboard event.
+
+Show Me The Key reads key events via libinput directly, and then show them on screen, so it does not depend on X11 or special Wayland Compositors and will work all across them.
+
 # Install
 
 ## Distribution Package (Recommended)
@@ -94,11 +100,11 @@ $ showmethekey-gtk
 
 # Usage
 
-For detailed usage please run usage dialog from app menu!
+Toggle the switch to show the floating keys window, and drag it to anywhere you want, because Wayland does not allow a client to set its position. You may pin it at the top of other windows if you desktop allows that, then you could disable the clickable switch, and the window will become click-through.
 
-You need to toggle the switch to start it manually and need to input admin password to polkit authentication agent's dialog, because we need superuser permission to read keyboard events (this program does not handle your password so it is safe). Wayland does not allow a client to set its position, so this program does not set its position in preference, and you can click the "Clickable Area" in titlebar and drag the floating window to anywhere you want.
+You may need to input admin password if there is a polkit authentication agent's dialog, because we need superuser permission to read keyboard events (this program does not handle your password). Users in `wheel` group can skip password authentication.
 
-Users in `wheel` group can skip password authentication.
+For detailed usage, please run usage dialog from app menu.
 
 ## Special Notice for Wayland Session Users
 
@@ -127,11 +133,11 @@ windowrulev2 = float,class:^(showmethekey-gtk)$ # make window floating
 windowrulev2 = pin,class:^(showmethekey-gtk)$ # pin window
 ```
 
-# Feature
+## If You are Tired of the App (Settings) Window
 
-[screenkey](https://gitlab.com/screenkey/screenkey) is a popular project for streamers or tutorial recorders because it can make your typing visual on screen, but it only works under X11, not Wayland because it uses X11 functions to get keyboard event.
+You could always close the app (settings) window after keys window is shown. To show keys window by default, run `showmethekey-gtk` with `-k` option. To hide app window by default, run `showmethekey-gtk` with `-A` option. If you already use some compositor rules to make keys window always on top and at position you want, you may want to make keys window click-through by default, then you could use `-C` option.
 
-This program, instead, reads key events via libinput directly, and then put it on screen, so it will not depend on X11 or special Wayland Compositors and will work across them.
+When keys win is shown, you could always toggle clickable by quickly pressing Ctrl twice (or pressing both Ctrl), and toggle paused by quickly pressing Alt twice (or pressing both Alt).
 
 # Project Structure
 
