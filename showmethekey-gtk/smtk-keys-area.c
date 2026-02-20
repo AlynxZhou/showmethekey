@@ -527,7 +527,7 @@ void smtk_keys_area_add_key(SmtkKeysArea *area, char key[])
 	if (area->keys != NULL)
 		last = area->keys->data;
 	if (area->mode == SMTK_KEY_MODE_COMPACT && last != NULL &&
-	    strcmp(last->string, key) == 0) {
+	    g_strcmp0(last->string, key) == 0) {
 		++last->counter;
 		g_free(key);
 	} else {

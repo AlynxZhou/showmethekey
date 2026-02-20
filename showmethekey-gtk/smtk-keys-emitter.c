@@ -23,6 +23,7 @@ struct _SmtkKeysEmitter {
 	SmtkKeyMode mode;
 	bool show_keyboard;
 	bool show_mouse;
+	bool ctrl_pressed;
 	bool alt_pressed;
 	GError *error;
 };
@@ -161,20 +162,37 @@ static void trigger_key_idle_function(SmtkKeysEmitter *emitter,
 			   key_idle_data, key_idle_destroy_function);
 }
 
-static int pause_idle_function(void *data)
+static int toggle_clickable(void *data)
 {
 	SmtkKeysEmitter *emitter = data;
 
-	g_settings_set_boolean(emitter->settings, "paused",
-			       !g_settings_get_boolean(emitter->settings,
-						       "paused"));
+	const char *key = "clickable";
+	const bool value = g_settings_get_boolean(emitter->settings, key);
+	g_settings_set_boolean(emitter->settings, key, !value);
 
 	return 0;
 }
 
-static void trigger_pause_idle_function(SmtkKeysEmitter *emitter)
+static void trigger_clickable_idle(SmtkKeysEmitter *emitter)
 {
-	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, pause_idle_function,
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, toggle_clickable,
+			   g_object_ref(emitter), g_object_unref);
+}
+
+static int toggle_paused(void *data)
+{
+	SmtkKeysEmitter *emitter = data;
+
+	const char *key = "paused";
+	const bool value = g_settings_get_boolean(emitter->settings, key);
+	g_settings_set_boolean(emitter->settings, key, !value);
+
+	return 0;
+}
+
+static void trigger_paused_idle(SmtkKeysEmitter *emitter)
+{
+	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, toggle_paused,
 			   g_object_ref(emitter), g_object_unref);
 }
 
@@ -204,28 +222,40 @@ static void *poller_function(void *data)
 			continue;
 		}
 
-		// TODO: Press both Ctrl to clickable?
-
-		// Press both Alt to pause. Xkbcommon treat left and right alt
-		// as the same one, so we have to do it here.
+		// Quickly press Ctrl twice or both Ctrl to toggle clickable and
+		// quickly press Alt twice or both Alt to toggle paused.
+		// Because xkbcommon treat left and right alt as the same one, we
+		// have to do it here, not in mapper.
 		SmtkEventType type = smtk_event_get_event_type(event);
 		SmtkEventState state = smtk_event_get_event_state(event);
 		const char *key_name = smtk_event_get_key_name(event);
-		if (type == SMTK_EVENT_TYPE_KEYBOARD_KEY &&
-		    state == SMTK_EVENT_STATE_PRESSED &&
-		    (strcmp(key_name, "KEY_LEFTALT") == 0 ||
-		     strcmp(key_name, "KEY_RIGHTALT") == 0)) {
-			if (emitter->alt_pressed) {
-				trigger_pause_idle_function(emitter);
-				emitter->alt_pressed = false;
-			} else {
-				emitter->alt_pressed = true;
+		if (type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
+			if (state == SMTK_EVENT_STATE_PRESSED) {
+				if (g_strcmp0(key_name, "KEY_LEFTCTRL") == 0 ||
+				    g_strcmp0(key_name, "KEY_RIGHTCTRL") == 0) {
+					if (emitter->ctrl_pressed) {
+						trigger_clickable_idle(emitter);
+						emitter->ctrl_pressed = false;
+					} else {
+						emitter->ctrl_pressed = true;
+					}
+				}
+				if (g_strcmp0(key_name, "KEY_LEFTALT") == 0 ||
+				    g_strcmp0(key_name, "KEY_RIGHTALT") == 0) {
+					if (emitter->alt_pressed) {
+						trigger_paused_idle(emitter);
+						emitter->alt_pressed = false;
+					} else {
+						emitter->alt_pressed = true;
+					}
+				}
 			}
 		} else {
+			if (emitter->ctrl_pressed)
+				emitter->ctrl_pressed = false;
 			if (emitter->alt_pressed)
 				emitter->alt_pressed = false;
 		}
-
 		char *key = NULL;
 		// Always get key with SmtkKeysMapper, it will update XKB state
 		// to keep sync with actual keyboard.
@@ -271,6 +301,7 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *emitter)
 	emitter->error = NULL;
 	emitter->show_keyboard = true;
 	emitter->show_mouse = true;
+	emitter->ctrl_pressed = false;
 	emitter->alt_pressed = false;
 }
 

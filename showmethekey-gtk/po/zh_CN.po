@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-17 12:34+0800\n"
+"POT-Creation-Date: 2026-02-20 20:24+0800\n"
 "PO-Revision-Date: 2021-04-21 15:16+0800\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,40 +16,40 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:106 showmethekey-gtk/smtk-app-win.c:700
+#: showmethekey-gtk/smtk-app.c:165 showmethekey-gtk/smtk-app-win.c:380
 #: showmethekey-gtk/smtk-app-win.ui:37 showmethekey-gtk/smtk-app-win.ui:44
 msgid "Show Me The Key"
 msgstr "让我看键"
 
-#: showmethekey-gtk/smtk-app.c:111
+#: showmethekey-gtk/smtk-app.c:170
 msgid "Display version then exit."
 msgstr "显示版本号然后退出。"
 
-#: showmethekey-gtk/smtk-app.c:114
+#: showmethekey-gtk/smtk-app.c:173
 msgid "Show keys window on start up (deprecated by `-k, --keys-win`)."
 msgstr "在启动时显示按键窗口（已废弃，请使用 `-k, --keys-win`）。"
 
-#: showmethekey-gtk/smtk-app.c:117
+#: showmethekey-gtk/smtk-app.c:176
 msgid "Show keys window on start up."
 msgstr "在启动时显示按键窗口。"
 
-#: showmethekey-gtk/smtk-app.c:119
+#: showmethekey-gtk/smtk-app.c:178
 msgid "Hide app window and show keys window on start up."
 msgstr "在启动时隐藏配置窗口并显示按键窗口。"
 
-#: showmethekey-gtk/smtk-app.c:122
+#: showmethekey-gtk/smtk-app.c:181
 msgid "Make keys window unclickable on start up."
 msgstr "在启动时令按键窗口不接收输入事件。"
 
-#: showmethekey-gtk/smtk-app-win.c:698
+#: showmethekey-gtk/smtk-app-win.c:378
 msgid "translator-credits"
 msgstr "Alynx Zhou"
 
-#: showmethekey-gtk/smtk-app-win.c:699
+#: showmethekey-gtk/smtk-app-win.c:379
 msgid "About Show Me The Key"
 msgstr "关于让我看键"
 
-#: showmethekey-gtk/smtk-app-win.c:701
+#: showmethekey-gtk/smtk-app-win.c:381
 msgid "Show keys you typed on screen."
 msgstr "在屏幕上显示你按的键。"
 
@@ -71,143 +71,145 @@ msgstr "接收输入事件（_C)"
 
 #: showmethekey-gtk/smtk-app-win.ui:88
 msgid ""
-"Turning off will pass input event to other apps under the floating window."
-msgstr "关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。"
+"Turning off will pass input event to other apps under the floating window. "
+"Quickly press Ctrl twice or both Ctrl anywhere to toggle this."
+msgstr "关闭该项后，输入事件将会被传递给悬浮窗口下面的其它应用。可以通过随时连按两下 Ctrl 或者同时按下两个 Ctrl 切换该选项。"
 
-#: showmethekey-gtk/smtk-app-win.ui:106
+#: showmethekey-gtk/smtk-app-win.ui:101
 msgid "_Pause"
 msgstr "暂停（_P）"
 
-#: showmethekey-gtk/smtk-app-win.ui:107
+#: showmethekey-gtk/smtk-app-win.ui:102
 msgid ""
-"Temporary hide input like password. Press both alt anywhere to toggle this."
-msgstr "临时隐藏输入，比如密码。可以随时通过同时按下两个 alt 键切换该选项。"
+"Temporary hide input like password. Quickly press Alt twice or both Alt "
+"anywhere to toggle this."
+msgstr "临时隐藏输入，比如密码。可以随时通过连按两下 Alt 或者同时按下两个 Alt 切换该选项。"
 
-#: showmethekey-gtk/smtk-app-win.ui:126
+#: showmethekey-gtk/smtk-app-win.ui:116
 msgid "Show _Shift Separately"
 msgstr "单独显示 Shift（_S）"
 
-#: showmethekey-gtk/smtk-app-win.ui:127
+#: showmethekey-gtk/smtk-app-win.ui:117
 msgid "Show Ctrl+Shift+a or Ctrl+A."
 msgstr "显示 Ctrl+Shift+a 还是 Ctrl+A。"
 
-#: showmethekey-gtk/smtk-app-win.ui:145
+#: showmethekey-gtk/smtk-app-win.ui:130
 msgid "Show _Keyboard Key"
 msgstr "显示键盘按键（_K）"
 
-#: showmethekey-gtk/smtk-app-win.ui:146
+#: showmethekey-gtk/smtk-app-win.ui:131
 msgid "Maybe some users don't want keyboard keys."
 msgstr "也许一些用户不想看见键盘按键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:164
+#: showmethekey-gtk/smtk-app-win.ui:144
 msgid "Show _Mouse Button"
 msgstr "显示鼠标按钮（_M）"
 
-#: showmethekey-gtk/smtk-app-win.ui:165
+#: showmethekey-gtk/smtk-app-win.ui:145
 msgid "Mouse buttons can be very annoying."
 msgstr "鼠标按钮有时候会太占地方。"
 
-#: showmethekey-gtk/smtk-app-win.ui:183
+#: showmethekey-gtk/smtk-app-win.ui:158
 msgid "Draw Keys _Border"
 msgstr "绘制按键边框（_B）"
 
-#: showmethekey-gtk/smtk-app-win.ui:184
+#: showmethekey-gtk/smtk-app-win.ui:159
 msgid "In case keys and key combos are hard to distinguish."
 msgstr "以防按键和组合键难以区分。"
 
-#: showmethekey-gtk/smtk-app-win.ui:202
+#: showmethekey-gtk/smtk-app-win.ui:172
 msgid "Hide _Visible Keys"
 msgstr "隐藏可见按键（_V）"
 
-#: showmethekey-gtk/smtk-app-win.ui:203
+#: showmethekey-gtk/smtk-app-win.ui:173
 msgid "Only show keys with modifiers."
 msgstr "只显示包含修饰键的组合键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:220
+#: showmethekey-gtk/smtk-app-win.ui:185
 msgid "Display Mode"
 msgstr "显示模式"
 
-#: showmethekey-gtk/smtk-app-win.ui:221
+#: showmethekey-gtk/smtk-app-win.ui:186
 msgid "Raw is Linux kernel's scancode and maybe not so useful."
 msgstr "按键名是 Linux 内核的扫描码，可能不会特别有用。"
 
-#: showmethekey-gtk/smtk-app-win.ui:227
+#: showmethekey-gtk/smtk-app-win.ui:192
 msgid "Composed"
 msgstr "组合键"
 
-#: showmethekey-gtk/smtk-app-win.ui:228
+#: showmethekey-gtk/smtk-app-win.ui:193
 msgid "Raw"
 msgstr "按键名"
 
-#: showmethekey-gtk/smtk-app-win.ui:229
+#: showmethekey-gtk/smtk-app-win.ui:194
 msgid "Compact"
 msgstr "紧凑"
 
-#: showmethekey-gtk/smtk-app-win.ui:242
+#: showmethekey-gtk/smtk-app-win.ui:202
 msgid "Alignment Mode"
 msgstr "对齐方向"
 
-#: showmethekey-gtk/smtk-app-win.ui:243
+#: showmethekey-gtk/smtk-app-win.ui:203
 msgid "Some users prefer to display keys in center."
 msgstr "有些用户希望居中显示按键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:249
+#: showmethekey-gtk/smtk-app-win.ui:209
 msgid "End"
 msgstr "末尾"
 
-#: showmethekey-gtk/smtk-app-win.ui:250
+#: showmethekey-gtk/smtk-app-win.ui:210
 msgid "Center"
 msgstr "居中"
 
-#: showmethekey-gtk/smtk-app-win.ui:264
+#: showmethekey-gtk/smtk-app-win.ui:219
 msgid "Timeout (ms)"
 msgstr "超时（毫秒）"
 
-#: showmethekey-gtk/smtk-app-win.ui:265
+#: showmethekey-gtk/smtk-app-win.ui:220
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
 msgstr "多少毫秒没有新按键之后清除已有的按键。设置为 0 保留所有按键。"
 
-#: showmethekey-gtk/smtk-app-win.ui:286
+#: showmethekey-gtk/smtk-app-win.ui:236
 msgid "Width (px)"
 msgstr "宽度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:287
+#: showmethekey-gtk/smtk-app-win.ui:237
 msgid "Width of keys window."
 msgstr "按键窗口的宽度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:303
+#: showmethekey-gtk/smtk-app-win.ui:253
 msgid "Height (px)"
 msgstr "高度（像素）"
 
-#: showmethekey-gtk/smtk-app-win.ui:304
+#: showmethekey-gtk/smtk-app-win.ui:254
 msgid "Height of keys window."
 msgstr "按键窗口的高度。"
 
-#: showmethekey-gtk/smtk-app-win.ui:320
+#: showmethekey-gtk/smtk-app-win.ui:270
 msgid "Key Margin Ratio"
 msgstr "按键间隔比例"
 
-#: showmethekey-gtk/smtk-app-win.ui:321
+#: showmethekey-gtk/smtk-app-win.ui:271
 msgid "Key margin ratio in keys window."
 msgstr "按键窗口中按键和按键之间的空白的宽度比例。"
 
 #. default
-#: showmethekey-gtk/smtk-app-win.ui:333
+#: showmethekey-gtk/smtk-app-win.ui:283
 msgctxt "none"
 msgid "Default"
 msgstr "默认值"
 
-#: showmethekey-gtk/smtk-app-win.ui:349
+#: showmethekey-gtk/smtk-app-win.ui:294
 msgid "Keyboard"
 msgstr "键盘"
 
-#: showmethekey-gtk/smtk-app-win.ui:353
+#: showmethekey-gtk/smtk-app-win.ui:298
 msgid "Keymap"
 msgstr "键位"
 
-#: showmethekey-gtk/smtk-app-win.ui:354
+#: showmethekey-gtk/smtk-app-win.ui:299
 msgid "Choose your keyboard layout and variant."
 msgstr "选择您的键盘布局和变体。"
 
@@ -297,7 +299,7 @@ msgstr ""
 "\n"
 "您可以通过标题栏上的菜单按钮 ->“使用说明”来再次访问此对话框。"
 
-#: showmethekey-gtk/smtk-keys-win.c:362
+#: showmethekey-gtk/smtk-keys-win.c:304
 msgid "Clickable"
 msgstr "可点击"
 

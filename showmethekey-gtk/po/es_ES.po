@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: showmethekey\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-17 12:34+0800\n"
+"POT-Creation-Date: 2026-02-20 20:24+0800\n"
 "PO-Revision-Date: 2024-08-02 10:16-0600\n"
 "Last-Translator: ItzSelenux\n"
 "Language-Team: none\n"
@@ -16,41 +16,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: showmethekey-gtk/smtk-app.c:106 showmethekey-gtk/smtk-app-win.c:700
+#: showmethekey-gtk/smtk-app.c:165 showmethekey-gtk/smtk-app-win.c:380
 #: showmethekey-gtk/smtk-app-win.ui:37 showmethekey-gtk/smtk-app-win.ui:44
 msgid "Show Me The Key"
 msgstr "Muéstrame La Tecla"
 
-#: showmethekey-gtk/smtk-app.c:111
+#: showmethekey-gtk/smtk-app.c:170
 msgid "Display version then exit."
 msgstr "Mostrar versión y salir."
 
-#: showmethekey-gtk/smtk-app.c:114
+#: showmethekey-gtk/smtk-app.c:173
 msgid "Show keys window on start up (deprecated by `-k, --keys-win`)."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:117
+#: showmethekey-gtk/smtk-app.c:176
 #, fuzzy
 msgid "Show keys window on start up."
 msgstr "Muestra las teclas que escribiste en pantalla."
 
-#: showmethekey-gtk/smtk-app.c:119
+#: showmethekey-gtk/smtk-app.c:178
 msgid "Hide app window and show keys window on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app.c:122
+#: showmethekey-gtk/smtk-app.c:181
 msgid "Make keys window unclickable on start up."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.c:698
+#: showmethekey-gtk/smtk-app-win.c:378
 msgid "translator-credits"
 msgstr "ItzSelenux"
 
-#: showmethekey-gtk/smtk-app-win.c:699
+#: showmethekey-gtk/smtk-app-win.c:379
 msgid "About Show Me The Key"
 msgstr "Acerca de Muéstrame la Tecla"
 
-#: showmethekey-gtk/smtk-app-win.c:701
+#: showmethekey-gtk/smtk-app-win.c:381
 msgid "Show keys you typed on screen."
 msgstr "Muestra las teclas que escribiste en pantalla."
 
@@ -71,108 +71,111 @@ msgid "_Clickable"
 msgstr "_Clickeable"
 
 #: showmethekey-gtk/smtk-app-win.ui:88
+#, fuzzy
 msgid ""
-"Turning off will pass input event to other apps under the floating window."
+"Turning off will pass input event to other apps under the floating window. "
+"Quickly press Ctrl twice or both Ctrl anywhere to toggle this."
 msgstr ""
 "Desactivar permitirá que los eventos de entrada pasen a otras aplicaciones "
 "bajo la ventana flotante."
 
-#: showmethekey-gtk/smtk-app-win.ui:106
+#: showmethekey-gtk/smtk-app-win.ui:101
 msgid "_Pause"
 msgstr "_Pausa"
 
-#: showmethekey-gtk/smtk-app-win.ui:107
+#: showmethekey-gtk/smtk-app-win.ui:102
 #, fuzzy
 msgid ""
-"Temporary hide input like password. Press both alt anywhere to toggle this."
+"Temporary hide input like password. Quickly press Alt twice or both Alt "
+"anywhere to toggle this."
 msgstr "Ocultar temporalmente entradas como una contraseña."
 
-#: showmethekey-gtk/smtk-app-win.ui:126
+#: showmethekey-gtk/smtk-app-win.ui:116
 msgid "Show _Shift Separately"
 msgstr "Mostrar _Shift Separadamente"
 
-#: showmethekey-gtk/smtk-app-win.ui:127
+#: showmethekey-gtk/smtk-app-win.ui:117
 msgid "Show Ctrl+Shift+a or Ctrl+A."
 msgstr "Mostrar Ctrl+Shift+a o Ctrl+A."
 
-#: showmethekey-gtk/smtk-app-win.ui:145
+#: showmethekey-gtk/smtk-app-win.ui:130
 #, fuzzy
 msgid "Show _Keyboard Key"
 msgstr "Teclado"
 
-#: showmethekey-gtk/smtk-app-win.ui:146
+#: showmethekey-gtk/smtk-app-win.ui:131
 msgid "Maybe some users don't want keyboard keys."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:164
+#: showmethekey-gtk/smtk-app-win.ui:144
 msgid "Show _Mouse Button"
 msgstr "Mostrar _Botón del Ratón"
 
-#: showmethekey-gtk/smtk-app-win.ui:165
+#: showmethekey-gtk/smtk-app-win.ui:145
 msgid "Mouse buttons can be very annoying."
 msgstr "Los botones del ratón pueden ser muy molestos."
 
-#: showmethekey-gtk/smtk-app-win.ui:183
+#: showmethekey-gtk/smtk-app-win.ui:158
 msgid "Draw Keys _Border"
 msgstr "Dibujar _Borde de Teclas"
 
-#: showmethekey-gtk/smtk-app-win.ui:184
+#: showmethekey-gtk/smtk-app-win.ui:159
 msgid "In case keys and key combos are hard to distinguish."
 msgstr ""
 "En caso de que las teclas y combinaciones de teclas sean difíciles de "
 "distinguir."
 
-#: showmethekey-gtk/smtk-app-win.ui:202
+#: showmethekey-gtk/smtk-app-win.ui:172
 msgid "Hide _Visible Keys"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:203
+#: showmethekey-gtk/smtk-app-win.ui:173
 msgid "Only show keys with modifiers."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:220
+#: showmethekey-gtk/smtk-app-win.ui:185
 msgid "Display Mode"
 msgstr "Modo de Pantalla"
 
-#: showmethekey-gtk/smtk-app-win.ui:221
+#: showmethekey-gtk/smtk-app-win.ui:186
 msgid "Raw is Linux kernel's scancode and maybe not so useful."
 msgstr ""
 "\"Bruto\" es el código de escaneo del núcleo de Linux y tal vez no sea tan "
 "útil."
 
-#: showmethekey-gtk/smtk-app-win.ui:227
+#: showmethekey-gtk/smtk-app-win.ui:192
 msgid "Composed"
 msgstr "Compuesto"
 
-#: showmethekey-gtk/smtk-app-win.ui:228
+#: showmethekey-gtk/smtk-app-win.ui:193
 msgid "Raw"
 msgstr "Bruto"
 
-#: showmethekey-gtk/smtk-app-win.ui:229
+#: showmethekey-gtk/smtk-app-win.ui:194
 msgid "Compact"
 msgstr "Compacto"
 
-#: showmethekey-gtk/smtk-app-win.ui:242
+#: showmethekey-gtk/smtk-app-win.ui:202
 msgid "Alignment Mode"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:243
+#: showmethekey-gtk/smtk-app-win.ui:203
 msgid "Some users prefer to display keys in center."
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:249
+#: showmethekey-gtk/smtk-app-win.ui:209
 msgid "End"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:250
+#: showmethekey-gtk/smtk-app-win.ui:210
 msgid "Center"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:264
+#: showmethekey-gtk/smtk-app-win.ui:219
 msgid "Timeout (ms)"
 msgstr "Tiempo de Espera (ms)"
 
-#: showmethekey-gtk/smtk-app-win.ui:265
+#: showmethekey-gtk/smtk-app-win.ui:220
 msgid ""
 "Clear keys if no new key after how many miliscconds. Set to 0 to keep all "
 "keys."
@@ -180,46 +183,46 @@ msgstr ""
 "Borrar teclas si no hay nuevas teclas después de cuántos milisegundos. "
 "Establecer en 0 para mantener todas las teclas."
 
-#: showmethekey-gtk/smtk-app-win.ui:286
+#: showmethekey-gtk/smtk-app-win.ui:236
 msgid "Width (px)"
 msgstr "Anchura (px)"
 
-#: showmethekey-gtk/smtk-app-win.ui:287
+#: showmethekey-gtk/smtk-app-win.ui:237
 msgid "Width of keys window."
 msgstr "Anchura de la ventana de teclas."
 
-#: showmethekey-gtk/smtk-app-win.ui:303
+#: showmethekey-gtk/smtk-app-win.ui:253
 msgid "Height (px)"
 msgstr "Altura (px)"
 
-#: showmethekey-gtk/smtk-app-win.ui:304
+#: showmethekey-gtk/smtk-app-win.ui:254
 msgid "Height of keys window."
 msgstr "Altura de la ventana de teclas."
 
-#: showmethekey-gtk/smtk-app-win.ui:320
+#: showmethekey-gtk/smtk-app-win.ui:270
 msgid "Key Margin Ratio"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:321
+#: showmethekey-gtk/smtk-app-win.ui:271
 #, fuzzy
 msgid "Key margin ratio in keys window."
 msgstr "Altura de la ventana de teclas."
 
 #. default
-#: showmethekey-gtk/smtk-app-win.ui:333
+#: showmethekey-gtk/smtk-app-win.ui:283
 msgctxt "none"
 msgid "Default"
 msgstr ""
 
-#: showmethekey-gtk/smtk-app-win.ui:349
+#: showmethekey-gtk/smtk-app-win.ui:294
 msgid "Keyboard"
 msgstr "Teclado"
 
-#: showmethekey-gtk/smtk-app-win.ui:353
+#: showmethekey-gtk/smtk-app-win.ui:298
 msgid "Keymap"
 msgstr "Distribución de Teclas"
 
-#: showmethekey-gtk/smtk-app-win.ui:354
+#: showmethekey-gtk/smtk-app-win.ui:299
 msgid "Choose your keyboard layout and variant."
 msgstr "Elija su distribución y variante del teclado."
 
@@ -322,7 +325,7 @@ msgstr ""
 "Puede abrir este diálogo nuevamente a través del icono de menú en la barra "
 "de título -> \"Uso\"."
 
-#: showmethekey-gtk/smtk-keys-win.c:362
+#: showmethekey-gtk/smtk-keys-win.c:304
 msgid "Clickable"
 msgstr "Clickeable"
 

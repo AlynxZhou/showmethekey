@@ -85,7 +85,7 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Clickable</property>
-                        <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window.</property>
+                        <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window. Quickly press Ctrl twice or both Ctrl anywhere to toggle this.</property>
                         <property name="activatable-widget">clickable_switch</property>
                         <child>
                           <object class="GtkSwitch" id="clickable_switch">
@@ -99,7 +99,7 @@
                       <object class="AdwActionRow">
                         <property name="use-underline">true</property>
                         <property name="title" translatable="yes">_Pause</property>
-                        <property name="subtitle" translatable="yes">Temporary hide input like password. Press both alt anywhere to toggle this.</property>
+                        <property name="subtitle" translatable="yes">Temporary hide input like password. Quickly press Alt twice or both Alt anywhere to toggle this.</property>
                         <property name="activatable-widget">pause_switch</property>
                         <child>
                           <object class="GtkSwitch" id="pause_switch">
