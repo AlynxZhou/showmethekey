@@ -35,6 +35,7 @@
   <template class="SmtkAppWin" parent="AdwApplicationWindow">
     <property name="icon-name">one.alynx.showmethekey</property>
     <property name="title" translatable="yes">Show Me The Key</property>
+    <property name="default-width">800</property>
     <property name="content">
       <object class="AdwToolbarView">
         <child type="top">
@@ -69,242 +70,232 @@
           </object>
         </child>
         <property name="content">
-          <object class="AdwClamp">
-            <property name="child">
-              <object class="GtkBox">
-                <property name="orientation">vertical</property>
-                <property name="margin-top">10</property>
-                <property name="margin-start">10</property>
-                <property name="margin-bottom">10</property>
-                <property name="margin-end">10</property>
-                <property name="spacing">10</property>
+          <object class="AdwPreferencesPage">
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">General</property>
                 <child>
-                  <object class="AdwPreferencesGroup">
-                    <property name="title" translatable="yes">General</property>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">_Clickable</property>
+                    <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window. Quickly press Ctrl twice or both Ctrl anywhere to toggle this.</property>
+                    <property name="activatable-widget">clickable_switch</property>
                     <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">_Clickable</property>
-                        <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window. Quickly press Ctrl twice or both Ctrl anywhere to toggle this.</property>
-                        <property name="activatable-widget">clickable_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="clickable_switch">
-                            <property name="valign">center</property>
-                            <property name="active">true</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">_Pause</property>
-                        <property name="subtitle" translatable="yes">Temporary hide input like password. Quickly press Alt twice or both Alt anywhere to toggle this.</property>
-                        <property name="activatable-widget">pause_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="pause_switch">
-                            <property name="valign">center</property>
-                            <!-- <property name="sensitive">false</property> -->
-                            <property name="active">false</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Show _Shift Separately</property>
-                        <property name="subtitle" translatable="yes">Show Ctrl+Shift+a or Ctrl+A.</property>
-                        <property name="activatable-widget">shift_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="shift_switch">
-                            <property name="valign">center</property>
-                            <property name="active">true</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Show _Keyboard Key</property>
-                        <property name="subtitle" translatable="yes">Maybe some users don't want keyboard keys.</property>
-                        <property name="activatable-widget">keyboard_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="keyboard_switch">
-                            <property name="valign">center</property>
-                            <property name="active">true</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Show _Mouse Button</property>
-                        <property name="subtitle" translatable="yes">Mouse buttons can be very annoying.</property>
-                        <property name="activatable-widget">mouse_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="mouse_switch">
-                            <property name="valign">center</property>
-                            <property name="active">true</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Draw Keys _Border</property>
-                        <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
-                        <property name="activatable-widget">border_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="border_switch">
-                            <property name="valign">center</property>
-                            <property name="active">true</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Hide _Visible Keys</property>
-                        <property name="subtitle" translatable="yes">Only show keys with modifiers.</property>
-                        <property name="activatable-widget">hide_visible_switch</property>
-                        <child>
-                          <object class="GtkSwitch" id="hide_visible_switch">
-                            <property name="valign">center</property>
-                            <property name="active">false</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwComboRow" id="mode_selector">
-                        <property name="title" translatable="yes">Display Mode</property>
-                        <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode and maybe not so useful.</property>
-                        <!-- Must keep the same sequence with SmtkKeyMode. -->
-                        <property name="selected">0</property>
-                        <property name="model">
-                          <object class="GtkStringList">
-                            <items>
-                              <item translatable="yes">Composed</item>
-                              <item translatable="yes">Raw</item>
-                              <item translatable="yes">Compact</item>
-                            </items>
-                          </object>
-                        </property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwComboRow" id="alignment_selector">
-                        <property name="title" translatable="yes">Alignment Mode</property>
-                        <property name="subtitle" translatable="yes">Some users prefer to display keys in center.</property>
-                        <!-- Must keep the same sequence with SmtkKeyAlignment. -->
-                        <property name="selected">0</property>
-                        <property name="model">
-                          <object class="GtkStringList">
-                            <items>
-                              <item translatable="yes">End</item>
-                              <item translatable="yes">Center</item>
-                            </items>
-                          </object>
-                        </property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Timeout (ms)</property>
-                        <property name="subtitle" translatable="yes">Clear keys if no new key after how many miliscconds. Set to 0 to keep all keys.</property>
-                        <property name="activatable-widget">timeout_entry</property>
-                        <child>
-                          <object class="GtkSpinButton" id="timeout_entry">
-                            <property name="valign">center</property>
-                            <!-- Keep 0 digit after dot because we are using it as int. -->
-                            <property name="digits">0</property>
-                            <property name="text">0</property>
-                            <property name="adjustment">timeout_adjustment</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Width (px)</property>
-                        <property name="subtitle" translatable="yes">Width of keys window.</property>
-                        <property name="activatable-widget">width_entry</property>
-                        <child>
-                          <object class="GtkSpinButton" id="width_entry">
-                            <property name="valign">center</property>
-                            <!-- Keep 0 digit after dot because we are using it as int. -->
-                            <property name="digits">0</property>
-                            <property name="text">1500</property>
-                            <property name="adjustment">width_adjustment</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Height (px)</property>
-                        <property name="subtitle" translatable="yes">Height of keys window.</property>
-                        <property name="activatable-widget">height_entry</property>
-                        <child>
-                          <object class="GtkSpinButton" id="height_entry">
-                            <property name="valign">center</property>
-                            <!-- Keep 0 digit after dot because we are using it as int. -->
-                            <property name="digits">0</property>
-                            <property name="text">200</property>
-                            <property name="adjustment">height_adjustment</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Key Margin Ratio</property>
-                        <property name="subtitle" translatable="yes">Key margin ratio in keys window.</property>
-                        <property name="activatable-widget">margin_slider</property>
-                        <child>
-                          <object class="GtkScale" id="margin_slider">
-                            <property name="valign">center</property>
-                            <property name="hexpand">true</property>
-                            <property name="draw-value">true</property>
-                            <property name="value-pos">right</property>
-                            <property name="digits">2</property>
-                            <property name="adjustment">margin_adjustment</property>
-                            <marks>
-                              <mark translatable="yes" comments="default" context="none" value="0" position="top"></mark>
-                              <mark translatable="yes" comments="default" context="none" value="0.4" position="top">Default</mark>
-                              <mark translatable="yes" comments="default" context="none" value="1" position="top"></mark>
-                            </marks>
-                          </object>
-                        </child>
+                      <object class="GtkSwitch" id="clickable_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
                       </object>
                     </child>
                   </object>
                 </child>
                 <child>
-                  <object class="AdwPreferencesGroup">
-                    <property name="title" translatable="yes">Keyboard</property>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">_Pause</property>
+                    <property name="subtitle" translatable="yes">Temporary hide input like password. Quickly press Alt twice or both Alt anywhere to toggle this.</property>
+                    <property name="activatable-widget">pause_switch</property>
                     <child>
-                      <object class="AdwComboRow" id="keymap_selector">
-                        <property name="use-underline">true</property>
-                        <property name="title" translatable="yes">Keymap</property>
-                        <property name="subtitle" translatable="yes">Choose your keyboard layout and variant.</property>
-                        <!-- <property name="enable-search">true</property> -->
-                        <property name="selected">0</property>
+                      <object class="GtkSwitch" id="pause_switch">
+                        <property name="valign">center</property>
+                        <!-- <property name="sensitive">false</property> -->
+                        <property name="active">false</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Show _Shift Separately</property>
+                    <property name="subtitle" translatable="yes">Show Ctrl+Shift+a or Ctrl+A.</property>
+                    <property name="activatable-widget">shift_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="shift_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Show _Keyboard Key</property>
+                    <property name="subtitle" translatable="yes">Maybe some users don't want keyboard keys.</property>
+                    <property name="activatable-widget">keyboard_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="keyboard_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Show _Mouse Button</property>
+                    <property name="subtitle" translatable="yes">Mouse buttons can be very annoying.</property>
+                    <property name="activatable-widget">mouse_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="mouse_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Draw Keys _Border</property>
+                    <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
+                    <property name="activatable-widget">border_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="border_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Hide _Visible Keys</property>
+                    <property name="subtitle" translatable="yes">Only show keys with modifiers.</property>
+                    <property name="activatable-widget">hide_visible_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="hide_visible_switch">
+                        <property name="valign">center</property>
+                        <property name="active">false</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwComboRow" id="mode_selector">
+                    <property name="title" translatable="yes">Display Mode</property>
+                    <property name="subtitle" translatable="yes">Raw is Linux kernel's scancode and maybe not so useful.</property>
+                    <!-- Must keep the same sequence with SmtkKeyMode. -->
+                    <property name="selected">0</property>
+                    <property name="model">
+                      <object class="GtkStringList">
+                        <items>
+                          <item translatable="yes">Composed</item>
+                          <item translatable="yes">Raw</item>
+                          <item translatable="yes">Compact</item>
+                        </items>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwComboRow" id="alignment_selector">
+                    <property name="title" translatable="yes">Alignment Mode</property>
+                    <property name="subtitle" translatable="yes">Some users prefer to display keys in center.</property>
+                    <!-- Must keep the same sequence with SmtkKeyAlignment. -->
+                    <property name="selected">0</property>
+                    <property name="model">
+                      <object class="GtkStringList">
+                        <items>
+                          <item translatable="yes">End</item>
+                          <item translatable="yes">Center</item>
+                        </items>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Timeout (ms)</property>
+                    <property name="subtitle" translatable="yes">Clear keys if no new key after how many miliscconds. Set to 0 to keep all keys.</property>
+                    <property name="activatable-widget">timeout_entry</property>
+                    <child>
+                      <object class="GtkSpinButton" id="timeout_entry">
+                        <property name="valign">center</property>
+                        <!-- Keep 0 digit after dot because we are using it as int. -->
+                        <property name="digits">0</property>
+                        <property name="text">0</property>
+                        <property name="adjustment">timeout_adjustment</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Width (px)</property>
+                    <property name="subtitle" translatable="yes">Width of keys window.</property>
+                    <property name="activatable-widget">width_entry</property>
+                    <child>
+                      <object class="GtkSpinButton" id="width_entry">
+                        <property name="valign">center</property>
+                        <!-- Keep 0 digit after dot because we are using it as int. -->
+                        <property name="digits">0</property>
+                        <property name="text">1500</property>
+                        <property name="adjustment">width_adjustment</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Height (px)</property>
+                    <property name="subtitle" translatable="yes">Height of keys window.</property>
+                    <property name="activatable-widget">height_entry</property>
+                    <child>
+                      <object class="GtkSpinButton" id="height_entry">
+                        <property name="valign">center</property>
+                        <!-- Keep 0 digit after dot because we are using it as int. -->
+                        <property name="digits">0</property>
+                        <property name="text">200</property>
+                        <property name="adjustment">height_adjustment</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Key Margin Ratio</property>
+                    <property name="subtitle" translatable="yes">Key margin ratio in keys window.</property>
+                    <property name="activatable-widget">margin_slider</property>
+                    <child>
+                      <object class="GtkScale" id="margin_slider">
+                        <property name="valign">center</property>
+                        <property name="hexpand">true</property>
+                        <property name="draw-value">true</property>
+                        <property name="value-pos">right</property>
+                        <property name="digits">2</property>
+                        <property name="adjustment">margin_adjustment</property>
+                        <marks>
+                          <mark translatable="yes" comments="default" context="none" value="0" position="top"></mark>
+                          <mark translatable="yes" comments="default" context="none" value="0.4" position="top">Default</mark>
+                          <mark translatable="yes" comments="default" context="none" value="1" position="top"></mark>
+                        </marks>
                       </object>
                     </child>
                   </object>
                 </child>
               </object>
-            </property>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Keyboard</property>
+                <child>
+                  <object class="AdwComboRow" id="keymap_selector">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Keymap</property>
+                    <property name="subtitle" translatable="yes">Choose your keyboard layout and variant.</property>
+                    <!-- <property name="enable-search">true</property> -->
+                    <property name="selected">0</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </property>
       </object>
