@@ -52,7 +52,9 @@ static int open_restricted(const char *path, int flags, void *user_data)
 {
 	int fd = open(path, flags);
 	if (fd < 0)
-		fprintf(stderr, "Failed to open %s because of %s.\n", path,
+		fprintf(stderr,
+			"Failed to open %s because of %s.\n",
+			path,
 			strerror(errno));
 	return fd < 0 ? -errno : fd;
 }
@@ -81,19 +83,25 @@ static int print_key_event(struct libinput_event *event)
 		libinput_event_keyboard_get_key_state(keyboard);
 	const char *state_name = state_code == LIBINPUT_KEY_STATE_PRESSED ?
 					 "PRESSED" :
-					       "RELEASED";
+					 "RELEASED";
 
-	return printf("{"
-		      "\"event_name\": \"KEYBOARD_KEY\", "
-		      "\"event_type\": %d, "
-		      "\"time_stamp\": %d, "
-		      "\"key_name\": \"%s\", "
-		      "\"key_code\": %d, "
-		      "\"state_name\": \"%s\", "
-		      "\"state_code\": %d"
-		      "}\n",
-		      event_type, time_stamp, key_name, key_code, state_name,
-		      state_code);
+	return printf(
+		"{"
+		"\"event_name\": \"KEYBOARD_KEY\", "
+		"\"event_type\": %d, "
+		"\"time_stamp\": %d, "
+		"\"key_name\": \"%s\", "
+		"\"key_code\": %d, "
+		"\"state_name\": \"%s\", "
+		"\"state_code\": %d"
+		"}\n",
+		event_type,
+		time_stamp,
+		key_name,
+		key_code,
+		state_name,
+		state_code
+	);
 }
 
 static int print_button_event(struct libinput_event *event)
@@ -110,18 +118,24 @@ static int print_button_event(struct libinput_event *event)
 		libinput_event_pointer_get_button_state(pointer);
 	const char *state_name = state_code == LIBINPUT_BUTTON_STATE_PRESSED ?
 					 "PRESSED" :
-					       "RELEASED";
-	return printf("{"
-		      "\"event_name\": \"POINTER_BUTTON\", "
-		      "\"event_type\": %d, "
-		      "\"time_stamp\": %d, "
-		      "\"key_name\": \"%s\", "
-		      "\"key_code\": %d, "
-		      "\"state_name\": \"%s\", "
-		      "\"state_code\": %d"
-		      "}\n",
-		      event_type, time_stamp, button_name, button_code,
-		      state_name, state_code);
+					 "RELEASED";
+	return printf(
+		"{"
+		"\"event_name\": \"POINTER_BUTTON\", "
+		"\"event_type\": %d, "
+		"\"time_stamp\": %d, "
+		"\"key_name\": \"%s\", "
+		"\"key_code\": %d, "
+		"\"state_name\": \"%s\", "
+		"\"state_code\": %d"
+		"}\n",
+		event_type,
+		time_stamp,
+		button_name,
+		button_code,
+		state_name,
+		state_code
+	);
 }
 
 static int handle_events(struct libinput *libinput)
@@ -192,15 +206,17 @@ void print_help(char *program_name)
 
 int main(int argc, char *argv[])
 {
-	const struct option long_options[] = { { "version", no_argument, 0,
-						 'v' },
-					       { "help", no_argument, 0, 'h' },
-					       { NULL, 0, NULL, 0 } };
+	const struct option long_options[] = {
+		{ "version", no_argument, 0, 'v' },
+		{ "help", no_argument, 0, 'h' },
+		{ NULL, 0, NULL, 0 }
+	};
 
 	int option_index = 0;
 	int opt = 0;
-	while ((opt = getopt_long(argc, argv, "vh", long_options,
-				  &option_index)) != -1) {
+	while ((opt = getopt_long(
+			argc, argv, "vh", long_options, &option_index
+		)) != -1) {
 		switch (opt) {
 		case 0:
 			// We don't use this.
@@ -215,7 +231,9 @@ int main(int argc, char *argv[])
 			// getopt_long already printed an error message.
 			break;
 		default:
-			fprintf(stderr, "%s: Invalid option `-%c`.\n", argv[0],
+			fprintf(stderr,
+				"%s: Invalid option `-%c`.\n",
+				argv[0],
 				opt);
 			break;
 		}

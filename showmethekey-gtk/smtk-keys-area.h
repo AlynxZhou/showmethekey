@@ -6,8 +6,13 @@
 G_BEGIN_DECLS
 
 #define SMTK_TYPE_KEYS_AREA smtk_keys_area_get_type()
-G_DECLARE_FINAL_TYPE(SmtkKeysArea, smtk_keys_area, SMTK, KEYS_AREA,
-		     GtkDrawingArea)
+G_DECLARE_FINAL_TYPE(
+	SmtkKeysArea,
+	smtk_keys_area,
+	SMTK,
+	KEYS_AREA,
+	GtkDrawingArea
+)
 
 // It looks like glib-mkenums cannot make enums
 // if clang-format make this in one line. But why???
@@ -19,7 +24,7 @@ typedef enum {
 // clang-format on
 
 GtkWidget *smtk_keys_area_new(void);
-void smtk_keys_area_add_key(SmtkKeysArea *area, char *key);
+void smtk_keys_area_add_key(SmtkKeysArea *area, const char *key);
 
 G_END_DECLS
 

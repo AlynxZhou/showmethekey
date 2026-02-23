@@ -9,6 +9,7 @@ bool smtk_keymap_is_default(const char *string)
 	       g_strcmp0(string, "default") == 0;
 }
 
+// TODO: Turn this into a boxed type?
 struct _SmtkKeymapItem {
 	GObject parent_instance;
 	char *layout;
@@ -19,7 +20,7 @@ G_DEFINE_TYPE(SmtkKeymapItem, smtk_keymap_item, G_TYPE_OBJECT)
 
 enum { PROP_0, PROP_LAYOUT, PROP_VARIANT, PROP_NAME, N_PROPS };
 
-static GParamSpec *obj_props[N_PROPS] = { NULL };
+static GParamSpec *props[N_PROPS] = { NULL };
 
 static char *build_name(const char *layout, const char *variant)
 {
@@ -28,137 +29,123 @@ static char *build_name(const char *layout, const char *variant)
 	return g_strdup_printf("%s (%s)", layout, variant);
 }
 
-static void smtk_keymap_item_set_property(GObject *object,
-					  unsigned int property_id,
-					  const GValue *value,
-					  GParamSpec *pspec)
+static void item_set_layout(SmtkKeymapItem *this, const char *layout)
 {
-	SmtkKeymapItem *keymap_item = SMTK_KEYMAP_ITEM(object);
+	g_clear_pointer(&this->layout, g_free);
+	this->layout = g_strdup(layout);
 
-	switch (property_id) {
+	g_clear_pointer(&this->name, g_free);
+	this->name = build_name(this->layout, this->variant);
+}
+
+static void item_set_variant(SmtkKeymapItem *this, const char *variant)
+{
+	g_clear_pointer(&this->variant, g_free);
+	this->variant = g_strdup(variant);
+
+	g_clear_pointer(&this->name, g_free);
+	this->name = build_name(this->layout, this->variant);
+}
+
+static void item_set_property(
+	GObject *o,
+	unsigned int prop,
+	const GValue *value,
+	GParamSpec *pspec
+)
+{
+	SmtkKeymapItem *this = SMTK_KEYMAP_ITEM(o);
+
+	switch (prop) {
 	case PROP_LAYOUT:
-		smtk_keymap_item_set_layout(keymap_item,
-					    g_value_get_string(value));
+		item_set_layout(this, g_value_get_string(value));
 		break;
 	case PROP_VARIANT:
-		smtk_keymap_item_set_variant(keymap_item,
-					     g_value_get_string(value));
+		item_set_variant(this, g_value_get_string(value));
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_keymap_item_get_property(GObject *object,
-					  unsigned int property_id,
-					  GValue *value, GParamSpec *pspec)
+static void item_get_property(
+	GObject *o,
+	unsigned int prop,
+	GValue *value,
+	GParamSpec *pspec
+)
 {
-	SmtkKeymapItem *keymap_item = SMTK_KEYMAP_ITEM(object);
+	SmtkKeymapItem *this = SMTK_KEYMAP_ITEM(o);
 
-	switch (property_id) {
+	switch (prop) {
 	case PROP_LAYOUT:
-		g_value_set_string(value, keymap_item->layout);
+		g_value_set_string(value, this->layout);
 		break;
 	case PROP_VARIANT:
-		g_value_set_string(value, keymap_item->variant);
+		g_value_set_string(value, this->variant);
 		break;
 	case PROP_NAME:
-		g_value_set_string(value, keymap_item->name);
+		g_value_set_string(value, this->name);
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_keymap_item_finalize(GObject *object)
+static void item_finalize(GObject *o)
 {
-	SmtkKeymapItem *keymap_item = SMTK_KEYMAP_ITEM(object);
+	SmtkKeymapItem *this = SMTK_KEYMAP_ITEM(o);
 
-	g_clear_pointer(&keymap_item->layout, g_free);
-	g_clear_pointer(&keymap_item->variant, g_free);
-	g_clear_pointer(&keymap_item->name, g_free);
+	g_clear_pointer(&this->layout, g_free);
+	g_clear_pointer(&this->variant, g_free);
+	g_clear_pointer(&this->name, g_free);
+
+	G_OBJECT_CLASS(smtk_keymap_item_parent_class)->finalize(o);
 }
 
-static void smtk_keymap_item_init(SmtkKeymapItem *keymap_item)
+static void smtk_keymap_item_class_init(SmtkKeymapItemClass *klass)
 {
+	GObjectClass *o_class = G_OBJECT_CLASS(klass);
+
+	o_class->set_property = item_set_property;
+	o_class->get_property = item_get_property;
+
+	o_class->finalize = item_finalize;
+
+	props[PROP_LAYOUT] = g_param_spec_string(
+		"layout",
+		"Layout",
+		"Keymap Layout",
+		NULL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_VARIANT] = g_param_spec_string(
+		"variant",
+		"Variant",
+		"Keymap Variant",
+		NULL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_NAME] = g_param_spec_string(
+		"name", "Name", "Keymap Display Name", NULL, G_PARAM_READABLE
+	);
+
+	g_object_class_install_properties(o_class, N_PROPS, props);
 }
 
-static void smtk_keymap_item_class_init(SmtkKeymapItemClass *keymap_item_class)
+static void smtk_keymap_item_init(SmtkKeymapItem *this)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(keymap_item_class);
-
-	object_class->set_property = smtk_keymap_item_set_property;
-	object_class->get_property = smtk_keymap_item_get_property;
-
-	object_class->finalize = smtk_keymap_item_finalize;
-
-	obj_props[PROP_LAYOUT] =
-		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
-				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_VARIANT] = g_param_spec_string(
-		"variant", "Variant", "Keymap Variant", NULL,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_NAME] = g_param_spec_string(
-		"name", "Name", "Keymap Display Name", NULL, G_PARAM_READABLE);
-
-	g_object_class_install_properties(object_class, N_PROPS, obj_props);
 }
 
 SmtkKeymapItem *smtk_keymap_item_new(const char *layout, const char *variant)
 {
-	return g_object_new(SMTK_TYPE_KEYMAP_ITEM, "layout", layout, "variant",
-			    variant, NULL);
-}
-
-const char *smtk_keymap_item_get_layout(SmtkKeymapItem *keymap_item)
-{
-	g_return_val_if_fail(keymap_item != NULL, NULL);
-
-	return keymap_item->layout;
-}
-
-void smtk_keymap_item_set_layout(SmtkKeymapItem *keymap_item,
-				 const char *layout)
-{
-	g_return_if_fail(keymap_item != NULL);
-
-	g_clear_pointer(&keymap_item->layout, g_free);
-	keymap_item->layout = g_strdup(layout);
-
-	g_clear_pointer(&keymap_item->name, g_free);
-	keymap_item->name =
-		build_name(keymap_item->layout, keymap_item->variant);
-}
-
-const char *smtk_keymap_item_get_variant(SmtkKeymapItem *keymap_item)
-{
-	g_return_val_if_fail(keymap_item != NULL, NULL);
-
-	return keymap_item->variant;
-}
-
-void smtk_keymap_item_set_variant(SmtkKeymapItem *keymap_item,
-				  const char *variant)
-{
-	g_return_if_fail(keymap_item != NULL);
-
-	g_clear_pointer(&keymap_item->variant, g_free);
-	keymap_item->variant = g_strdup(variant);
-
-	g_clear_pointer(&keymap_item->name, g_free);
-	keymap_item->name =
-		build_name(keymap_item->layout, keymap_item->variant);
-}
-
-const char *smtk_keymap_item_get_name(SmtkKeymapItem *keymap_item)
-{
-	g_return_val_if_fail(keymap_item != NULL, NULL);
-
-	return keymap_item->name;
+	return g_object_new(
+		SMTK_TYPE_KEYMAP_ITEM, "layout", layout, "variant", variant, NULL
+	);
 }
 
 struct _SmtkKeymapList {
@@ -166,56 +153,61 @@ struct _SmtkKeymapList {
 	GPtrArray *items;
 };
 
-static GType smtk_keymap_list_get_item_type(GListModel *list)
+static GType list_get_item_type(GListModel *list)
 {
 	return G_TYPE_OBJECT;
 }
 
-static unsigned int smtk_keymap_list_get_n_items(GListModel *list)
+static unsigned int list_get_n_items(GListModel *list)
 {
-	SmtkKeymapList *keymap_list = SMTK_KEYMAP_LIST(list);
+	SmtkKeymapList *this = SMTK_KEYMAP_LIST(list);
 
-	return keymap_list->items->len;
+	return this->items->len;
 }
 
-static void *smtk_keymap_list_get_item(GListModel *list, unsigned int position)
+static void *list_get_item(GListModel *list, unsigned int position)
 {
-	SmtkKeymapList *keymap_list = SMTK_KEYMAP_LIST(list);
+	SmtkKeymapList *this = SMTK_KEYMAP_LIST(list);
 
-	if (position >= keymap_list->items->len)
+	if (position >= this->items->len)
 		return NULL;
 
-	return g_object_ref(keymap_list->items->pdata[position]);
+	return g_object_ref(this->items->pdata[position]);
 }
 
-static void smtk_keymap_list_model_init(GListModelInterface *iface)
+static void list_model_init(GListModelInterface *iface)
 {
-	iface->get_item_type = smtk_keymap_list_get_item_type;
-	iface->get_n_items = smtk_keymap_list_get_n_items;
-	iface->get_item = smtk_keymap_list_get_item;
+	iface->get_item_type = list_get_item_type;
+	iface->get_n_items = list_get_n_items;
+	iface->get_item = list_get_item;
 }
 
-G_DEFINE_TYPE_WITH_CODE(SmtkKeymapList, smtk_keymap_list, G_TYPE_OBJECT,
-			G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL,
-					      smtk_keymap_list_model_init))
+G_DEFINE_TYPE_WITH_CODE(
+	SmtkKeymapList,
+	smtk_keymap_list,
+	G_TYPE_OBJECT,
+	G_IMPLEMENT_INTERFACE(G_TYPE_LIST_MODEL, list_model_init)
+)
 
-static void smtk_keymap_list_finalize(GObject *object)
+static void list_finalize(GObject *o)
 {
-	SmtkKeymapList *keymap_list = SMTK_KEYMAP_LIST(object);
+	SmtkKeymapList *this = SMTK_KEYMAP_LIST(o);
 
-	g_clear_pointer(&keymap_list->items, g_ptr_array_unref);
-}
+	g_clear_pointer(&this->items, g_ptr_array_unref);
 
-static void smtk_keymap_list_init(SmtkKeymapList *keymap_list)
-{
-	keymap_list->items = g_ptr_array_new_with_free_func(g_object_unref);
+	G_OBJECT_CLASS(smtk_keymap_list_parent_class)->finalize(o);
 }
 
 static void smtk_keymap_list_class_init(SmtkKeymapListClass *keymap_list_class)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(keymap_list_class);
 
-	object_class->finalize = smtk_keymap_list_finalize;
+	object_class->finalize = list_finalize;
+}
+
+static void smtk_keymap_list_init(SmtkKeymapList *this)
+{
+	this->items = g_ptr_array_new_with_free_func(g_object_unref);
 }
 
 SmtkKeymapList *smtk_keymap_list_new(void)
@@ -223,30 +215,29 @@ SmtkKeymapList *smtk_keymap_list_new(void)
 	return g_object_new(SMTK_TYPE_KEYMAP_LIST, NULL);
 }
 
-void smtk_keymap_list_append(SmtkKeymapList *keymap_list, const char *layout,
-			     const char *variant)
+void smtk_keymap_list_append(
+	SmtkKeymapList *this,
+	const char *layout,
+	const char *variant
+)
 {
-	g_return_if_fail(keymap_list != NULL);
+	g_return_if_fail(this != NULL);
 
-	g_ptr_array_add(keymap_list->items,
-			smtk_keymap_item_new(layout, variant));
+	g_ptr_array_add(this->items, smtk_keymap_item_new(layout, variant));
 
-	g_list_model_items_changed(G_LIST_MODEL(keymap_list),
-				   keymap_list->items->len - 1, 0, 1);
+	g_list_model_items_changed(
+		G_LIST_MODEL(this), this->items->len - 1, 0, 1
+	);
 }
 
-static int _compare(gconstpointer a, gconstpointer b)
+static int compare(gconstpointer a, gconstpointer b)
 {
 #if GLIB_CHECK_VERSION(2, 76, 0)
-	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)a));
-	const char *name2 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)b));
+	const char *name1 = SMTK_KEYMAP_ITEM((void *)a)->name;
+	const char *name2 = SMTK_KEYMAP_ITEM((void *)b)->name;
 #else
-	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(void **)a));
-	const char *name2 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM(*(void **)b));
+	const char *name1 = SMTK_KEYMAP_ITEM(*(void **)a)->name;
+	const char *name2 = SMTK_KEYMAP_ITEM(*(void **)b)->name;
 #endif
 	// Most people use US (QWERTY) layout, so make it first to be the
 	// default value.
@@ -257,38 +248,41 @@ static int _compare(gconstpointer a, gconstpointer b)
 	return g_strcmp0(name1, name2);
 }
 
-void smtk_keymap_list_sort(SmtkKeymapList *keymap_list)
+void smtk_keymap_list_sort(SmtkKeymapList *this)
 {
-	g_return_if_fail(keymap_list != NULL);
+	g_return_if_fail(this != NULL);
 #if GLIB_CHECK_VERSION(2, 76, 0)
-	g_ptr_array_sort_values(keymap_list->items, _compare);
+	g_ptr_array_sort_values(this->items, compare);
 #else
-	g_ptr_array_sort(keymap_list->items, _compare);
+	g_ptr_array_sort(this->items, compare);
 #endif
-	g_list_model_items_changed(G_LIST_MODEL(keymap_list), 0,
-				   keymap_list->items->len,
-				   keymap_list->items->len);
+	g_list_model_items_changed(
+		G_LIST_MODEL(this), 0, this->items->len, this->items->len
+	);
 }
 
-static int _equal(gconstpointer a, gconstpointer b)
+static int equal(gconstpointer a, gconstpointer b)
 {
-	const char *name1 =
-		smtk_keymap_item_get_name(SMTK_KEYMAP_ITEM((void *)a));
+	const char *name1 = SMTK_KEYMAP_ITEM((void *)a)->name;
 	const char *name2 = b;
 
 	return g_strcmp0(name1, name2) == 0;
 }
 
-int smtk_keymap_list_find(SmtkKeymapList *keymap_list, const char *layout,
-			  const char *variant)
+int smtk_keymap_list_find(
+	SmtkKeymapList *this,
+	const char *layout,
+	const char *variant
+)
 {
-	g_return_val_if_fail(keymap_list != NULL, -1);
+	g_return_val_if_fail(this != NULL, -1);
 
 	g_autofree char *name = build_name(layout, variant);
 	unsigned int position;
 
-	if (g_ptr_array_find_with_equal_func(keymap_list->items, name, _equal,
-					     &position))
+	if (g_ptr_array_find_with_equal_func(
+		    this->items, name, equal, &position
+	    ))
 		return position;
 
 	return -1;

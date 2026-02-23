@@ -2,6 +2,7 @@
 
 #include "smtk-event.h"
 
+// TODO: Turn this into a boxed type?
 struct _SmtkEvent {
 	GObject parent_instance;
 	char *source;
@@ -21,64 +22,61 @@ G_DEFINE_QUARK(smtk-event-error-quark, smtk_event_error)
 
 enum { PROP_0, PROP_SOURCE, N_PROPS };
 
-static GParamSpec *obj_props[N_PROPS] = { NULL };
+static GParamSpec *props[N_PROPS] = { NULL };
 
-static void smtk_event_set_property(GObject *object, unsigned int property_id,
-				    const GValue *value, GParamSpec *pspec)
+static void set_property(
+	GObject *o,
+	unsigned int prop,
+	const GValue *value,
+	GParamSpec *pspec
+)
 {
-	SmtkEvent *event = SMTK_EVENT(object);
+	SmtkEvent *this = SMTK_EVENT(o);
 
-	switch (property_id) {
+	switch (prop) {
 	case PROP_SOURCE:
-		if (event->source != NULL)
-			g_free(event->source);
-		event->source = g_value_dup_string(value);
+		g_clear_pointer(&this->source, g_free);
+		this->source = g_value_dup_string(value);
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_event_get_property(GObject *object, unsigned int property_id,
-				    GValue *value, GParamSpec *pspec)
+static void
+get_property(GObject *o, unsigned int prop, GValue *value, GParamSpec *pspec)
 {
-	SmtkEvent *event = SMTK_EVENT(object);
+	SmtkEvent *this = SMTK_EVENT(o);
 
-	switch (property_id) {
+	switch (prop) {
 	case PROP_SOURCE:
-		g_value_set_string(value, event->source);
+		g_value_set_string(value, this->source);
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_event_init(SmtkEvent *event)
+static void constructed(GObject *o)
 {
-	event->error = NULL;
-	event->source = NULL;
-	event->key_name = NULL;
-	event->event_type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
-	event->event_state = SMTK_EVENT_STATE_RELEASED;
-}
+	SmtkEvent *this = SMTK_EVENT(o);
 
-static void smtk_event_constructed(GObject *object)
-{
-	SmtkEvent *event = SMTK_EVENT(object);
-
-	if (event->source == NULL || strlen(event->source) == 0) {
-		g_set_error(&event->error, SMTK_EVENT_ERROR,
-			    SMTK_EVENT_ERROR_SOURCE,
-			    "Failed to create event because of empty source.");
+	if (this->source == NULL || strlen(this->source) == 0) {
+		g_set_error(
+			&this->error,
+			SMTK_EVENT_ERROR,
+			SMTK_EVENT_ERROR_SOURCE,
+			"Failed to create event because of empty source."
+		);
 		return;
 	}
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-Utility-API.html#json-from-string>.
 	// Transfer full, we should free it.
-	JsonNode *json = json_from_string(event->source, &event->error);
+	g_autoptr(JsonNode) json = json_from_string(this->source, &this->error);
 	if (json == NULL)
 		return;
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-JSON-Node.html#json-node-get-object>.
@@ -89,102 +87,113 @@ static void smtk_event_constructed(GObject *object)
 	const char *event_name =
 		json_object_get_string_member(json_object, "event_name");
 	if (g_strcmp0(event_name, "POINTER_BUTTON") == 0)
-		event->event_type = SMTK_EVENT_TYPE_POINTER_BUTTON;
+		this->event_type = SMTK_EVENT_TYPE_POINTER_BUTTON;
 	else
-		event->event_type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
+		this->event_type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
 	const char *event_state_name =
 		json_object_get_string_member(json_object, "state_name");
 	if (g_strcmp0(event_state_name, "PRESSED") == 0)
-		event->event_state = SMTK_EVENT_STATE_PRESSED;
+		this->event_state = SMTK_EVENT_STATE_PRESSED;
 	else
-		event->event_state = SMTK_EVENT_STATE_RELEASED;
+		this->event_state = SMTK_EVENT_STATE_RELEASED;
 	// See <https://developer.gnome.org/json-glib/stable/json-glib-JSON-Object.html#json-object-get-member>.
 	// Transfer none, so we need g_strdup().
-	event->key_name = g_strdup(
-		json_object_get_string_member(json_object, "key_name"));
-	event->key_code = json_object_get_int_member(json_object, "key_code");
-	event->time_stamp =
+	this->key_name = g_strdup(
+		json_object_get_string_member(json_object, "key_name")
+	);
+	this->key_code = json_object_get_int_member(json_object, "key_code");
+	this->time_stamp =
 		json_object_get_int_member(json_object, "time_stamp");
-	json_node_unref(json);
+
+	G_OBJECT_CLASS(smtk_event_parent_class)->constructed(o);
 }
 
-static void smtk_event_finalize(GObject *object)
+static void finalize(GObject *o)
 {
-	SmtkEvent *event = SMTK_EVENT(object);
-	if (event->source != NULL) {
-		g_free(event->source);
-		event->source = NULL;
-	}
-	if (event->key_name != NULL) {
-		g_free(event->key_name);
-		event->key_name = NULL;
-	}
+	SmtkEvent *this = SMTK_EVENT(o);
+
+	g_clear_pointer(&this->source, g_free);
+	g_clear_pointer(&this->key_name, g_free);
+
+	G_OBJECT_CLASS(smtk_event_parent_class)->finalize(o);
 }
 
-static void smtk_event_class_init(SmtkEventClass *event_class)
+static void smtk_event_class_init(SmtkEventClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(event_class);
+	GObjectClass *o_class = G_OBJECT_CLASS(klass);
 
-	object_class->set_property = smtk_event_set_property;
-	object_class->get_property = smtk_event_get_property;
+	o_class->set_property = set_property;
+	o_class->get_property = get_property;
 
-	object_class->constructed = smtk_event_constructed;
+	o_class->constructed = constructed;
 
-	object_class->finalize = smtk_event_finalize;
+	o_class->finalize = finalize;
 
-	obj_props[PROP_SOURCE] = g_param_spec_string(
-		"source", "Source", "Event Text Source", NULL,
-		G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE);
+	props[PROP_SOURCE] = g_param_spec_string(
+		"source",
+		"Source",
+		"Event Text Source",
+		NULL,
+		G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE
+	);
 
-	g_object_class_install_properties(object_class, N_PROPS, obj_props);
+	g_object_class_install_properties(o_class, N_PROPS, props);
+}
+
+static void smtk_event_init(SmtkEvent *this)
+{
+	this->error = NULL;
+	this->source = NULL;
+	this->key_name = NULL;
+	this->event_type = SMTK_EVENT_TYPE_KEYBOARD_KEY;
+	this->event_state = SMTK_EVENT_STATE_RELEASED;
 }
 
 SmtkEvent *smtk_event_new(char *source, GError **error)
 {
-	SmtkEvent *event =
-		g_object_new(SMTK_TYPE_EVENT, "source", source, NULL);
+	SmtkEvent *this = g_object_new(SMTK_TYPE_EVENT, "source", source, NULL);
 
-	if (event->error != NULL) {
-		g_propagate_error(error, event->error);
-		g_object_unref(event);
+	if (this->error != NULL) {
+		g_propagate_error(error, this->error);
+		g_object_unref(this);
 		return NULL;
 	}
 
-	return event;
+	return this;
 }
 
-SmtkEventType smtk_event_get_event_type(SmtkEvent *event)
+SmtkEventType smtk_event_get_event_type(SmtkEvent *this)
 {
-	g_return_val_if_fail(event != NULL, SMTK_EVENT_TYPE_UNKNOWN);
+	g_return_val_if_fail(this != NULL, SMTK_EVENT_TYPE_UNKNOWN);
 
-	return event->event_type;
+	return this->event_type;
 }
 
-SmtkEventState smtk_event_get_event_state(SmtkEvent *event)
+SmtkEventState smtk_event_get_event_state(SmtkEvent *this)
 {
-	g_return_val_if_fail(event != NULL, SMTK_EVENT_STATE_UNKNOWN);
+	g_return_val_if_fail(this != NULL, SMTK_EVENT_STATE_UNKNOWN);
 
-	return event->event_state;
+	return this->event_state;
 }
 
-const char *smtk_event_get_key_name(SmtkEvent *event)
+const char *smtk_event_get_key_name(SmtkEvent *this)
 {
-	g_return_val_if_fail(event != NULL, NULL);
+	g_return_val_if_fail(this != NULL, NULL);
 
-	return event->key_name;
+	return this->key_name;
 }
 
-unsigned int smtk_event_get_key_code(SmtkEvent *event)
+unsigned int smtk_event_get_key_code(SmtkEvent *this)
 {
 	// 0 is KEY_RESERVED for evdev.
-	g_return_val_if_fail(event != NULL, 0);
+	g_return_val_if_fail(this != NULL, 0);
 
-	return event->key_code;
+	return this->key_code;
 }
 
-unsigned int smtk_event_get_time_stamp(SmtkEvent *event)
+unsigned int smtk_event_get_time_stamp(SmtkEvent *this)
 {
-	g_return_val_if_fail(event != NULL, 0);
+	g_return_val_if_fail(this != NULL, 0);
 
-	return event->time_stamp;
+	return this->time_stamp;
 }

@@ -65,195 +65,256 @@ enum {
 	N_PROPS
 };
 
-static GParamSpec *obj_props[N_PROPS] = { NULL };
+static GParamSpec *props[N_PROPS] = { NULL };
 
 // Prevent clang-format from adding space between minus.
 // clang-format off
 G_DEFINE_QUARK(smtk-keys-mapper-error-quark, smtk_keys_mapper_error)
 // clang-format on
 
-static bool smtk_keys_mapper_refresh_keymap(SmtkKeysMapper *mapper)
+static bool refresh_keymap(SmtkKeysMapper *this)
 {
-	if (mapper->xkb_keymap != NULL)
-		xkb_keymap_unref(mapper->xkb_keymap);
+	if (this->xkb_keymap != NULL)
+		xkb_keymap_unref(this->xkb_keymap);
 
 	struct xkb_rule_names names = {
-		NULL, NULL,
-		smtk_keymap_is_default(mapper->layout) ? NULL : mapper->layout,
-		smtk_keymap_is_default(mapper->variant) ? NULL :
-							  mapper->variant,
+		NULL,
+		NULL,
+		smtk_keymap_is_default(this->layout) ? NULL : this->layout,
+		smtk_keymap_is_default(this->variant) ? NULL : this->variant,
 		NULL
 	};
-	mapper->xkb_keymap = xkb_keymap_new_from_names(
-		mapper->xkb_context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
-	if (mapper->xkb_keymap == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
-			    "Failed to create XKB keymap.");
+	this->xkb_keymap = xkb_keymap_new_from_names(
+		this->xkb_context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS
+	);
+	if (this->xkb_keymap == NULL) {
+		g_set_error(
+			&this->error,
+			SMTK_KEYS_MAPPER_ERROR,
+			SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
+			"Failed to create XKB keymap."
+		);
 		return false;
 	}
 
-	if (mapper->xkb_state != NULL)
-		xkb_state_unref(mapper->xkb_state);
-	if (mapper->xkb_state_empty != NULL)
-		xkb_state_unref(mapper->xkb_state_empty);
+	if (this->xkb_state != NULL)
+		xkb_state_unref(this->xkb_state);
+	if (this->xkb_state_empty != NULL)
+		xkb_state_unref(this->xkb_state_empty);
 
-	mapper->xkb_state = xkb_state_new(mapper->xkb_keymap);
-	if (mapper->xkb_state == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			    "Failed to create XKB state.");
+	this->xkb_state = xkb_state_new(this->xkb_keymap);
+	if (this->xkb_state == NULL) {
+		g_set_error(
+			&this->error,
+			SMTK_KEYS_MAPPER_ERROR,
+			SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			"Failed to create XKB state."
+		);
 		return false;
 	}
-	mapper->xkb_state_empty = xkb_state_new(mapper->xkb_keymap);
-	if (mapper->xkb_state_empty == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			    "Failed to create empty XKB state.");
+	this->xkb_state_empty = xkb_state_new(this->xkb_keymap);
+	if (this->xkb_state_empty == NULL) {
+		g_set_error(
+			&this->error,
+			SMTK_KEYS_MAPPER_ERROR,
+			SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
+			"Failed to create empty XKB state."
+		);
 		return false;
 	}
 
 	return true;
 }
 
-static void smtk_keys_mapper_set_layout(SmtkKeysMapper *mapper,
-					const char *layout)
+static void set_layout(SmtkKeysMapper *this, const char *layout)
 {
-	g_return_if_fail(mapper != NULL);
-
-	if (mapper->layout != NULL)
-		g_free(mapper->layout);
-	mapper->layout = g_strdup(layout);
+	g_clear_pointer(&this->layout, g_free);
+	this->layout = g_strdup(layout);
 
 	// If we first change layout then change variant, we may get error
 	// between two function calls, it is safe to ignore it.
-	smtk_keys_mapper_refresh_keymap(mapper);
+	refresh_keymap(this);
 }
 
-static void smtk_keys_mapper_set_variant(SmtkKeysMapper *mapper,
-					 const char *variant)
+static void set_variant(SmtkKeysMapper *this, const char *variant)
 {
-	g_return_if_fail(mapper != NULL);
+	g_clear_pointer(&this->variant, g_free);
+	this->variant = g_strdup(variant);
 
-	if (mapper->variant != NULL)
-		g_free(mapper->variant);
-	mapper->variant = g_strdup(variant);
-
-	smtk_keys_mapper_refresh_keymap(mapper);
+	refresh_keymap(this);
 }
 
-static void smtk_keys_mapper_set_property(GObject *object,
-					  unsigned int property_id,
-					  const GValue *value,
-					  GParamSpec *pspec)
+static void set_property(
+	GObject *o,
+	unsigned int prop,
+	const GValue *value,
+	GParamSpec *pspec
+)
 {
-	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+	SmtkKeysMapper *this = SMTK_KEYS_MAPPER(o);
 
-	switch (property_id) {
+	switch (prop) {
 	case PROP_SHOW_SHIFT:
-		mapper->show_shift = g_value_get_boolean(value);
+		this->show_shift = g_value_get_boolean(value);
 		break;
 	case PROP_HIDE_VISIBLE:
-		mapper->hide_visible = g_value_get_boolean(value);
+		this->hide_visible = g_value_get_boolean(value);
 		break;
 	case PROP_LAYOUT:
-		smtk_keys_mapper_set_layout(mapper, g_value_get_string(value));
+		set_layout(this, g_value_get_string(value));
 		break;
 	case PROP_VARIANT:
-		smtk_keys_mapper_set_variant(mapper, g_value_get_string(value));
+		set_variant(this, g_value_get_string(value));
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_keys_mapper_get_property(GObject *object,
-					  unsigned int property_id,
-					  GValue *value, GParamSpec *pspec)
+static void
+get_property(GObject *o, unsigned int prop, GValue *value, GParamSpec *pspec)
 {
-	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+	SmtkKeysMapper *this = SMTK_KEYS_MAPPER(o);
 
-	switch (property_id) {
+	switch (prop) {
 	case PROP_SHOW_SHIFT:
-		g_value_set_boolean(value, mapper->show_shift);
+		g_value_set_boolean(value, this->show_shift);
 		break;
 	case PROP_HIDE_VISIBLE:
-		g_value_set_boolean(value, mapper->hide_visible);
+		g_value_set_boolean(value, this->hide_visible);
 		break;
 	case PROP_LAYOUT:
-		g_value_set_string(value, mapper->layout);
+		g_value_set_string(value, this->layout);
 		break;
 	case PROP_VARIANT:
-		g_value_set_string(value, mapper->variant);
+		g_value_set_string(value, this->variant);
 		break;
 	default:
 		/* We don't have any other property... */
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
 		break;
 	}
 }
 
-static void smtk_keys_mapper_constructed(GObject *object)
+static void constructed(GObject *object)
 {
-	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+	SmtkKeysMapper *this = SMTK_KEYS_MAPPER(object);
 
-	mapper->settings = g_settings_new("one.alynx.showmethekey");
-	g_settings_bind(mapper->settings, "show-shift", mapper, "show-shift",
-			G_SETTINGS_BIND_GET);
-	g_settings_bind(mapper->settings, "hide-visible", mapper,
-			"hide-visible", G_SETTINGS_BIND_GET);
-	g_settings_bind(mapper->settings, "layout", mapper, "layout",
-			G_SETTINGS_BIND_GET);
-	g_settings_bind(mapper->settings, "variant", mapper, "variant",
-			G_SETTINGS_BIND_GET);
+	this->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(
+		this->settings,
+		"show-shift",
+		this,
+		"show-shift",
+		G_SETTINGS_BIND_GET
+	);
+	g_settings_bind(
+		this->settings,
+		"hide-visible",
+		this,
+		"hide-visible",
+		G_SETTINGS_BIND_GET
+	);
+	g_settings_bind(
+		this->settings, "layout", this, "layout", G_SETTINGS_BIND_GET
+	);
+	g_settings_bind(
+		this->settings, "variant", this, "variant", G_SETTINGS_BIND_GET
+	);
 
-	if (!smtk_keys_mapper_refresh_keymap(mapper))
-		return;
+	refresh_keymap(this);
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->constructed(object);
 }
 
-static void smtk_keys_mapper_dispose(GObject *object)
+static void dispose(GObject *object)
 {
-	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+	SmtkKeysMapper *this = SMTK_KEYS_MAPPER(object);
 
-	g_clear_object(&mapper->settings);
+	g_clear_object(&this->settings);
 
-	g_clear_pointer(&mapper->xkb_state, xkb_state_unref);
-	g_clear_pointer(&mapper->xkb_state_empty, xkb_state_unref);
-	g_clear_pointer(&mapper->xkb_keymap, xkb_keymap_unref);
-	g_clear_pointer(&mapper->xkb_context, xkb_context_unref);
+	g_clear_pointer(&this->xkb_state, xkb_state_unref);
+	g_clear_pointer(&this->xkb_state_empty, xkb_state_unref);
+	g_clear_pointer(&this->xkb_keymap, xkb_keymap_unref);
+	g_clear_pointer(&this->xkb_context, xkb_context_unref);
 
-	g_clear_pointer(&mapper->xkb_mod_names, g_hash_table_unref);
-	g_clear_pointer(&mapper->composed_replace_names, g_hash_table_unref);
+	g_clear_pointer(&this->xkb_mod_names, g_hash_table_unref);
+	g_clear_pointer(&this->composed_replace_names, g_hash_table_unref);
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->dispose(object);
 }
 
-static void smtk_keys_mapper_finalize(GObject *object)
+static void finalize(GObject *object)
 {
-	SmtkKeysMapper *mapper = SMTK_KEYS_MAPPER(object);
+	SmtkKeysMapper *this = SMTK_KEYS_MAPPER(object);
 
-	g_clear_pointer(&mapper->layout, g_free);
-	g_clear_pointer(&mapper->variant, g_free);
+	g_clear_pointer(&this->layout, g_free);
+	g_clear_pointer(&this->variant, g_free);
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->finalize(object);
 }
 
-static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
+static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *klass)
 {
-	mapper->error = NULL;
-	mapper->settings = NULL;
-	mapper->layout = NULL;
-	mapper->variant = NULL;
+	GObjectClass *o_class = G_OBJECT_CLASS(klass);
 
-	mapper->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-	if (mapper->xkb_context == NULL) {
-		g_set_error(&mapper->error, SMTK_KEYS_MAPPER_ERROR,
-			    SMTK_KEYS_MAPPER_ERROR_XKB_CONTEXT,
-			    "Failed to create XKB context.");
+	o_class->set_property = set_property;
+	o_class->get_property = get_property;
+
+	o_class->constructed = constructed;
+
+	o_class->dispose = dispose;
+	o_class->finalize = finalize;
+
+	props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
+		"show-shift",
+		"Show Shift",
+		"Show Shift Separately",
+		true,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
+		"hide-visible",
+		"Hide Visible",
+		"Hide Visible Keys",
+		false,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_LAYOUT] = g_param_spec_string(
+		"layout",
+		"Layout",
+		"Keymap Layout",
+		NULL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_VARIANT] = g_param_spec_string(
+		"variant",
+		"Variant",
+		"Keymap Variant",
+		NULL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+
+	g_object_class_install_properties(o_class, N_PROPS, props);
+}
+
+static void smtk_keys_mapper_init(SmtkKeysMapper *this)
+{
+	this->error = NULL;
+	this->settings = NULL;
+	this->layout = NULL;
+	this->variant = NULL;
+
+	this->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	if (this->xkb_context == NULL) {
+		g_set_error(
+			&this->error,
+			SMTK_KEYS_MAPPER_ERROR,
+			SMTK_KEYS_MAPPER_ERROR_XKB_CONTEXT,
+			"Failed to create XKB context."
+		);
 		return;
 	}
 
@@ -261,324 +322,551 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *mapper)
 	// g_free() for releasing them.
 	// We only use key in this GHashTable,
 	// so don't pass a value free function to it!
-	mapper->xkb_mod_names =
+	this->xkb_mod_names =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Super_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Super_R"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Control_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Control_R"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Alt_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Alt_R"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Shift_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Super_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Super_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Control_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Control_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Alt_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Alt_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Shift_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Shift_R"));
 	// See <https://github.com/AlynxZhou/showmethekey/issues/83>.
 	// A more common name is AltGr, and it is a modifier.
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("ISO_Level3_Shift"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("ISO_Level3_Shift"));
 	// I believe nowadays there is no keyboard that has those keys,
 	// Shift+Alt will get Meta_L and Meta_R, but why not show Shift+Alt
 	// then? I am a Emacs user but I even don't know how to input Hyper, and
 	// in Emacs Meta is just Alt. I will ignore those virtual keys unless
 	// you show me some keyboards with real keys for Meta and Hyper.
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Meta_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Meta_R"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Hyper_L"));
-	g_hash_table_add(mapper->xkb_mod_names, g_strdup("Hyper_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Meta_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Meta_R"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Hyper_L"));
+	g_hash_table_add(this->xkb_mod_names, g_strdup("Hyper_R"));
 
 	// Some key names I don't like, replace them. There is no need to
 	// replace modifiers here because they are handled differently.
-	mapper->composed_replace_names =
+	this->composed_replace_names =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	// It should be safe to add "Shift+" here, if you want to make some
 	// Shift modified key raw. For example ISO_Left_Tab here.
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("ISO_Left_Tab"), g_strdup("Shift+Tab"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("XF86AudioMute"), g_strdup("MuteToggle"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("XF86AudioLowerVolume"),
-			    g_strdup("VolumnDown"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("XF86AudioRaiseVolume"),
-			    g_strdup("VolumnUp"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("XF86MonBrightnessDown"),
-			    g_strdup("BrightnessDown"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("XF86MonBrightnessUp"),
-			    g_strdup("BrightnessUp"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("Num_Lock"), g_strdup("NumLock"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("asciitilde"), g_strdup("~"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("grave"),
-			    g_strdup("`"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("exclam"),
-			    g_strdup("!"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("at"),
-			    g_strdup("@"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("numbersign"), g_strdup("#"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("dollar"),
-			    g_strdup("$"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("percent"),
-			    g_strdup("%"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("asciicircum"), g_strdup("^"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("ampersand"), g_strdup("&"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("asterisk"), g_strdup("*"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("parenleft"), g_strdup("("));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("parenright"), g_strdup(")"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("minus"),
-			    g_strdup("-"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("underscore"), g_strdup("_"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("equal"),
-			    g_strdup("="));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("plus"),
-			    g_strdup("+"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("bracketleft"), g_strdup("["));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("braceleft"), g_strdup("{"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("bracketright"), g_strdup("]"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("braceright"), g_strdup("}"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("backslash"), g_strdup("\\"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("bar"),
-			    g_strdup("|"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("Caps_Lock"), g_strdup("CapsLock"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("semicolon"), g_strdup(";"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("colon"),
-			    g_strdup(":"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("apostrophe"), g_strdup("'"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("quotedbl"), g_strdup("\""));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Return"),
-			    g_strdup("Enter"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Escape"),
-			    g_strdup("Escape"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("comma"),
-			    g_strdup(","));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("less"),
-			    g_strdup("<"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("period"),
-			    g_strdup("."));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("greater"),
-			    g_strdup(">"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("slash"),
-			    g_strdup("/"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("question"), g_strdup("?"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("space"),
-			    g_strdup("Space"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Print"),
-			    g_strdup("PrintScreen"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Sys_Req"),
-			    g_strdup("SysReq"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("Scroll_Lock"), g_strdup("ScrollLock"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Prior"),
-			    g_strdup("PageUp"));
-	g_hash_table_insert(mapper->composed_replace_names, g_strdup("Next"),
-			    g_strdup("PageDown"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("BTN_LEFT"), g_strdup("MouseLeft"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("BTN_RIGHT"), g_strdup("MouseRight"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("BTN_MIDDLE"), g_strdup("MouseMiddle"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("BTN_EXTRA"), g_strdup("MouseForward"));
-	g_hash_table_insert(mapper->composed_replace_names,
-			    g_strdup("BTN_SIDE"), g_strdup("MouseBack"));
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("ISO_Left_Tab"),
+		g_strdup("Shift+Tab")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("XF86AudioMute"),
+		g_strdup("MuteToggle")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("XF86AudioLowerVolume"),
+		g_strdup("VolumnDown")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("XF86AudioRaiseVolume"),
+		g_strdup("VolumnUp")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("XF86MonBrightnessDown"),
+		g_strdup("BrightnessDown")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("XF86MonBrightnessUp"),
+		g_strdup("BrightnessUp")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Num_Lock"),
+		g_strdup("NumLock")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("asciitilde"),
+		g_strdup("~")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("grave"), g_strdup("`")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("exclam"), g_strdup("!")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("at"), g_strdup("@")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("numbersign"),
+		g_strdup("#")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("dollar"), g_strdup("$")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("percent"), g_strdup("%")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("asciicircum"),
+		g_strdup("^")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("ampersand"),
+		g_strdup("&")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("asterisk"),
+		g_strdup("*")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("parenleft"),
+		g_strdup("(")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("parenright"),
+		g_strdup(")")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("minus"), g_strdup("-")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("underscore"),
+		g_strdup("_")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("equal"), g_strdup("=")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("plus"), g_strdup("+")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("bracketleft"),
+		g_strdup("[")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("braceleft"),
+		g_strdup("{")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("bracketright"),
+		g_strdup("]")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("braceright"),
+		g_strdup("}")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("backslash"),
+		g_strdup("\\")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("bar"), g_strdup("|")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Caps_Lock"),
+		g_strdup("CapsLock")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("semicolon"),
+		g_strdup(";")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("colon"), g_strdup(":")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("apostrophe"),
+		g_strdup("'")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("quotedbl"),
+		g_strdup("\"")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Return"),
+		g_strdup("Enter")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Escape"),
+		g_strdup("Escape")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("comma"), g_strdup(",")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("less"), g_strdup("<")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("period"), g_strdup(".")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("greater"), g_strdup(">")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names, g_strdup("slash"), g_strdup("/")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("question"),
+		g_strdup("?")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("space"),
+		g_strdup("Space")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Print"),
+		g_strdup("PrintScreen")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Sys_Req"),
+		g_strdup("SysReq")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Scroll_Lock"),
+		g_strdup("ScrollLock")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Prior"),
+		g_strdup("PageUp")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("Next"),
+		g_strdup("PageDown")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("BTN_LEFT"),
+		g_strdup("MouseLeft")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("BTN_RIGHT"),
+		g_strdup("MouseRight")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("BTN_MIDDLE"),
+		g_strdup("MouseMiddle")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("BTN_EXTRA"),
+		g_strdup("MouseForward")
+	);
+	g_hash_table_insert(
+		this->composed_replace_names,
+		g_strdup("BTN_SIDE"),
+		g_strdup("MouseBack")
+	);
 
 	// For simple mode, we use shorter strings and icons.
 	//
 	// Icons are chosen based on @arielherself's idea.
 	//
 	// See <https://github.com/AlynxZhou/showmethekey/pull/43/files>.
-	mapper->compact_replace_names =
+	this->compact_replace_names =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("ISO_Left_Tab"), g_strdup("⭰"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Meta_L"),
-			    g_strdup("Meta"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Meta_R"),
-			    g_strdup("Meta"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("XF86AudioMute"), g_strdup("🔇"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("XF86AudioLowerVolume"), g_strdup("🔈"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("XF86AudioRaiseVolume"), g_strdup("🔊"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("XF86MonBrightnessDown"), g_strdup("🔅"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("XF86MonBrightnessUp"), g_strdup("🔆"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Num_Lock"),
-			    g_strdup("⇭"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("asciitilde"), g_strdup("~"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("grave"),
-			    g_strdup("`"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("exclam"),
-			    g_strdup("!"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("at"),
-			    g_strdup("@"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("numbersign"), g_strdup("#"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("dollar"),
-			    g_strdup("$"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("percent"),
-			    g_strdup("%"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("asciicircum"), g_strdup("^"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("ampersand"), g_strdup("&"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("asterisk"),
-			    g_strdup("*"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("parenleft"), g_strdup("("));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("parenright"), g_strdup(")"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("minus"),
-			    g_strdup("-"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("underscore"), g_strdup("_"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("equal"),
-			    g_strdup("="));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("plus"),
-			    g_strdup("+"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("bracketleft"), g_strdup("["));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("braceleft"), g_strdup("{"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("bracketright"), g_strdup("]"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("braceright"), g_strdup("}"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("backslash"), g_strdup("\\"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("bar"),
-			    g_strdup("|"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("Caps_Lock"), g_strdup("⇪"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("semicolon"), g_strdup(";"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("colon"),
-			    g_strdup(":"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("apostrophe"), g_strdup("'"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("quotedbl"),
-			    g_strdup("\""));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Return"),
-			    g_strdup("⏎"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Escape"),
-			    g_strdup("Esc"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("comma"),
-			    g_strdup(","));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("less"),
-			    g_strdup("<"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("period"),
-			    g_strdup("."));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("greater"),
-			    g_strdup(">"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("slash"),
-			    g_strdup("/"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("question"),
-			    g_strdup("?"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("space"),
-			    g_strdup("⎵"));
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("ISO_Left_Tab"),
+		g_strdup("⭰")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Meta_L"),
+		g_strdup("Meta")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Meta_R"),
+		g_strdup("Meta")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("XF86AudioMute"),
+		g_strdup("🔇")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("XF86AudioLowerVolume"),
+		g_strdup("🔈")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("XF86AudioRaiseVolume"),
+		g_strdup("🔊")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("XF86MonBrightnessDown"),
+		g_strdup("🔅")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("XF86MonBrightnessUp"),
+		g_strdup("🔆")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Num_Lock"), g_strdup("⇭")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("asciitilde"),
+		g_strdup("~")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("grave"), g_strdup("`")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("exclam"), g_strdup("!")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("at"), g_strdup("@")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("numbersign"),
+		g_strdup("#")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("dollar"), g_strdup("$")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("percent"), g_strdup("%")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("asciicircum"),
+		g_strdup("^")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("ampersand"),
+		g_strdup("&")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("asterisk"), g_strdup("*")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("parenleft"),
+		g_strdup("(")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("parenright"),
+		g_strdup(")")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("minus"), g_strdup("-")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("underscore"),
+		g_strdup("_")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("equal"), g_strdup("=")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("plus"), g_strdup("+")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("bracketleft"),
+		g_strdup("[")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("braceleft"),
+		g_strdup("{")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("bracketright"),
+		g_strdup("]")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("braceright"),
+		g_strdup("}")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("backslash"),
+		g_strdup("\\")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("bar"), g_strdup("|")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Caps_Lock"),
+		g_strdup("⇪")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("semicolon"),
+		g_strdup(";")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("colon"), g_strdup(":")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("apostrophe"),
+		g_strdup("'")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("quotedbl"),
+		g_strdup("\"")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Return"), g_strdup("⏎")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Escape"), g_strdup("Esc")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("comma"), g_strdup(",")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("less"), g_strdup("<")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("period"), g_strdup(".")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("greater"), g_strdup(">")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("slash"), g_strdup("/")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("question"), g_strdup("?")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("space"), g_strdup("⎵")
+	);
 	// The UTF-8 Print Screen Symbol is too large for some fonts.
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Print"),
-			    g_strdup("⎙"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Sys_Req"),
-			    g_strdup("SysReq"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("Scroll_Lock"), g_strdup("⇳"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Prior"),
-			    g_strdup("PageUp"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Next"),
-			    g_strdup("PageDown"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("BTN_LEFT"),
-			    g_strdup("🖰↖"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("BTN_RIGHT"), g_strdup("🖰↗"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("BTN_MIDDLE"), g_strdup("🖰↕"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("BTN_EXTRA"), g_strdup("🖰F"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("BTN_SIDE"),
-			    g_strdup("🖰B"));
-	g_hash_table_insert(mapper->compact_replace_names,
-			    g_strdup("BackSpace"), g_strdup("⌫"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Delete"),
-			    g_strdup("⌦"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Tab"),
-			    g_strdup("⇥"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Left"),
-			    g_strdup("←"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Right"),
-			    g_strdup("→"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Up"),
-			    g_strdup("↑"));
-	g_hash_table_insert(mapper->compact_replace_names, g_strdup("Down"),
-			    g_strdup("↓"));
-}
-
-static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *mapper_class)
-{
-	GObjectClass *object_class = G_OBJECT_CLASS(mapper_class);
-
-	object_class->set_property = smtk_keys_mapper_set_property;
-	object_class->get_property = smtk_keys_mapper_get_property;
-
-	object_class->constructed = smtk_keys_mapper_constructed;
-
-	object_class->dispose = smtk_keys_mapper_dispose;
-	object_class->finalize = smtk_keys_mapper_finalize;
-
-	obj_props[PROP_SHOW_SHIFT] = g_param_spec_boolean(
-		"show-shift", "Show Shift", "Show Shift Separately", true,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_HIDE_VISIBLE] = g_param_spec_boolean(
-		"hide-visible", "Hide Visible", "Hide Visible Keys", false,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_LAYOUT] =
-		g_param_spec_string("layout", "Layout", "Keymap Layout", NULL,
-				    G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-	obj_props[PROP_VARIANT] = g_param_spec_string(
-		"variant", "Variant", "Keymap Variant", NULL,
-		G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
-
-	g_object_class_install_properties(object_class, N_PROPS, obj_props);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Print"), g_strdup("⎙")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Sys_Req"),
+		g_strdup("SysReq")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Scroll_Lock"),
+		g_strdup("⇳")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Prior"),
+		g_strdup("PageUp")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("Next"),
+		g_strdup("PageDown")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BTN_LEFT"),
+		g_strdup("🖰↖")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BTN_RIGHT"),
+		g_strdup("🖰↗")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BTN_MIDDLE"),
+		g_strdup("🖰↕")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BTN_EXTRA"),
+		g_strdup("🖰F")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BTN_SIDE"),
+		g_strdup("🖰B")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names,
+		g_strdup("BackSpace"),
+		g_strdup("⌫")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Delete"), g_strdup("⌦")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Tab"), g_strdup("⇥")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Left"), g_strdup("←")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Right"), g_strdup("→")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Up"), g_strdup("↑")
+	);
+	g_hash_table_insert(
+		this->compact_replace_names, g_strdup("Down"), g_strdup("↓")
+	);
 }
 
 SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
 {
-	SmtkKeysMapper *mapper = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
+	SmtkKeysMapper *this = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
 
-	if (mapper->error != NULL) {
-		g_propagate_error(error, mapper->error);
-		g_object_unref(mapper);
+	if (this->error != NULL) {
+		g_propagate_error(error, this->error);
+		g_object_unref(this);
 		return NULL;
 	}
 
-	return mapper;
+	return this;
 }
 
-char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
+char *smtk_keys_mapper_get_raw(SmtkKeysMapper *this, SmtkEvent *event)
 {
-	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(this != NULL, NULL);
 	g_return_val_if_fail(event != NULL, NULL);
 
 	// XKBcommon only handles keyboard.
@@ -586,10 +874,12 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 		xkb_keycode_t xkb_key_code =
 			KEY_CODE_EV_TO_XKB(smtk_event_get_key_code(event));
 		SmtkEventState event_state = smtk_event_get_event_state(event);
-		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
-				     event_state == SMTK_EVENT_STATE_PRESSED ?
-					     XKB_KEY_DOWN :
-					     XKB_KEY_UP);
+		xkb_state_update_key(
+			this->xkb_state,
+			xkb_key_code,
+			event_state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
+								  XKB_KEY_UP
+		);
 	}
 	return g_strdup(smtk_event_get_key_name(event));
 }
@@ -601,45 +891,59 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *mapper, SmtkEvent *event)
 //
 // AltGr == ISO_Level3_Shift == XKB_MOD_NAME_MOD5, handle it like Shift.
 // See <https://xkbcommon.org/doc/current/keymap-text-format-v1.html#terminology>.
-static bool check_show(SmtkKeysMapper *mapper, const char *modifier,
-		       xkb_keycode_t xkb_key_code)
+static bool check_show(
+	SmtkKeysMapper *this,
+	const char *modifier,
+	xkb_keycode_t xkb_key_code
+)
 {
-	return xkb_state_mod_name_is_active(mapper->xkb_state, modifier,
-					    XKB_STATE_MODS_EFFECTIVE) > 0 &&
-	       (mapper->show_shift ||
+	return xkb_state_mod_name_is_active(
+		       this->xkb_state, modifier, XKB_STATE_MODS_EFFECTIVE
+	       ) > 0 &&
+	       (this->show_shift ||
 		!xkb_state_mod_index_is_consumed(
-			mapper->xkb_state, xkb_key_code,
-			xkb_keymap_mod_get_index(mapper->xkb_keymap,
-						 modifier)));
+			this->xkb_state,
+			xkb_key_code,
+			xkb_keymap_mod_get_index(this->xkb_keymap, modifier)
+		));
 }
 
-static char *smtk_keys_mapper_concat_key(SmtkKeysMapper *mapper,
-					 SmtkKeyMode mode, char *main_key,
-					 xkb_keycode_t xkb_key_code)
+static char *concat_key(
+	SmtkKeysMapper *this,
+	SmtkKeyMode mode,
+	const char *main_key,
+	xkb_keycode_t xkb_key_code
+)
 {
 	// Use a GString for easior mods concat.
 	GString *buffer = g_string_new(NULL);
 	// I'd like to call it "Super".
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_SUPER,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer,
-				mode == SMTK_KEY_MODE_COMPACT ? "⌘" : "Super+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_CTRL,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer,
-				mode == SMTK_KEY_MODE_COMPACT ? "⌃" : "Ctrl+");
-	if (xkb_state_mod_name_is_active(mapper->xkb_state, MOD_ALT,
-					 XKB_STATE_MODS_EFFECTIVE) > 0)
-		g_string_append(buffer,
-				mode == SMTK_KEY_MODE_COMPACT ? "⌥" : "Alt+");
-	if (check_show(mapper, MOD_SHIFT, xkb_key_code))
-		g_string_append(buffer,
-				mode == SMTK_KEY_MODE_COMPACT ? "⇧" : "Shift+");
-	if (check_show(mapper, MOD_ALTGR, xkb_key_code))
+	if (xkb_state_mod_name_is_active(
+		    this->xkb_state, MOD_SUPER, XKB_STATE_MODS_EFFECTIVE
+	    ) > 0)
+		g_string_append(
+			buffer, mode == SMTK_KEY_MODE_COMPACT ? "⌘" : "Super+"
+		);
+	if (xkb_state_mod_name_is_active(
+		    this->xkb_state, MOD_CTRL, XKB_STATE_MODS_EFFECTIVE
+	    ) > 0)
+		g_string_append(
+			buffer, mode == SMTK_KEY_MODE_COMPACT ? "⌃" : "Ctrl+"
+		);
+	if (xkb_state_mod_name_is_active(
+		    this->xkb_state, MOD_ALT, XKB_STATE_MODS_EFFECTIVE
+	    ) > 0)
+		g_string_append(
+			buffer, mode == SMTK_KEY_MODE_COMPACT ? "⌥" : "Alt+"
+		);
+	if (check_show(this, MOD_SHIFT, xkb_key_code))
+		g_string_append(
+			buffer, mode == SMTK_KEY_MODE_COMPACT ? "⇧" : "Shift+"
+		);
+	if (check_show(this, MOD_ALTGR, xkb_key_code))
 		g_string_append(buffer, "AltGr+");
 	g_string_append(buffer, main_key);
-	g_free(main_key);
-	return g_string_free(buffer, FALSE);
+	return g_string_free_and_steal(buffer);
 }
 
 static bool is_visible_key(struct xkb_state *xkb_state)
@@ -650,24 +954,31 @@ static bool is_visible_key(struct xkb_state *xkb_state)
 	// be simply filtered out by range, so we only check modifiers. Shift
 	// always generates insertable keys so don't check it here.
 	g_debug("Super: %d, Ctrl: %d, Alt: %d.",
-		xkb_state_mod_name_is_active(xkb_state, MOD_SUPER,
-					     XKB_STATE_MODS_EFFECTIVE),
-		xkb_state_mod_name_is_active(xkb_state, MOD_CTRL,
-					     XKB_STATE_MODS_EFFECTIVE),
-		xkb_state_mod_name_is_active(xkb_state, MOD_ALT,
-					     XKB_STATE_MODS_EFFECTIVE));
-	return !(xkb_state_mod_name_is_active(xkb_state, MOD_SUPER,
-					      XKB_STATE_MODS_EFFECTIVE) ||
-		 xkb_state_mod_name_is_active(xkb_state, MOD_CTRL,
-					      XKB_STATE_MODS_EFFECTIVE) ||
-		 xkb_state_mod_name_is_active(xkb_state, MOD_ALT,
-					      XKB_STATE_MODS_EFFECTIVE));
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_SUPER, XKB_STATE_MODS_EFFECTIVE
+		),
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_CTRL, XKB_STATE_MODS_EFFECTIVE
+		),
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_ALT, XKB_STATE_MODS_EFFECTIVE
+		));
+	return !(
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_SUPER, XKB_STATE_MODS_EFFECTIVE
+		) ||
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_CTRL, XKB_STATE_MODS_EFFECTIVE
+		) ||
+		xkb_state_mod_name_is_active(
+			xkb_state, MOD_ALT, XKB_STATE_MODS_EFFECTIVE
+		)
+	);
 }
 
-static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
-				      SmtkEvent *event)
+static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 {
-	char *main_key = NULL;
+	g_autofree char *main_key = NULL;
 	// We put xkb_key_code here because the Shift detection use it.
 	// Though Xkbcommon don't handle mouse button state, we can still
 	// convert evdev key code to xkb key code.
@@ -677,59 +988,63 @@ static char *smtk_keys_mapper_get_key(SmtkKeysMapper *mapper, SmtkKeyMode mode,
 	// so we use libinput key name for mouse button.
 	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
 		SmtkEventState event_state = smtk_event_get_event_state(event);
-		xkb_state_update_key(mapper->xkb_state, xkb_key_code,
-				     event_state == SMTK_EVENT_STATE_PRESSED ?
-					     XKB_KEY_DOWN :
-					     XKB_KEY_UP);
+		xkb_state_update_key(
+			this->xkb_state,
+			xkb_key_code,
+			event_state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
+								  XKB_KEY_UP
+		);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
-			mapper->xkb_state, xkb_key_code);
+			this->xkb_state, xkb_key_code
+		);
 		// Always get the unshifted key if show shift.
-		if (check_show(mapper, MOD_SHIFT, xkb_key_code) ||
-		    check_show(mapper, MOD_ALTGR, xkb_key_code))
+		if (check_show(this, MOD_SHIFT, xkb_key_code) ||
+		    check_show(this, MOD_ALTGR, xkb_key_code))
 			xkb_key_sym = xkb_state_key_get_one_sym(
-				mapper->xkb_state_empty, xkb_key_code);
-		if (mapper->hide_visible && is_visible_key(mapper->xkb_state)) {
+				this->xkb_state_empty, xkb_key_code
+			);
+		if (this->hide_visible && is_visible_key(this->xkb_state)) {
 			g_debug("Hide visible key.");
 			return NULL;
 		}
-		main_key = g_malloc(XKB_KEY_SYM_NAME_LENGTH);
-		xkb_keysym_get_name(xkb_key_sym, main_key,
-				    XKB_KEY_SYM_NAME_LENGTH);
+		main_key = g_malloc0(XKB_KEY_SYM_NAME_LENGTH);
+		xkb_keysym_get_name(
+			xkb_key_sym, main_key, XKB_KEY_SYM_NAME_LENGTH
+		);
 	} else {
 		main_key = g_strdup(smtk_event_get_key_name(event));
 	}
 	// Just ignore mods so we can prevent text like mod+mod.
-	if (g_hash_table_contains(mapper->xkb_mod_names, main_key)) {
+	if (g_hash_table_contains(this->xkb_mod_names, main_key)) {
 		g_debug("Ignore pure mod.");
-		g_free(main_key);
 		return NULL;
 	}
 	const char *replace_name = g_hash_table_lookup(
-		mode == SMTK_KEY_MODE_COMPACT ? mapper->compact_replace_names :
-						mapper->composed_replace_names,
-		main_key);
+		mode == SMTK_KEY_MODE_COMPACT ? this->compact_replace_names :
+						this->composed_replace_names,
+		main_key
+	);
 	if (replace_name != NULL) {
-		g_free(main_key);
+		g_clear_pointer(&main_key, g_free);
 		// Copy from the string reference in GHashTable,
 		// so we can use g_free() after append it into GString.
 		main_key = g_strdup(replace_name);
 	}
-	return smtk_keys_mapper_concat_key(mapper, mode, main_key,
-					   xkb_key_code);
+	return concat_key(this, mode, main_key, xkb_key_code);
 }
 
-char *smtk_keys_mapper_get_composed(SmtkKeysMapper *mapper, SmtkEvent *event)
+char *smtk_keys_mapper_get_composed(SmtkKeysMapper *this, SmtkEvent *event)
 {
-	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(this != NULL, NULL);
 	g_return_val_if_fail(event != NULL, NULL);
 
-	return smtk_keys_mapper_get_key(mapper, SMTK_KEY_MODE_COMPOSED, event);
+	return get_key(this, SMTK_KEY_MODE_COMPOSED, event);
 }
 
-char *smtk_keys_mapper_get_compact(SmtkKeysMapper *mapper, SmtkEvent *event)
+char *smtk_keys_mapper_get_compact(SmtkKeysMapper *this, SmtkEvent *event)
 {
-	g_return_val_if_fail(mapper != NULL, NULL);
+	g_return_val_if_fail(this != NULL, NULL);
 	g_return_val_if_fail(event != NULL, NULL);
 
-	return smtk_keys_mapper_get_key(mapper, SMTK_KEY_MODE_COMPACT, event);
+	return get_key(this, SMTK_KEY_MODE_COMPACT, event);
 }

@@ -27,11 +27,11 @@ typedef enum {
 G_DECLARE_FINAL_TYPE(SmtkEvent, smtk_event, SMTK, EVENT, GObject)
 
 SmtkEvent *smtk_event_new(char *source, GError **error);
-SmtkEventType smtk_event_get_event_type(SmtkEvent *event);
-SmtkEventState smtk_event_get_event_state(SmtkEvent *event);
-const char *smtk_event_get_key_name(SmtkEvent *event);
-unsigned int smtk_event_get_key_code(SmtkEvent *event);
-unsigned int smtk_event_get_time_stamp(SmtkEvent *event);
+SmtkEventType smtk_event_get_event_type(SmtkEvent *this);
+SmtkEventState smtk_event_get_event_state(SmtkEvent *this);
+const char *smtk_event_get_key_name(SmtkEvent *this);
+unsigned int smtk_event_get_key_code(SmtkEvent *this);
+unsigned int smtk_event_get_time_stamp(SmtkEvent *this);
 
 G_END_DECLS
 

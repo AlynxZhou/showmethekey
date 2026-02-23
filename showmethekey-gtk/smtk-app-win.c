@@ -51,8 +51,11 @@ static int mode_to_selector(GValue *value, GVariant *variant, void *data)
 	return true;
 }
 
-static GVariant *selector_to_mode(const GValue *value,
-				  const GVariantType *expected_type, void *data)
+static GVariant *selector_to_mode(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
 {
 	switch (g_value_get_uint(value)) {
 	case SMTK_KEY_MODE_COMPOSED:
@@ -81,9 +84,11 @@ static int alignment_to_selector(GValue *value, GVariant *variant, void *data)
 	return true;
 }
 
-static GVariant *selector_to_alignment(const GValue *value,
-				       const GVariantType *expected_type,
-				       void *data)
+static GVariant *selector_to_alignment(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
 {
 	switch (g_value_get_uint(value)) {
 	case SMTK_KEY_ALIGNMENT_END:
@@ -97,16 +102,17 @@ static GVariant *selector_to_alignment(const GValue *value,
 
 static int layout_to_selector(GValue *value, GVariant *variant, void *data)
 {
-	SmtkAppWin *win = data;
+	SmtkAppWin *this = data;
 	const char *slayout = NULL;
 	g_variant_get(variant, "&s", &slayout);
 	g_autofree char *svariant =
-		g_settings_get_string(win->settings, "variant");
+		g_settings_get_string(this->settings, "variant");
 
 	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
-	int position = smtk_keymap_list_find(SMTK_KEYMAP_LIST(keymap_list),
-					     slayout, svariant);
+		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
+	int position = smtk_keymap_list_find(
+		SMTK_KEYMAP_LIST(keymap_list), slayout, svariant
+	);
 	if (position > 0)
 		g_value_set_uint(value, position);
 	else
@@ -115,17 +121,20 @@ static int layout_to_selector(GValue *value, GVariant *variant, void *data)
 	return true;
 }
 
-static GVariant *selector_to_layout(const GValue *value,
-				    const GVariantType *expected_type,
-				    void *data)
+static GVariant *selector_to_layout(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
 {
-	SmtkAppWin *win = data;
+	SmtkAppWin *this = data;
 	unsigned int position = g_value_get_uint(value);
 	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
-	GObject *keymap = g_list_model_get_object(keymap_list, position);
-	const char *slayout =
-		smtk_keymap_item_get_layout(SMTK_KEYMAP_ITEM(keymap));
+		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
+	g_autoptr(GObject)
+		keymap = g_list_model_get_object(keymap_list, position);
+	g_autofree char *slayout = NULL;
+	g_object_get(keymap, "layout", &slayout, NULL);
 
 	if (slayout == NULL || strlen(slayout) == 0)
 		return NULL;
@@ -135,16 +144,17 @@ static GVariant *selector_to_layout(const GValue *value,
 
 static int variant_to_selector(GValue *value, GVariant *variant, void *data)
 {
-	SmtkAppWin *win = data;
+	SmtkAppWin *this = data;
 	g_autofree char *slayout =
-		g_settings_get_string(win->settings, "layout");
+		g_settings_get_string(this->settings, "layout");
 	const char *svariant = NULL;
 	g_variant_get(variant, "&s", &svariant);
 
 	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
-	int position = smtk_keymap_list_find(SMTK_KEYMAP_LIST(keymap_list),
-					     slayout, svariant);
+		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
+	int position = smtk_keymap_list_find(
+		SMTK_KEYMAP_LIST(keymap_list), slayout, svariant
+	);
 	if (position > 0)
 		g_value_set_uint(value, position);
 	else
@@ -153,17 +163,20 @@ static int variant_to_selector(GValue *value, GVariant *variant, void *data)
 	return true;
 }
 
-static GVariant *selector_to_variant(const GValue *value,
-				     const GVariantType *expected_type,
-				     void *data)
+static GVariant *selector_to_variant(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
 {
-	SmtkAppWin *win = data;
+	SmtkAppWin *this = data;
 	unsigned int position = g_value_get_uint(value);
 	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(win->keymap_selector));
-	GObject *keymap = g_list_model_get_object(keymap_list, position);
-	const char *svariant =
-		smtk_keymap_item_get_variant(SMTK_KEYMAP_ITEM(keymap));
+		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
+	g_autoptr(GObject)
+		keymap = g_list_model_get_object(keymap_list, position);
+	g_autofree char *svariant = NULL;
+	g_object_get(keymap, "variant", &svariant, NULL);
 
 	if (svariant == NULL)
 		svariant = "";
@@ -171,156 +184,243 @@ static GVariant *selector_to_variant(const GValue *value,
 	return g_variant_new_string(svariant);
 }
 
-static void smtk_app_win_init(SmtkAppWin *win)
+static void constructed(GObject *o)
 {
-	gtk_widget_init_template(GTK_WIDGET(win));
+	SmtkAppWin *this = SMTK_APP_WIN(o);
+
 	// If we want to bind ui template file to class, we must put menu into
 	// another file.
-	GtkBuilder *builder = gtk_builder_new_from_resource(
-		"/one/alynx/showmethekey/smtk-app-win-menu.ui");
+	g_autoptr(GtkBuilder) builder = gtk_builder_new_from_resource(
+		"/one/alynx/showmethekey/smtk-app-win-menu.ui"
+	);
 	GMenuModel *menu_model =
 		G_MENU_MODEL(gtk_builder_get_object(builder, "menu"));
-	gtk_menu_button_set_menu_model(GTK_MENU_BUTTON(win->menu_button),
-				       menu_model);
-	g_object_unref(builder);
+	gtk_menu_button_set_menu_model(
+		GTK_MENU_BUTTON(this->menu_button), menu_model
+	);
 
-	gtk_window_set_focus(GTK_WINDOW(win), NULL);
-	gtk_window_set_default_widget(GTK_WINDOW(win), win->keys_win_switch);
+	gtk_window_set_focus(GTK_WINDOW(this), NULL);
+	gtk_window_set_default_widget(GTK_WINDOW(this), this->keys_win_switch);
 
-	SmtkKeymapList *keymap_list = smtk_keymap_list_new();
-	GtkExpression *name_expression = gtk_property_expression_new(
-		SMTK_TYPE_KEYMAP_ITEM, NULL, "name");
-	adw_combo_row_set_expression(ADW_COMBO_ROW(win->keymap_selector),
-				     name_expression);
-	adw_combo_row_set_model(ADW_COMBO_ROW(win->keymap_selector),
-				G_LIST_MODEL(keymap_list));
-	win->rxkb_context = rxkb_context_new(RXKB_CONTEXT_NO_FLAGS);
-	if (win->rxkb_context != NULL &&
-	    rxkb_context_parse_default_ruleset(win->rxkb_context)) {
+	g_autoptr(SmtkKeymapList) klist = smtk_keymap_list_new();
+	g_autoptr(GtkExpression) name_expression = gtk_property_expression_new(
+		SMTK_TYPE_KEYMAP_ITEM, NULL, "name"
+	);
+	adw_combo_row_set_expression(
+		ADW_COMBO_ROW(this->keymap_selector), name_expression
+	);
+	adw_combo_row_set_model(
+		ADW_COMBO_ROW(this->keymap_selector), G_LIST_MODEL(klist)
+	);
+	this->rxkb_context = rxkb_context_new(RXKB_CONTEXT_NO_FLAGS);
+	if (this->rxkb_context != NULL &&
+	    rxkb_context_parse_default_ruleset(this->rxkb_context)) {
 		for (struct rxkb_layout *rxkb_layout =
-			     rxkb_layout_first(win->rxkb_context);
+			     rxkb_layout_first(this->rxkb_context);
 		     rxkb_layout != NULL;
 		     rxkb_layout = rxkb_layout_next(rxkb_layout))
 			smtk_keymap_list_append(
-				keymap_list, rxkb_layout_get_name(rxkb_layout),
-				rxkb_layout_get_variant(rxkb_layout));
-		smtk_keymap_list_sort(keymap_list);
+				klist,
+				rxkb_layout_get_name(rxkb_layout),
+				rxkb_layout_get_variant(rxkb_layout)
+			);
+		smtk_keymap_list_sort(klist);
 	}
 
-	win->settings = NULL;
-}
+	this->settings = g_settings_new("one.alynx.showmethekey");
+	g_settings_bind(
+		this->settings,
+		"active",
+		this->keys_win_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"clickable",
+		this->clickable_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"paused",
+		this->pause_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"show-shift",
+		this->shift_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"show-keyboard",
+		this->keyboard_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"show-mouse",
+		this->mouse_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"draw-border",
+		this->border_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"hide-visible",
+		this->hide_visible_switch,
+		"active",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"mode",
+		this->mode_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		mode_to_selector,
+		selector_to_mode,
+		this,
+		NULL
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"alignment",
+		this->alignment_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		alignment_to_selector,
+		selector_to_alignment,
+		this,
+		NULL
+	);
+	g_settings_bind(
+		this->settings,
+		"width",
+		this->width_entry,
+		"value",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"height",
+		this->height_entry,
+		"value",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"margin-ratio",
+		gtk_range_get_adjustment(GTK_RANGE(this->margin_slider)),
+		"value",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind(
+		this->settings,
+		"timeout",
+		this->timeout_entry,
+		"value",
+		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"layout",
+		this->keymap_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		layout_to_selector,
+		selector_to_layout,
+		this,
+		NULL
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"variant",
+		this->keymap_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		variant_to_selector,
+		selector_to_variant,
+		this,
+		NULL
+	);
 
-static void smtk_app_win_constructed(GObject *object)
-{
-	SmtkAppWin *win = SMTK_APP_WIN(object);
-
-	win->settings = g_settings_new("one.alynx.showmethekey");
-	g_settings_bind(win->settings, "active", win->keys_win_switch, "active",
-			G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "clickable", win->clickable_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "paused", win->pause_switch, "active",
-			G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "show-shift", win->shift_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "show-keyboard", win->keyboard_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "show-mouse", win->mouse_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "draw-border", win->border_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "hide-visible", win->hide_visible_switch,
-			"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind_with_mapping(win->settings, "mode", win->mode_selector,
-				     "selected", G_SETTINGS_BIND_DEFAULT,
-				     mode_to_selector, selector_to_mode, win,
-				     NULL);
-	g_settings_bind_with_mapping(win->settings, "alignment",
-				     win->alignment_selector, "selected",
-				     G_SETTINGS_BIND_DEFAULT,
-				     alignment_to_selector,
-				     selector_to_alignment, win, NULL);
-	g_settings_bind(win->settings, "width", win->width_entry, "value",
-			G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "height", win->height_entry, "value",
-			G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "margin-ratio",
-			gtk_range_get_adjustment(GTK_RANGE(win->margin_slider)),
-			"value", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind(win->settings, "timeout", win->timeout_entry, "value",
-			G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind_with_mapping(win->settings, "layout",
-				     win->keymap_selector, "selected",
-				     G_SETTINGS_BIND_DEFAULT,
-				     layout_to_selector, selector_to_layout,
-				     win, NULL);
-	g_settings_bind_with_mapping(win->settings, "variant",
-				     win->keymap_selector, "selected",
-				     G_SETTINGS_BIND_DEFAULT,
-				     variant_to_selector, selector_to_variant,
-				     win, NULL);
-
-	if (g_settings_get_boolean(win->settings, "first-time")) {
-		smtk_app_win_show_usage(win);
-		g_settings_set_boolean(win->settings, "first-time", false);
+	if (g_settings_get_boolean(this->settings, "first-time")) {
+		smtk_app_win_show_usage(this);
+		g_settings_set_boolean(this->settings, "first-time", false);
 	}
 
-	G_OBJECT_CLASS(smtk_app_win_parent_class)->constructed(object);
+	G_OBJECT_CLASS(smtk_app_win_parent_class)->constructed(o);
 }
 
-static void smtk_app_win_dispose(GObject *object)
+static void dispose(GObject *o)
 {
-	SmtkAppWin *win = SMTK_APP_WIN(object);
+	SmtkAppWin *this = SMTK_APP_WIN(o);
 
-	g_clear_object(&win->settings);
+	g_clear_object(&this->settings);
 
-	g_clear_pointer(&win->rxkb_context, rxkb_context_unref);
+	g_clear_pointer(&this->rxkb_context, rxkb_context_unref);
 
-	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(object);
+	G_OBJECT_CLASS(smtk_app_win_parent_class)->dispose(o);
 }
 
-static void smtk_app_win_class_init(SmtkAppWinClass *win_class)
+static void smtk_app_win_class_init(SmtkAppWinClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(win_class);
+	GObjectClass *o_class = G_OBJECT_CLASS(klass);
+	GtkWidgetClass *w_class = GTK_WIDGET_CLASS(klass);
 
-	object_class->constructed = smtk_app_win_constructed;
-	object_class->dispose = smtk_app_win_dispose;
+	o_class->constructed = constructed;
+	o_class->dispose = dispose;
 
 	gtk_widget_class_set_template_from_resource(
-		GTK_WIDGET_CLASS(win_class),
-		"/one/alynx/showmethekey/smtk-app-win.ui");
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, keys_win_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, menu_button);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, clickable_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, pause_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, shift_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, keyboard_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, mouse_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, border_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, hide_visible_switch);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, mode_selector);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, alignment_selector);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, width_entry);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, height_entry);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, margin_slider);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, timeout_entry);
-	gtk_widget_class_bind_template_child(GTK_WIDGET_CLASS(win_class),
-					     SmtkAppWin, keymap_selector);
+		w_class, "/one/alynx/showmethekey/smtk-app-win.ui"
+	);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, keys_win_switch
+	);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, menu_button);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, clickable_switch
+	);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, pause_switch);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, shift_switch);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, keyboard_switch
+	);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, mouse_switch);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, border_switch);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, hide_visible_switch
+	);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, mode_selector);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, alignment_selector
+	);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, width_entry);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, height_entry);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, margin_slider);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, timeout_entry);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, keymap_selector
+	);
+}
+
+static void smtk_app_win_init(SmtkAppWin *this)
+{
+	gtk_widget_init_template(GTK_WIDGET(this));
+	this->settings = NULL;
 }
 
 GtkWidget *smtk_app_win_new(SmtkApp *app)
@@ -328,17 +428,17 @@ GtkWidget *smtk_app_win_new(SmtkApp *app)
 	return g_object_new(SMTK_TYPE_APP_WIN, "application", app, NULL);
 }
 
-void smtk_app_win_show_usage(SmtkAppWin *win)
+void smtk_app_win_show_usage(SmtkAppWin *this)
 {
-	g_return_if_fail(win != NULL);
+	g_return_if_fail(this != NULL);
 
 	GtkWidget *usage_win = smtk_usage_win_new();
 	gtk_window_present(GTK_WINDOW(usage_win));
 }
 
-void smtk_app_win_show_about(SmtkAppWin *win)
+void smtk_app_win_show_about(SmtkAppWin *this)
 {
-	g_return_if_fail(win != NULL);
+	g_return_if_fail(this != NULL);
 
 	const char *developers[] = { "Alynx Zhou",    "LGiki",	      "mimir-d",
 				     "Jakub Jirutka", "Eli Schwartz", "Ariel",
@@ -370,18 +470,38 @@ void smtk_app_win_show_about(SmtkAppWin *win)
 		"limitations under the License.";
 
 #if ADW_CHECK_VERSION(1, 5, 0)
-	adw_show_about_dialog(GTK_WIDGET(win), "developers", developers,
+	adw_show_about_dialog(
+		GTK_WIDGET(this),
+		"developers",
+		developers,
 #else
-	adw_show_about_window(GTK_WINDOW(win), "developers", developers,
+	adw_show_about_window(
+		GTK_WINDOW(this),
+		"developers",
+		developers,
 #endif
-			      "artists", artists, "documenters", documenters,
-			      "translator-credits", _("translator-credits"),
-			      "title", _("About Show Me The Key"),
-			      "application-name", _("Show Me The Key"),
-			      "comments", _("Show keys you typed on screen."),
-			      "copyright", "Copyright © 2021-2022 Alynx Zhou",
-			      "license", license, "application-icon",
-			      "one.alynx.showmethekey", "website",
-			      "https://showmethekey.alynx.one/", "version",
-			      PROJECT_VERSION, NULL);
+		"artists",
+		artists,
+		"documenters",
+		documenters,
+		"translator-credits",
+		_("translator-credits"),
+		"title",
+		_("About Show Me The Key"),
+		"application-name",
+		_("Show Me The Key"),
+		"comments",
+		_("Show keys you typed on screen."),
+		"copyright",
+		"Copyright © 2021-2022 Alynx Zhou",
+		"license",
+		license,
+		"application-icon",
+		"one.alynx.showmethekey",
+		"website",
+		"https://showmethekey.alynx.one/",
+		"version",
+		PROJECT_VERSION,
+		NULL
+	);
 }
