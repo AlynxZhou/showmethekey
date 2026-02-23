@@ -9,7 +9,7 @@ bool smtk_keymap_is_default(const char *string)
 	       g_strcmp0(string, "default") == 0;
 }
 
-// TODO: Turn this into a boxed type?
+// NOTE: This could not be a boxed type because GtkListBoxRow requires GObject.
 struct _SmtkKeymapItem {
 	GObject parent_instance;
 	char *layout;
@@ -41,7 +41,8 @@ static void item_set_layout(SmtkKeymapItem *this, const char *layout)
 static void item_set_variant(SmtkKeymapItem *this, const char *variant)
 {
 	g_clear_pointer(&this->variant, g_free);
-	this->variant = g_strdup(variant);
+	// Use empty string so we don't need to check NULL on reading item.
+	this->variant = variant != NULL ? g_strdup(variant) : g_strdup("");
 
 	g_clear_pointer(&this->name, g_free);
 	this->name = build_name(this->layout, this->variant);
@@ -141,7 +142,7 @@ static void smtk_keymap_item_init(SmtkKeymapItem *this)
 {
 }
 
-SmtkKeymapItem *smtk_keymap_item_new(const char *layout, const char *variant)
+static SmtkKeymapItem *item_new(const char *layout, const char *variant)
 {
 	return g_object_new(
 		SMTK_TYPE_KEYMAP_ITEM, "layout", layout, "variant", variant, NULL
@@ -222,8 +223,9 @@ void smtk_keymap_list_append(
 )
 {
 	g_return_if_fail(this != NULL);
+	g_return_if_fail(layout != NULL);
 
-	g_ptr_array_add(this->items, smtk_keymap_item_new(layout, variant));
+	g_ptr_array_add(this->items, item_new(layout, variant));
 
 	g_list_model_items_changed(
 		G_LIST_MODEL(this), this->items->len - 1, 0, 1

@@ -100,88 +100,18 @@ static GVariant *selector_to_alignment(
 	}
 }
 
-static int layout_to_selector(GValue *value, GVariant *variant, void *data)
+static void
+on_selected(SmtkAppWin *this, GParamSpec *prop, AdwComboRow *keymap_selector)
 {
-	SmtkAppWin *this = data;
-	const char *slayout = NULL;
-	g_variant_get(variant, "&s", &slayout);
-	g_autofree char *svariant =
-		g_settings_get_string(this->settings, "variant");
-
-	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
-	int position = smtk_keymap_list_find(
-		SMTK_KEYMAP_LIST(keymap_list), slayout, svariant
+	GObject *item = adw_combo_row_get_selected_item(
+		ADW_COMBO_ROW(this->keymap_selector)
 	);
-	if (position > 0)
-		g_value_set_uint(value, position);
-	else
-		g_value_set_uint(value, 0);
+	g_autofree char *layout = NULL;
+	g_autofree char *variant = NULL;
 
-	return true;
-}
-
-static GVariant *selector_to_layout(
-	const GValue *value,
-	const GVariantType *expected_type,
-	void *data
-)
-{
-	SmtkAppWin *this = data;
-	unsigned int position = g_value_get_uint(value);
-	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
-	g_autoptr(GObject)
-		keymap = g_list_model_get_object(keymap_list, position);
-	g_autofree char *slayout = NULL;
-	g_object_get(keymap, "layout", &slayout, NULL);
-
-	if (slayout == NULL || strlen(slayout) == 0)
-		return NULL;
-
-	return g_variant_new_string(slayout);
-}
-
-static int variant_to_selector(GValue *value, GVariant *variant, void *data)
-{
-	SmtkAppWin *this = data;
-	g_autofree char *slayout =
-		g_settings_get_string(this->settings, "layout");
-	const char *svariant = NULL;
-	g_variant_get(variant, "&s", &svariant);
-
-	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
-	int position = smtk_keymap_list_find(
-		SMTK_KEYMAP_LIST(keymap_list), slayout, svariant
-	);
-	if (position > 0)
-		g_value_set_uint(value, position);
-	else
-		g_value_set_uint(value, 0);
-
-	return true;
-}
-
-static GVariant *selector_to_variant(
-	const GValue *value,
-	const GVariantType *expected_type,
-	void *data
-)
-{
-	SmtkAppWin *this = data;
-	unsigned int position = g_value_get_uint(value);
-	GListModel *keymap_list =
-		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
-	g_autoptr(GObject)
-		keymap = g_list_model_get_object(keymap_list, position);
-	g_autofree char *svariant = NULL;
-	g_object_get(keymap, "variant", &svariant, NULL);
-
-	if (svariant == NULL)
-		svariant = "";
-
-	return g_variant_new_string(svariant);
+	g_object_get(item, "layout", &layout, "variant", &variant, NULL);
+	g_settings_set_string(this->settings, "layout", layout);
+	g_settings_set_string(this->settings, "variant", variant);
 }
 
 static void constructed(GObject *o)
@@ -334,29 +264,30 @@ static void constructed(GObject *o)
 		"value",
 		G_SETTINGS_BIND_DEFAULT
 	);
-	g_settings_bind_with_mapping(
-		this->settings,
-		"layout",
-		this->keymap_selector,
-		"selected",
-		G_SETTINGS_BIND_DEFAULT,
-		layout_to_selector,
-		selector_to_layout,
-		this,
-		NULL
+	// See <https://docs.gtk.org/gio/method.Settings.bind_with_mapping.html>.
+	//
+	// We are unable to bind settings with keymap selector, because we have
+	// 2 different keys for keymap, but each property can only be bound once.
+	// It is OK to only load them on constructed, and save them on changed.
+	g_autofree char *layout =
+		g_settings_get_string(this->settings, "layout");
+	g_autofree char *variant =
+		g_settings_get_string(this->settings, "variant");
+	GListModel *keymaps =
+		adw_combo_row_get_model(ADW_COMBO_ROW(this->keymap_selector));
+	int position = smtk_keymap_list_find(
+		SMTK_KEYMAP_LIST(keymaps), layout, variant
 	);
-	g_settings_bind_with_mapping(
-		this->settings,
-		"variant",
-		this->keymap_selector,
-		"selected",
-		G_SETTINGS_BIND_DEFAULT,
-		variant_to_selector,
-		selector_to_variant,
-		this,
-		NULL
+	adw_combo_row_set_selected(
+		ADW_COMBO_ROW(this->keymap_selector),
+		position > 0 ? position : 0
 	);
-
+	g_signal_connect_swapped(
+		this->keymap_selector,
+		"notify::selected",
+		G_CALLBACK(on_selected),
+		this
+	);
 	if (g_settings_get_boolean(this->settings, "first-time")) {
 		smtk_app_win_show_usage(this);
 		g_settings_set_boolean(this->settings, "first-time", false);

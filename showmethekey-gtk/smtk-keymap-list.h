@@ -11,8 +11,6 @@ bool smtk_keymap_is_default(const char *string);
 #define SMTK_TYPE_KEYMAP_ITEM smtk_keymap_item_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeymapItem, smtk_keymap_item, SMTK, KEYMAP_ITEM, GObject)
 
-SmtkKeymapItem *smtk_keymap_item_new(const char *layout, const char *variant);
-
 #define SMTK_TYPE_KEYMAP_LIST smtk_keymap_list_get_type()
 G_DECLARE_FINAL_TYPE(SmtkKeymapList, smtk_keymap_list, SMTK, KEYMAP_LIST, GObject)
 
