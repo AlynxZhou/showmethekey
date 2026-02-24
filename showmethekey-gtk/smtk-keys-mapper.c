@@ -52,7 +52,6 @@ struct _SmtkKeysMapper {
 	GHashTable *xkb_mod_names;
 	GHashTable *composed_replace_names;
 	GHashTable *compact_replace_names;
-	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysMapper, smtk_keys_mapper, G_TYPE_OBJECT)
 
@@ -67,11 +66,8 @@ enum {
 
 static GParamSpec *props[N_PROPS] = { NULL };
 
-// Prevent clang-format from adding space between minus.
-// clang-format off
-G_DEFINE_QUARK(smtk-keys-mapper-error-quark, smtk_keys_mapper_error)
-// clang-format on
-
+// We cannot use `g_error` here, because we update layout and variant in 2 steps,
+// and we may get error between them, it is OK to ignore the error then.
 static bool refresh_keymap(SmtkKeysMapper *this)
 {
 	if (this->xkb_keymap != NULL)
@@ -88,38 +84,25 @@ static bool refresh_keymap(SmtkKeysMapper *this)
 		this->xkb_context, &names, XKB_KEYMAP_COMPILE_NO_FLAGS
 	);
 	if (this->xkb_keymap == NULL) {
-		g_set_error(
-			&this->error,
-			SMTK_KEYS_MAPPER_ERROR,
-			SMTK_KEYS_MAPPER_ERROR_XKB_KEYMAP,
-			"Failed to create XKB keymap."
-		);
+		g_warning("Failed to create XKB keymap.");
 		return false;
 	}
 
 	if (this->xkb_state != NULL)
 		xkb_state_unref(this->xkb_state);
-	if (this->xkb_state_empty != NULL)
-		xkb_state_unref(this->xkb_state_empty);
 
 	this->xkb_state = xkb_state_new(this->xkb_keymap);
 	if (this->xkb_state == NULL) {
-		g_set_error(
-			&this->error,
-			SMTK_KEYS_MAPPER_ERROR,
-			SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			"Failed to create XKB state."
-		);
+		g_warning("Failed to create XKB state.");
 		return false;
 	}
+
+	if (this->xkb_state_empty != NULL)
+		xkb_state_unref(this->xkb_state_empty);
+
 	this->xkb_state_empty = xkb_state_new(this->xkb_keymap);
 	if (this->xkb_state_empty == NULL) {
-		g_set_error(
-			&this->error,
-			SMTK_KEYS_MAPPER_ERROR,
-			SMTK_KEYS_MAPPER_ERROR_XKB_STATE,
-			"Failed to create empty XKB state."
-		);
+		g_warning("Failed to create empty XKB state.");
 		return false;
 	}
 
@@ -224,7 +207,8 @@ static void constructed(GObject *object)
 		this->settings, "variant", this, "variant", G_SETTINGS_BIND_GET
 	);
 
-	refresh_keymap(this);
+	if (!refresh_keymap(this))
+		g_error("Failed to init keymap.");
 
 	G_OBJECT_CLASS(smtk_keys_mapper_parent_class)->constructed(object);
 }
@@ -302,21 +286,13 @@ static void smtk_keys_mapper_class_init(SmtkKeysMapperClass *klass)
 
 static void smtk_keys_mapper_init(SmtkKeysMapper *this)
 {
-	this->error = NULL;
 	this->settings = NULL;
 	this->layout = NULL;
 	this->variant = NULL;
 
 	this->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-	if (this->xkb_context == NULL) {
-		g_set_error(
-			&this->error,
-			SMTK_KEYS_MAPPER_ERROR,
-			SMTK_KEYS_MAPPER_ERROR_XKB_CONTEXT,
-			"Failed to create XKB context."
-		);
-		return;
-	}
+	if (this->xkb_context == NULL)
+		g_error("Failed to create XKB context.");
 
 	// GHashTable only keeps reference, so we manully copy string and set
 	// g_free() for releasing them.
@@ -851,16 +827,9 @@ static void smtk_keys_mapper_init(SmtkKeysMapper *this)
 	);
 }
 
-SmtkKeysMapper *smtk_keys_mapper_new(GError **error)
+SmtkKeysMapper *smtk_keys_mapper_new(void)
 {
 	SmtkKeysMapper *this = g_object_new(SMTK_TYPE_KEYS_MAPPER, NULL);
-
-	if (this->error != NULL) {
-		g_propagate_error(error, this->error);
-		g_object_unref(this);
-		return NULL;
-	}
-
 	return this;
 }
 

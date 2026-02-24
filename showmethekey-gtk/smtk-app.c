@@ -123,8 +123,7 @@ static void show_keys_win(SmtkApp *this)
 {
 	if (this->keys_win == NULL) {
 		g_autoptr(GError) error = NULL;
-		this->keys_win =
-			smtk_keys_win_new(this, this->clickable_opt, &error);
+		this->keys_win = smtk_keys_win_new(this, this->clickable_opt);
 		if (error != NULL) {
 			g_warning(
 				"Failed to create keys win: %s.", error->message

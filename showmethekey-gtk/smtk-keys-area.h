@@ -17,7 +17,7 @@ G_DECLARE_FINAL_TYPE(
 // It looks like glib-mkenums cannot make enums
 // if clang-format make this in one line. But why???
 // clang-format off
-typedef enum {
+typedef enum _SmtkKeyAlignment {
 	SMTK_KEY_ALIGNMENT_END,
 	SMTK_KEY_ALIGNMENT_CENTER
 } SmtkKeyAlignment;

@@ -25,7 +25,6 @@ struct _SmtkKeysEmitter {
 	bool show_mouse;
 	bool ctrl_pressed;
 	bool alt_pressed;
-	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
@@ -36,34 +35,6 @@ static unsigned int sigs[N_SIGNALS] = { 0 };
 enum { PROP_0, PROP_MODE, PROP_SHOW_KEYBOARD, PROP_SHOW_MOUSE, N_PROPS };
 
 static GParamSpec *props[N_PROPS] = { NULL };
-
-// Check whether user choose cancel for pkexec.
-static void
-on_cli_complete(GObject *source_object, GAsyncResult *res, void *data)
-{
-	// We got a copy of SmtkKeysEmitter's address when setting up this
-	// callback, and there is a condition, that user closes the switch,
-	// and emitter is disposed, then this callback is called, and the
-	// address we hold is invalid, it might point to other objects, and
-	// still not NULL. To solve this problem we hold a reference to this
-	// callback to prevent the emitter to be disposed and manually drop it.
-	g_debug("Calling on_cli_complete().");
-
-	g_autoptr(SmtkKeysEmitter) this = data;
-	// Cli may already released normally, and this function only cares about
-	// when cli exited with error, for example user cancelled pkexec.
-	if (this->cli == NULL || g_subprocess_get_exit_status(this->cli) == 0)
-		return;
-
-	// Better to close thread here to prevent a lot of error.
-	this->polling = false;
-	if (this->poller != NULL) {
-		g_debug("Stopping poller because cli exitted.");
-		g_thread_join(this->poller);
-		this->poller = NULL;
-	}
-	g_signal_emit_by_name(this, "error-cli-exit");
-}
 
 static void set_property(
 	GObject *o,
@@ -282,10 +253,7 @@ static void constructed(GObject *o)
 	// Seems we can only get constructor properties here.
 	SmtkKeysEmitter *this = SMTK_KEYS_EMITTER(o);
 
-	this->mapper = smtk_keys_mapper_new(&this->error);
-	// `this->error` is already set, just return.
-	if (this->mapper == NULL)
-		goto out;
+	this->mapper = smtk_keys_mapper_new();
 
 	this->settings = g_settings_new("one.alynx.showmethekey");
 	g_settings_bind(
@@ -306,7 +274,6 @@ static void constructed(GObject *o)
 		G_SETTINGS_BIND_GET
 	);
 
-out:
 	G_OBJECT_CLASS(smtk_keys_emitter_parent_class)->constructed(o);
 }
 
@@ -396,23 +363,15 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *this)
 	this->cli = NULL;
 	this->cli_out = NULL;
 	this->poller = NULL;
-	this->error = NULL;
 	this->show_keyboard = true;
 	this->show_mouse = true;
 	this->ctrl_pressed = false;
 	this->alt_pressed = false;
 }
 
-SmtkKeysEmitter *smtk_keys_emitter_new(GError **error)
+SmtkKeysEmitter *smtk_keys_emitter_new(void)
 {
 	SmtkKeysEmitter *this = g_object_new(SMTK_TYPE_KEYS_EMITTER, NULL);
-
-	if (this->error != NULL) {
-		g_propagate_error(error, this->error);
-		g_object_unref(this);
-		return NULL;
-	}
-
 	return this;
 }
 
@@ -440,6 +399,34 @@ static bool is_group(const char *group_name)
 	return false;
 }
 
+// Check whether user choose cancel for pkexec.
+static void
+on_cli_complete(GObject *source_object, GAsyncResult *res, void *data)
+{
+	// We got a copy of SmtkKeysEmitter's address when setting up this
+	// callback, and there is a condition, that user closes the switch,
+	// and emitter is disposed, then this callback is called, and the
+	// address we hold is invalid, it might point to other objects, and
+	// still not NULL. To solve this problem we hold a reference to this
+	// callback to prevent the emitter to be disposed and manually drop it.
+	g_debug("Calling on_cli_complete().");
+
+	g_autoptr(SmtkKeysEmitter) this = data;
+	// Cli may already released normally, and this function only cares about
+	// when cli exited with error, for example user cancelled pkexec.
+	if (this->cli == NULL || g_subprocess_get_exit_status(this->cli) == 0)
+		return;
+
+	// Better to close thread here to prevent a lot of error.
+	this->polling = false;
+	if (this->poller != NULL) {
+		g_debug("Stopping poller because cli exitted.");
+		g_thread_join(this->poller);
+		this->poller = NULL;
+	}
+	g_signal_emit_by_name(this, "error-cli-exit");
+}
+
 // Those two functions are splitted from init and dispose functions,
 // because we need to pass a reference to the async callback of GTask,
 // and don't want a loop reference (e.g. a emitter reference is dropped
@@ -447,17 +434,18 @@ static bool is_group(const char *group_name)
 // but cli is stopped only when emitter is disposed, and emitter is disposed
 // only when reference is dropped!). So we break it into different functions
 // and let the caller stop the cli before dispose.
-void smtk_keys_emitter_start_async(SmtkKeysEmitter *this, GError **error)
+void smtk_keys_emitter_start_async(SmtkKeysEmitter *this)
 {
 	g_debug("Calling smtk_keys_emitter_start_async().");
 	g_return_if_fail(this != NULL);
 
+	g_autoptr(GError) error = NULL;
 	if (is_group("input"))
 		this->cli = g_subprocess_new(
 			G_SUBPROCESS_FLAGS_STDIN_PIPE |
 				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 				G_SUBPROCESS_FLAGS_STDERR_PIPE,
-			error,
+			&error,
 			PACKAGE_BINDIR "/showmethekey-cli",
 			NULL
 		);
@@ -466,20 +454,20 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *this, GError **error)
 			G_SUBPROCESS_FLAGS_STDIN_PIPE |
 				G_SUBPROCESS_FLAGS_STDOUT_PIPE |
 				G_SUBPROCESS_FLAGS_STDERR_PIPE,
-			error,
+			&error,
 			PKEXEC_PATH,
 			PACKAGE_BINDIR "/showmethekey-cli",
 			NULL
 		);
-	// this->error is already set, just return.
 	if (this->cli == NULL)
-		return;
-	// Actually I don't wait the subprocess to return, they work like
-	// clients and daemons, why clients want to wait for daemons' exiting?
-	// This is just spawn subprocess.
-	// smtk_keys_emitter_cli_on_complete is called when GTask finished,
-	// and this is async and might the SmtkKeysWin is already destroyed.
-	// So we have to manually reference to emitter here.
+		g_error("Failed to start subprocess: %s", error->message);
+	// Actually I don't wait the subprocess to return, they work like client
+	// and daemon, why client waits for daemon's exiting? This is just
+	// spawning subprocess.
+	//
+	// `on_cli_complete` is called when GTask finished, because this is async
+	// and the SmtkKeysWin may be already destroyed, we have to manually
+	// reference it to prevent that.
 	g_subprocess_wait_check_async(
 		this->cli, NULL, on_cli_complete, g_object_ref(this)
 	);
@@ -488,10 +476,9 @@ void smtk_keys_emitter_start_async(SmtkKeysEmitter *this, GError **error)
 	);
 
 	this->polling = true;
-	this->poller = g_thread_try_new("poller", poll_cli, this, error);
-	// this->error is already set, just return.
+	this->poller = g_thread_try_new("poller", poll_cli, this, &error);
 	if (this->poller == NULL)
-		return;
+		g_error("Failed to start thread: %s.", error->message);
 }
 
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *this)
@@ -501,16 +488,13 @@ void smtk_keys_emitter_stop_async(SmtkKeysEmitter *this)
 
 	// Don't know why but I need to stop cli before poller.
 	if (this->cli != NULL) {
-		// Because we run subprocess with pkexec,
-		// so we cannot force kill it,
-		// we use stdin pipe to write a "stop\n",
-		// and let it exit by itself.
+		// We run subprocess with pkexec so we cannot force kill it, we
+		// use stdin pipe to write a "stop\n", and let it exit by itself.
 		const char stop[] = "stop\n";
-		GBytes *input = g_bytes_new(stop, sizeof(stop));
+		g_autoptr(GBytes) input = g_bytes_new(stop, sizeof(stop));
 		g_subprocess_communicate(
 			this->cli, input, NULL, NULL, NULL, NULL
 		);
-		g_bytes_unref(input);
 		// g_subprocess_force_exit(this->cli);
 		// Just close it, I am not interested in its error.
 		g_input_stream_close(G_INPUT_STREAM(this->cli_out), NULL, NULL);

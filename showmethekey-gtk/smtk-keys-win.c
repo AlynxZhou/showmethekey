@@ -23,7 +23,6 @@ struct _SmtkKeysWin {
 	bool show_keyboard;
 	bool show_mouse;
 	bool hide_visible;
-	GError *error;
 };
 G_DEFINE_TYPE(SmtkKeysWin, smtk_keys_win, ADW_TYPE_APPLICATION_WINDOW)
 
@@ -312,10 +311,7 @@ static void constructed(GObject *o)
 	gtk_box_append(GTK_BOX(this->box), this->header_bar);
 	gtk_widget_set_visible(this->handle, this->clickable);
 
-	this->emitter = smtk_keys_emitter_new(&this->error);
-	// `this->error` is set so just return.
-	if (this->emitter == NULL)
-		goto out;
+	this->emitter = smtk_keys_emitter_new();
 	g_signal_connect_swapped(
 		this->emitter,
 		"error-cli-exit",
@@ -324,9 +320,7 @@ static void constructed(GObject *o)
 	);
 	g_signal_connect_swapped(this->emitter, "key", G_CALLBACK(on_key), this);
 
-	smtk_keys_emitter_start_async(this->emitter, &this->error);
-	if (this->error != NULL)
-		goto out;
+	smtk_keys_emitter_start_async(this->emitter);
 
 	this->area = smtk_keys_area_new();
 	gtk_box_append(GTK_BOX(this->box), this->area);
@@ -360,7 +354,6 @@ static void constructed(GObject *o)
 		G_SETTINGS_BIND_DEFAULT
 	);
 
-out:
 	G_OBJECT_CLASS(smtk_keys_win_parent_class)->constructed(o);
 }
 
@@ -425,7 +418,6 @@ static void smtk_keys_win_init(SmtkKeysWin *this)
 	// TODO: Are those comments still true for GTK4?
 	// It seems a widget from `.ui` file is unable to set to transparent.
 	// So we have to make UI from code.
-	this->error = NULL;
 	this->clickable = false;
 	this->paused = false;
 
@@ -435,7 +427,7 @@ static void smtk_keys_win_init(SmtkKeysWin *this)
 	this->area = NULL;
 }
 
-GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable, GError **error)
+GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable)
 {
 	SmtkKeysWin *this = g_object_new(
 		SMTK_TYPE_KEYS_WIN,
@@ -472,15 +464,6 @@ GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable, GError **error)
 		false,
 		NULL
 	);
-
-	if (this->error != NULL) {
-		g_propagate_error(error, this->error);
-		// GtkWidget is GInitiallyUnowned,
-		// so we need to sink the floating first.
-		g_object_ref_sink(this);
-		gtk_window_destroy(GTK_WINDOW(this));
-		return NULL;
-	}
 
 	// gtk_window_set_default_size(GTK_WINDOW(win), width, height);
 	// Setting transient will block showing on all desktop so don't use it.

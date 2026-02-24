@@ -17,7 +17,7 @@ G_DECLARE_FINAL_TYPE(
 	AdwApplicationWindow
 )
 
-GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable, GError **error);
+GtkWidget *smtk_keys_win_new(SmtkApp *app, bool clickable);
 
 G_END_DECLS
 

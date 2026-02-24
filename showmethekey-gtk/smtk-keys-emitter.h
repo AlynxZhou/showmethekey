@@ -15,8 +15,8 @@ G_DECLARE_FINAL_TYPE(
 	GObject
 )
 
-SmtkKeysEmitter *smtk_keys_emitter_new(GError **error);
-void smtk_keys_emitter_start_async(SmtkKeysEmitter *this, GError **error);
+SmtkKeysEmitter *smtk_keys_emitter_new(void);
+void smtk_keys_emitter_start_async(SmtkKeysEmitter *this);
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *this);
 
 G_END_DECLS
