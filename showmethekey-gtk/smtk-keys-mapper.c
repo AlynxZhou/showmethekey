@@ -870,18 +870,18 @@ char *smtk_keys_mapper_get_raw(SmtkKeysMapper *this, SmtkEvent *event)
 	g_return_val_if_fail(event != NULL, NULL);
 
 	// XKBcommon only handles keyboard.
-	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
+	if (event->type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
 		xkb_keycode_t xkb_key_code =
-			KEY_CODE_EV_TO_XKB(smtk_event_get_key_code(event));
-		SmtkEventState event_state = smtk_event_get_event_state(event);
+			KEY_CODE_EV_TO_XKB(event->key_code);
+		SmtkEventState state = event->state;
 		xkb_state_update_key(
 			this->xkb_state,
 			xkb_key_code,
-			event_state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
-								  XKB_KEY_UP
+			state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
+							    XKB_KEY_UP
 		);
 	}
-	return g_strdup(smtk_event_get_key_name(event));
+	return g_strdup(event->key_name);
 }
 
 // Shift is a little bit complex, it can be consumed by capitalization
@@ -982,17 +982,16 @@ static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 	// We put xkb_key_code here because the Shift detection use it.
 	// Though Xkbcommon don't handle mouse button state, we can still
 	// convert evdev key code to xkb key code.
-	xkb_keycode_t xkb_key_code =
-		KEY_CODE_EV_TO_XKB(smtk_event_get_key_code(event));
+	xkb_keycode_t xkb_key_code = KEY_CODE_EV_TO_XKB(event->key_code);
 	// Xkbcommon only handle keyboards,
 	// so we use libinput key name for mouse button.
-	if (smtk_event_get_event_type(event) == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
-		SmtkEventState event_state = smtk_event_get_event_state(event);
+	if (event->type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
+		SmtkEventState state = event->state;
 		xkb_state_update_key(
 			this->xkb_state,
 			xkb_key_code,
-			event_state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
-								  XKB_KEY_UP
+			state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
+							    XKB_KEY_UP
 		);
 		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
 			this->xkb_state, xkb_key_code
@@ -1012,7 +1011,7 @@ static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 			xkb_key_sym, main_key, XKB_KEY_SYM_NAME_LENGTH
 		);
 	} else {
-		main_key = g_strdup(smtk_event_get_key_name(event));
+		main_key = g_strdup(event->key_name);
 	}
 	// Just ignore mods so we can prevent text like mod+mod.
 	if (g_hash_table_contains(this->xkb_mod_names, main_key)) {

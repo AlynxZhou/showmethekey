@@ -5,33 +5,34 @@
 
 G_BEGIN_DECLS
 
-typedef enum {
+typedef enum _SmtkEventType {
 	SMTK_EVENT_TYPE_UNKNOWN,
 	SMTK_EVENT_TYPE_KEYBOARD_KEY,
 	SMTK_EVENT_TYPE_POINTER_BUTTON
 } SmtkEventType;
 
-typedef enum {
+typedef enum _SmtkEventState {
 	SMTK_EVENT_STATE_UNKNOWN,
 	SMTK_EVENT_STATE_RELEASED,
 	SMTK_EVENT_STATE_PRESSED
 } SmtkEventState;
 
-#define SMTK_EVENT_ERROR smtk_event_error_quark()
-typedef enum {
-	SMTK_EVENT_ERROR_SOURCE,
-	SMTK_EVENT_ERROR_XKB_UNKNOWN
-} SmtkEventError;
+typedef struct _SmtkEvent {
+	SmtkEventType type;
+	SmtkEventState state;
+	char *key_name;
+	unsigned int key_code;
+	unsigned int time_stamp;
+} SmtkEvent;
 
 #define SMTK_TYPE_EVENT smtk_event_get_type()
-G_DECLARE_FINAL_TYPE(SmtkEvent, smtk_event, SMTK, EVENT, GObject)
 
-SmtkEvent *smtk_event_new(char *source, GError **error);
-SmtkEventType smtk_event_get_event_type(SmtkEvent *this);
-SmtkEventState smtk_event_get_event_state(SmtkEvent *this);
-const char *smtk_event_get_key_name(SmtkEvent *this);
-unsigned int smtk_event_get_key_code(SmtkEvent *this);
-unsigned int smtk_event_get_time_stamp(SmtkEvent *this);
+GType smtk_event_get_type(void);
+SmtkEvent *smtk_event_new(const char *source);
+SmtkEvent *smtk_event_copy(SmtkEvent *this);
+void smtk_event_free(SmtkEvent *this);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(SmtkEvent, smtk_event_free)
 
 G_END_DECLS
 

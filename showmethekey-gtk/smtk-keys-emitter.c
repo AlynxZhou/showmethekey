@@ -209,19 +209,17 @@ static void *poll_cli(void *data)
 			continue;
 		}
 
-		g_autoptr(SmtkEvent) event = smtk_event_new(line, &error);
-		if (event == NULL) {
-			g_warning("Create event error: %s.", error->message);
+		g_autoptr(SmtkEvent) event = smtk_event_new(line);
+		if (event == NULL)
 			continue;
-		}
 
 		// Quickly press Ctrl twice or both Ctrl to toggle clickable and
 		// quickly press Alt twice or both Alt to toggle paused.
 		// Because xkbcommon treat left and right alt as the same one, we
 		// have to do it here, not in mapper.
-		SmtkEventType type = smtk_event_get_event_type(event);
-		SmtkEventState state = smtk_event_get_event_state(event);
-		const char *key_name = smtk_event_get_key_name(event);
+		SmtkEventType type = event->type;
+		SmtkEventState state = event->state;
+		const char *key_name = event->key_name;
 		if (type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
 			if (state == SMTK_EVENT_STATE_PRESSED) {
 				if (g_strcmp0(key_name, "KEY_LEFTCTRL") == 0 ||
