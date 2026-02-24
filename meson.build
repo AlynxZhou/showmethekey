@@ -12,12 +12,19 @@ if get_option('debug') == true
 endif
 add_project_arguments('-DG_LOG_DOMAIN="showmethekey"', language: ['c'])
 
+prefix = get_option('prefix')
+bindir = prefix / get_option('bindir')
+libdir = prefix / get_option('libdir')
+datadir = prefix / get_option('datadir')
+localedir = prefix / get_option('localedir')
+pkexec_path = get_option('pkexec_path')
+
 conf_data = configuration_data()
 conf_data.set('project_version', meson.project_version())
 conf_data.set('gettext_package', meson.project_name())
-conf_data.set('package_bindir', get_option('prefix') / get_option('bindir'))
-conf_data.set('package_localedir', get_option('prefix') / get_option('localedir'))
-conf_data.set('pkexec_path', get_option('pkexec_path'))
+conf_data.set('package_bindir', bindir)
+conf_data.set('package_localedir', localedir)
+conf_data.set('pkexec_path', pkexec_path)
 
 configure_file(
   input: 'common' / 'config.h.in',
@@ -25,52 +32,24 @@ configure_file(
   configuration: conf_data
 )
 
+subdir('dists')
 subdir('showmethekey-cli')
-
 subdir('showmethekey-gtk')
 
 install_data(
   'LICENSE',
   install_dir: get_option('datadir') / 'licenses' / meson.project_name()
 )
-install_data(
-  'dists' / 'icons' / '128x128' / 'one.alynx.showmethekey.png',
-  install_dir: get_option('datadir') / 'icons' / 'hicolor' / '128x128' / 'apps'
-)
-install_data(
-  'dists' / 'icons' / '64x64' / 'one.alynx.showmethekey.png',
-  install_dir: get_option('datadir') / 'icons' / 'hicolor' / '64x64' / 'apps'
-)
-install_data(
-  'dists' / 'icons' / 'scalable' / 'one.alynx.showmethekey.svg',
-  install_dir: get_option('datadir') / 'icons' / 'hicolor' / 'scalable' / 'apps'
-)
-install_data(
-  'dists' / 'one.alynx.showmethekey.gschema.xml',
-  install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
-)
-install_data(
-  'dists' / 'one.alynx.showmethekey.metainfo.xml',
-  install_dir: get_option('datadir') / 'metainfo'
-)
-install_data(
-  'dists' / 'one.alynx.showmethekey.rules',
-  install_dir: get_option('datadir') / 'polkit-1' / 'rules.d'
-)
-configure_file(
-  input: 'dists' / 'one.alynx.showmethekey.policy.in',
-  output: 'one.alynx.showmethekey.policy',
-  configuration: conf_data,
-  install: true,
-  install_dir: get_option('datadir') / 'polkit-1' / 'actions'
-)
-configure_file(
-  input: 'dists/one.alynx.showmethekey.desktop.in',
-  output: 'one.alynx.showmethekey.desktop',
-  configuration: conf_data,
-  install: true,
-  install_dir: get_option('datadir') / 'applications'
-)
+
+summary({
+  'buildtype': get_option('buildtype'),
+  'prefix': prefix,
+  'bindir': bindir,
+  'libdir': libdir,
+  'datadir': datadir,
+  'localedir': localedir,
+  'pkexec_path': pkexec_path,
+}, section: 'Confiuration')
 
 # We should not compile schemas by ourselves when packaging for distributions.
 # A simple way to detect packaging is the `DISTDIR` env, but before Meson 0.57.0
