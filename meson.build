@@ -1,7 +1,7 @@
 project(
   'showmethekey',
   'c',
-  version: '1.19.0',
+  version: '1.20.0',
   license: 'Apache-2.0',
   default_options: ['c_std=gnu11']
 )
