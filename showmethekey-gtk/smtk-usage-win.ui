@@ -21,24 +21,82 @@
                 <property name="wrap">true</property>
                 <property name="use-markup">true</property>
                 <property name="label" translatable="yes">
-1. Please input admin password after toggling the switch, because it needs superuser permission to read input events, and Wayland does not allow running graphics program with superuser permission, so it uses polkit to run a backend with superuser permission. This program does not handle or store your password. Users in `wheel` group can skip password authentication.
+1. It is necessary to (0) input the admin password, after (1) toggling the main switch,
+because it needs superuser permission to read input events,
+and Wayland does not allow running graphical programs with superuser permission, so it uses polkit to run a backend with superuser permission.
+This program does not handle or store your password.
+Users in the `wheel` group can skip password authentication.
 
-2. After you toggle the switch to show the floating window, you need to drag it manually to anywhere you want,
-because Wayland does not allow window to set its position. The "Clickable" label on titlebar can be dragged as a handle.
+2. After you (1) toggle the main switch to show the floating window, and
+(2) toggle the "Clickable" switch, you can
+(3) click and drag the "Clickable" label to manually position the floating window.  
+Unfortunately Wayland does not allow windows to set their position, so it is necessary to (3) manually drag the "Clickable" label to position the floating window each time.
 
-3. Because Wayland does not allow a window to set "Always on Top" and "Always on Visible Workspace" by itself, you should set it manually if you are in a Wayland session and your window manager support it.
-For example if you are using GNOME Shell (Wayland), you can right click the "Clickable" on title bar to show a window manager menu and check "Always on Top" and "Always on Visible Workspace" in it.
-If you are using KDE Plasma (Wayland), you can right click "Floating Window - Show Me The Key" on task bar, check "Move to Desktop" -> "All Desktops" and "More Actions" -> "Keep Above Other".
-You can check this project's &lt;a href="https://github.com/AlynxZhou/showmethekey#special-
-notice-for-wayland-session-users"&gt;README&lt;/a&gt; to see if there are configurations for your compositor.
+3. Because Wayland does not allow windows to set their "Always on Top" and "Always on Visible Workspace" attributes,
+if you are in a Wayland session and your window manager supports it,
+you must manually (5) toggle "Always on Top" and "Always on Visible Workspace" on the floating window each time.
 
-4. To allow user move or resize the keys window, it is not click through by default, after moving it to the location you want, turn off "Clickable" switch so it won't block your other operations.
+With GNOME Shell and Wayland, (4) right click "Clickable" on the floating window to show the window manager menu, and (5) toggle on "Always on Top" and "Always on Visible Workspace".
 
-5. If you want to pause it (for example you need to insert password), you can use the "Pause" switch, it will not record your keys when paused.
+With KDE Plasma and Wayland, (4) right click "Floating Window - Show Me The Key" on the taskbar, and (5) toggle on "Move to Desktop" -> "All Desktops" and "More Actions" -> "Keep Above Other".
+
+For other window compositors,
+check &lt;a href="https://github.com/AlynxZhou/showmethekey#special-notice-for-wayland-session-users"&gt;showmethekey/README#special-notice-for-wayland-session-users&lt;/a&gt; 
+
+4. To allow the user to move or resize the keys window, it is not click through by default, after moving it to the location you want, turn off "Clickable" switch so it won't block your other operations.
+
+5. If you want to pause it (for example you need to type a password), you can use the "Pause" switch so that the typed password will not ve                        it will not record your keys when paused.
 
 6. Set Timeout to 0 if you want to keep all keys.
 
 You can open this dialog again via menu icon on title bar -> "Usage".
+                </property>
+                <property name="label" translatable="yes">
+## 1. Admin Password
+
+When you first toggle the `main switch`, you must enter your admin password.
+
+* **Why?** The app needs root (superuser) permission to read your keyboard events.
+* **Wayland:** Because Wayland stops GUI apps from running as root, this app uses `polkit` to ask for permission safely.
+* **Note:** The app **never** handles or stores your password.
+* Users in the `wheel` group can skip this step.
+
+---
+
+## 2. Moving the Window (Wayland)
+
+Wayland doesn't let apps position their own windows. You must move the window manually each time you start it.
+
+1.  Toggle the `main switch` (to show the window).
+2.  Toggle the `"Clickable"` switch **ON**.
+3.  Click and drag the `"Clickable" label` to move the window where you want it.
+
+## 3. Keep Window on Top (Wayland)
+
+After positioning the window (Step 2), you must also manually set it to be "Always on Top" and "Visible on All Workspaces" each time. Wayland blocks apps from doing this automatically.
+
+* **GNOME:** Right-click the `"Clickable" label` on the window. Toggle `"Always on Top"` and `"Always on Visible Workspace"`.
+* **KDE Plasma:** Right-click the app's icon in the `taskbar`. Select `"Move to Desktop"` -> `"All Desktops"`. Then select `"More Actions"` -> `"Keep Above Other"`.
+* **Other Desktops:** See the [README link](https://github.com/AlynxZhou/showmethekey#special-notice-for-wayland-session-users) for instructions.
+
+## 4. Making the Window "Click-Through"
+
+After you finish positioning the window (Step 2), toggle the "Clickable" switch OFF.
+
+* This makes the window "click-through."
+* It ensures the window won't block mouse clicks on the apps underneath it.
+
+## 5. Pausing
+
+Toggle the `"Pause" switch` to temporarily stop recording keys. This is useful when you need to type a password.
+
+## 6. Keep Keys on Screen
+
+To prevent keys from disappearing, set the `Timeout` value to **0**.
+
+---
+
+You can open this guide again by clicking the `menu icon` -> `"Usage"`.
                 </property>
               </object>
             </property>
