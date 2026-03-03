@@ -15,6 +15,19 @@ G_DECLARE_FINAL_TYPE(
 	GObject
 )
 
+// It looks like glib-mkenums cannot make enums
+// if clang-format make this in one line. But why???
+// clang-format off
+typedef enum _SmtkModifier {
+	SMTK_MODIFIER_NONE,
+	SMTK_MODIFIER_CTRL,
+	SMTK_MODIFIER_ALT,
+	SMTK_MODIFIER_SUPER,
+	SMTK_MODIFIER_SHIFT,
+	SMTK_MODIFIER_ESC
+} SmtkModifier;
+// clang-format on
+
 SmtkKeysEmitter *smtk_keys_emitter_new(void);
 void smtk_keys_emitter_start_async(SmtkKeysEmitter *this);
 void smtk_keys_emitter_stop_async(SmtkKeysEmitter *this);

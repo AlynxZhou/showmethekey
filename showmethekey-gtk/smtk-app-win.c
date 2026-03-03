@@ -8,6 +8,7 @@
 #include "smtk-app-win.h"
 #include "smtk-usage-win.h"
 #include "smtk-keys-area.h"
+#include "smtk-keys-emitter.h"
 #include "smtk-keys-mapper.h"
 #include "smtk-keymap-list.h"
 
@@ -18,7 +19,9 @@ struct _SmtkAppWin {
 	GtkWidget *menu_button;
 	GtkWidget *keys_win_switch;
 	GtkWidget *clickable_switch;
+	GtkWidget *clickable_selector;
 	GtkWidget *pause_switch;
+	GtkWidget *pause_selector;
 	GtkWidget *shift_switch;
 	GtkWidget *keyboard_switch;
 	GtkWidget *mouse_switch;
@@ -33,6 +36,49 @@ struct _SmtkAppWin {
 	GtkWidget *keymap_selector;
 };
 G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
+
+static int modifier_to_selector(GValue *value, GVariant *variant, void *data)
+{
+	const char *modifier = NULL;
+	g_variant_get(variant, "&s", &modifier);
+
+	if (g_strcmp0(modifier, "ctrl") == 0)
+		g_value_set_uint(value, SMTK_MODIFIER_CTRL);
+	else if (g_strcmp0(modifier, "alt") == 0)
+		g_value_set_uint(value, SMTK_MODIFIER_ALT);
+	else if (g_strcmp0(modifier, "super") == 0)
+		g_value_set_uint(value, SMTK_MODIFIER_SUPER);
+	else if (g_strcmp0(modifier, "shift") == 0)
+		g_value_set_uint(value, SMTK_MODIFIER_SHIFT);
+	else if (g_strcmp0(modifier, "Esc") == 0)
+		g_value_set_uint(value, SMTK_MODIFIER_ESC);
+	else
+		g_value_set_uint(value, SMTK_MODIFIER_NONE);
+
+	return true;
+}
+
+static GVariant *selector_to_modifier(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
+{
+	switch (g_value_get_uint(value)) {
+	case SMTK_MODIFIER_CTRL:
+		return g_variant_new_string("ctrl");
+	case SMTK_MODIFIER_ALT:
+		return g_variant_new_string("alt");
+	case SMTK_MODIFIER_SUPER:
+		return g_variant_new_string("super");
+	case SMTK_MODIFIER_SHIFT:
+		return g_variant_new_string("shift");
+	case SMTK_MODIFIER_ESC:
+		return g_variant_new_string("esc");
+	default:
+		return g_variant_new_string("none");
+	}
+}
 
 static int mode_to_selector(GValue *value, GVariant *variant, void *data)
 {
@@ -172,12 +218,34 @@ static void constructed(GObject *o)
 		"active",
 		G_SETTINGS_BIND_DEFAULT
 	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"clickable-modifier",
+		this->clickable_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		modifier_to_selector,
+		selector_to_modifier,
+		this,
+		NULL
+	);
 	g_settings_bind(
 		this->settings,
 		"paused",
 		this->pause_switch,
 		"active",
 		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"paused-modifier",
+		this->pause_selector,
+		"selected",
+		G_SETTINGS_BIND_DEFAULT,
+		modifier_to_selector,
+		selector_to_modifier,
+		this,
+		NULL
 	);
 	g_settings_bind(
 		this->settings,
@@ -325,7 +393,13 @@ static void smtk_app_win_class_init(SmtkAppWinClass *klass)
 	gtk_widget_class_bind_template_child(
 		w_class, SmtkAppWin, clickable_switch
 	);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, clickable_selector
+	);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, pause_switch);
+	gtk_widget_class_bind_template_child(
+		w_class, SmtkAppWin, pause_selector
+	);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, shift_switch);
 	gtk_widget_class_bind_template_child(
 		w_class, SmtkAppWin, keyboard_switch

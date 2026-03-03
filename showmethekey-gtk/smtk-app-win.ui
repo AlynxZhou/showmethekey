@@ -78,7 +78,7 @@
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
                     <property name="title" translatable="yes">_Clickable</property>
-                    <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window. Quickly press Ctrl twice or both Ctrl anywhere to toggle this.</property>
+                    <property name="subtitle" translatable="yes">Turning off will pass input event to other apps under the floating window.</property>
                     <property name="activatable-widget">clickable_switch</property>
                     <child>
                       <object class="GtkSwitch" id="clickable_switch">
@@ -89,10 +89,30 @@
                   </object>
                 </child>
                 <child>
+                  <object class="AdwComboRow" id="clickable_selector">
+                    <property name="title" translatable="yes">Clickable Modifier</property>
+                    <property name="subtitle" translatable="yes">Quickly press this twice or both anywhere to toggle clickable.</property>
+                    <!-- Must keep the same sequence with SmtkModifier. -->
+                    <property name="selected">1</property>
+                    <property name="model">
+                      <object class="GtkStringList">
+                        <items>
+                          <item translatable="yes">None</item>
+                          <item translatable="no">Ctrl</item>
+                          <item translatable="no">Alt</item>
+                          <item translatable="no">Super</item>
+                          <item translatable="no">Shift</item>
+                          <item translatable="no">Esc</item>
+                        </items>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
                     <property name="title" translatable="yes">_Pause</property>
-                    <property name="subtitle" translatable="yes">Temporary hide input like password. Quickly press Alt twice or both Alt anywhere to toggle this.</property>
+                    <property name="subtitle" translatable="yes">Temporary hide input like password.</property>
                     <property name="activatable-widget">pause_switch</property>
                     <child>
                       <object class="GtkSwitch" id="pause_switch">
@@ -101,6 +121,26 @@
                         <property name="active">false</property>
                       </object>
                     </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwComboRow" id="pause_selector">
+                    <property name="title" translatable="yes">Pause Modifier</property>
+                    <property name="subtitle" translatable="yes">Quickly press this twice or both anywhere to toggle pause.</property>
+                    <!-- Must keep the same sequence with SmtkModifier. -->
+                    <property name="selected">2</property>
+                    <property name="model">
+                      <object class="GtkStringList">
+                        <items>
+                          <item translatable="yes">None</item>
+                          <item translatable="no">Ctrl</item>
+                          <item translatable="no">Alt</item>
+                          <item translatable="no">Super</item>
+                          <item translatable="no">Shift</item>
+                          <item translatable="no">Esc</item>
+                        </items>
+                      </object>
+                    </property>
                   </object>
                 </child>
                 <child>

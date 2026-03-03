@@ -16,10 +16,20 @@
       <description>Whether keys win is clickable.</description>
       <default>true</default>
     </key>
+     <key enum="one.alynx.showmethekey.SmtkModifier" name="clickable-modifier">
+      <summary>Modifier of Clickable</summary>
+      <description>Modifier to quickly toggle clickable.</description>
+      <default>"ctrl"</default>
+    </key>
     <key type="b" name="paused">
       <summary>Paused or Not</summary>
       <description>Whether keys win is paused.</description>
       <default>false</default>
+    </key>
+    <key enum="one.alynx.showmethekey.SmtkModifier" name="paused-modifier">
+      <summary>Modifier of Paused</summary>
+      <description>Modifier to quickly toggle paused.</description>
+      <default>"alt"</default>
     </key>
     <key type="b" name="show-shift">
       <summary>Show Shift or Not</summary>

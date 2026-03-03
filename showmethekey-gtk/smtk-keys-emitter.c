@@ -23,8 +23,10 @@ struct _SmtkKeysEmitter {
 	SmtkKeyMode mode;
 	bool show_keyboard;
 	bool show_mouse;
-	bool ctrl_pressed;
-	bool alt_pressed;
+	SmtkModifier clickable_modifier;
+	SmtkModifier paused_modifier;
+	bool clickable_pressed;
+	bool paused_pressed;
 };
 G_DEFINE_TYPE(SmtkKeysEmitter, smtk_keys_emitter, G_TYPE_OBJECT)
 
@@ -32,7 +34,15 @@ enum { SIG_KEY, SIG_ERROR_CLI_EXIT, N_SIGNALS };
 
 static unsigned int sigs[N_SIGNALS] = { 0 };
 
-enum { PROP_0, PROP_MODE, PROP_SHOW_KEYBOARD, PROP_SHOW_MOUSE, N_PROPS };
+enum {
+	PROP_0,
+	PROP_MODE,
+	PROP_SHOW_KEYBOARD,
+	PROP_SHOW_MOUSE,
+	PROP_CLICKABLE_MODIFIER,
+	PROP_PAUSED_MODIFIER,
+	N_PROPS
+};
 
 static GParamSpec *props[N_PROPS] = { NULL };
 
@@ -55,6 +65,12 @@ static void set_property(
 	case PROP_SHOW_MOUSE:
 		this->show_mouse = g_value_get_boolean(value);
 		break;
+	case PROP_CLICKABLE_MODIFIER:
+		this->clickable_modifier = g_value_get_enum(value);
+		break;
+	case PROP_PAUSED_MODIFIER:
+		this->paused_modifier = g_value_get_enum(value);
+		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
@@ -76,6 +92,12 @@ get_property(GObject *o, unsigned int prop, GValue *value, GParamSpec *pspec)
 		break;
 	case PROP_SHOW_MOUSE:
 		g_value_set_boolean(value, this->show_mouse);
+		break;
+	case PROP_CLICKABLE_MODIFIER:
+		g_value_set_enum(value, this->clickable_modifier);
+		break;
+	case PROP_PAUSED_MODIFIER:
+		g_value_set_enum(value, this->paused_modifier);
 		break;
 	default:
 		/* We don't have any other property... */
@@ -117,6 +139,28 @@ static void trigger_key_idle(SmtkKeysEmitter *this, const char key[])
 	key_idle_data->emitter = g_object_ref(this);
 	key_idle_data->key = g_strdup(key);
 	g_timeout_add_full(G_PRIORITY_DEFAULT, 0, key_idle, key_idle_data, NULL);
+}
+
+static bool is_modifier(const char *key_name, SmtkModifier modifier)
+{
+	switch (modifier) {
+	case SMTK_MODIFIER_CTRL:
+		return g_strcmp0(key_name, "KEY_LEFTCTRL") == 0 ||
+		       g_strcmp0(key_name, "KEY_RIGHTCTRL") == 0;
+	case SMTK_MODIFIER_ALT:
+		return g_strcmp0(key_name, "KEY_LEFTALT") == 0 ||
+		       g_strcmp0(key_name, "KEY_RIGHTALT") == 0;
+	case SMTK_MODIFIER_SUPER:
+		return g_strcmp0(key_name, "KEY_LEFTMETA") == 0 ||
+		       g_strcmp0(key_name, "KEY_RIGHTMETA") == 0;
+	case SMTK_MODIFIER_SHIFT:
+		return g_strcmp0(key_name, "KEY_LEFTSHIFT") == 0 ||
+		       g_strcmp0(key_name, "KEY_RIGHTSHIFT") == 0;
+	case SMTK_MODIFIER_ESC:
+		return g_strcmp0(key_name, "KEY_ESC") == 0;
+	default:
+		return false;
+	}
 }
 
 static int toggle_clickable(void *data)
@@ -193,30 +237,32 @@ static void *poll_cli(void *data)
 		const char *key_name = event->key_name;
 		if (type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
 			if (state == SMTK_EVENT_STATE_PRESSED) {
-				if (g_strcmp0(key_name, "KEY_LEFTCTRL") == 0 ||
-				    g_strcmp0(key_name, "KEY_RIGHTCTRL") == 0) {
-					if (this->ctrl_pressed) {
+				if (is_modifier(
+					    key_name, this->clickable_modifier
+				    )) {
+					if (this->clickable_pressed) {
 						trigger_clickable_idle(this);
-						this->ctrl_pressed = false;
+						this->clickable_pressed = false;
 					} else {
-						this->ctrl_pressed = true;
+						this->clickable_pressed = true;
 					}
 				}
-				if (g_strcmp0(key_name, "KEY_LEFTALT") == 0 ||
-				    g_strcmp0(key_name, "KEY_RIGHTALT") == 0) {
-					if (this->alt_pressed) {
+				if (is_modifier(
+					    key_name, this->paused_modifier
+				    )) {
+					if (this->paused_pressed) {
 						trigger_paused_idle(this);
-						this->alt_pressed = false;
+						this->paused_pressed = false;
 					} else {
-						this->alt_pressed = true;
+						this->paused_pressed = true;
 					}
 				}
 			}
 		} else {
-			if (this->ctrl_pressed)
-				this->ctrl_pressed = false;
-			if (this->alt_pressed)
-				this->alt_pressed = false;
+			if (this->clickable_pressed)
+				this->clickable_pressed = false;
+			if (this->paused_pressed)
+				this->paused_pressed = false;
 		}
 		g_autofree char *key = NULL;
 		// Always get key with SmtkKeysMapper, it will update XKB state
@@ -271,6 +317,20 @@ static void constructed(GObject *o)
 		"show-mouse",
 		this,
 		"show-mouse",
+		G_SETTINGS_BIND_GET
+	);
+	g_settings_bind(
+		this->settings,
+		"clickable-modifier",
+		this,
+		"clickable-modifier",
+		G_SETTINGS_BIND_GET
+	);
+	g_settings_bind(
+		this->settings,
+		"paused-modifier",
+		this,
+		"paused-modifier",
 		G_SETTINGS_BIND_GET
 	);
 
@@ -352,6 +412,22 @@ static void smtk_keys_emitter_class_init(SmtkKeysEmitterClass *klass)
 		true,
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
 	);
+	props[PROP_CLICKABLE_MODIFIER] = g_param_spec_enum(
+		"clickable-modifier",
+		"Clickable Modifier",
+		"Modifier of Clickable",
+		SMTK_TYPE_MODIFIER,
+		SMTK_MODIFIER_CTRL,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_PAUSED_MODIFIER] = g_param_spec_enum(
+		"paused-modifier",
+		"Paused Modifier",
+		"Modifier of Paused",
+		SMTK_TYPE_MODIFIER,
+		SMTK_MODIFIER_ALT,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
 
 	g_object_class_install_properties(o_class, N_PROPS, props);
 }
@@ -365,8 +441,10 @@ static void smtk_keys_emitter_init(SmtkKeysEmitter *this)
 	this->poller = NULL;
 	this->show_keyboard = true;
 	this->show_mouse = true;
-	this->ctrl_pressed = false;
-	this->alt_pressed = false;
+	this->clickable_modifier = SMTK_MODIFIER_CTRL;
+	this->paused_modifier = SMTK_MODIFIER_ALT;
+	this->clickable_pressed = false;
+	this->paused_pressed = false;
 }
 
 SmtkKeysEmitter *smtk_keys_emitter_new(void)
