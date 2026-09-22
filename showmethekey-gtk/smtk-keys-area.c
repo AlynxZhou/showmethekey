@@ -175,7 +175,15 @@ draw_key(SmtkKeysArea *this, cairo_t *cr, const struct key_data *key_data)
 	else
 		g_debug("Drawing key: %s.", string);
 
-	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+	GdkRGBA color;
+#if GTK_CHECK_VERSION(4, 10, 0)
+	gtk_widget_get_color(GTK_WIDGET(this), &color);
+#else
+	gtk_style_context_get_color(
+		gtk_widget_get_style_context(GTK_WIDGET(this)), &color
+	);
+#endif
+	gdk_cairo_set_source_rgba(cr, &color);
 
 	// See <https://docs.gtk.org/Pango/method.Layout.set_text.html#parameters>.
 	PangoRectangle s_ink;
