@@ -11,6 +11,7 @@ G_DECLARE_FINAL_TYPE(SmtkApp, smtk_app, SMTK, APP, AdwApplication)
 
 SmtkApp *smtk_app_new(void);
 void smtk_app_quit(SmtkApp *this);
+void smtk_app_set_key_color(SmtkApp *this, const GdkRGBA *rgba);
 
 G_END_DECLS
 
