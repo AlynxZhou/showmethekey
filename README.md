@@ -149,6 +149,9 @@ You could always close the app (settings) window after keys window is shown. To 
 
 When keys win is shown, you could always toggle clickable by quickly pressing Ctrl twice (or pressing both Ctrl), and toggle paused by quickly pressing Alt twice (or pressing both Alt).
 
+To change the key color, add `window.smtk-keys-win { color: #94e2d5; }` to
+`~/.config/gtk-4.0/gtk.css` and restart the app.
+
 # Project Structure
 
 ## CLI

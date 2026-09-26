@@ -10,6 +10,7 @@
 struct _SmtkApp {
 	AdwApplication parent_instance;
 	GSettings *settings;
+	GtkCssProvider *color_provider;
 	GtkWidget *app_win;
 	GtkWidget *keys_win;
 	bool keys_win_opt;
@@ -250,6 +251,13 @@ static void startup(GApplication *app)
 	);
 
 	G_APPLICATION_CLASS(smtk_app_parent_class)->startup(app);
+
+	this->color_provider = gtk_css_provider_new();
+	gtk_style_context_add_provider_for_display(
+		gdk_display_get_default(),
+		GTK_STYLE_PROVIDER(this->color_provider),
+		GTK_STYLE_PROVIDER_PRIORITY_USER + 1
+	);
 }
 
 // See <https://developer.gnome.org/gio/stable/GApplication.html#GApplication-handle-local-options>.
@@ -300,6 +308,7 @@ static void dispose(GObject *o)
 	SmtkApp *this = SMTK_APP(o);
 
 	g_clear_object(&this->settings);
+	g_clear_object(&this->color_provider);
 
 	G_OBJECT_CLASS(smtk_app_parent_class)->dispose(o);
 }
@@ -381,6 +390,14 @@ SmtkApp *smtk_app_new(void)
 	return g_object_new(
 		SMTK_TYPE_APP, "application-id", "one.alynx.showmethekey", NULL
 	);
+}
+
+void smtk_app_set_key_color(SmtkApp *this, const GdkRGBA *rgba)
+{
+	g_autofree char *color = gdk_rgba_to_string(rgba);
+	g_autofree char *css =
+		g_strdup_printf("window.smtk-keys-win { color: %s; }", color);
+	gtk_css_provider_load_from_string(this->color_provider, css);
 }
 
 void smtk_app_quit(SmtkApp *this)
