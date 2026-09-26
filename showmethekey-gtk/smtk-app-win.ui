@@ -188,6 +188,22 @@
                 <child>
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Key C_olor</property>
+                    <property name="subtitle" translatable="yes">Color of keys and their borders for this session.</property>
+                    <property name="activatable-widget">color_button</property>
+                    <child>
+                      <object class="GtkColorDialogButton" id="color_button">
+                        <property name="valign">center</property>
+                        <property name="dialog">
+                          <object class="GtkColorDialog"/>
+                        </property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
                     <property name="title" translatable="yes">Draw Keys _Border</property>
                     <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
                     <property name="activatable-widget">border_switch</property>

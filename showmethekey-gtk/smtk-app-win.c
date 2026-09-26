@@ -25,6 +25,7 @@ struct _SmtkAppWin {
 	GtkWidget *shift_switch;
 	GtkWidget *keyboard_switch;
 	GtkWidget *mouse_switch;
+	GtkWidget *color_button;
 	GtkWidget *border_switch;
 	GtkWidget *hide_visible_switch;
 	GtkWidget *mode_selector;
@@ -160,6 +161,16 @@ on_selected(SmtkAppWin *this, GParamSpec *prop, AdwComboRow *keymap_selector)
 	g_settings_set_string(this->settings, "variant", variant);
 }
 
+static void on_color_changed(SmtkAppWin *this)
+{
+	const GdkRGBA *rgba = gtk_color_dialog_button_get_rgba(
+		GTK_COLOR_DIALOG_BUTTON(this->color_button)
+	);
+	smtk_app_set_key_color(
+		SMTK_APP(gtk_window_get_application(GTK_WINDOW(this))), rgba
+	);
+}
+
 static void constructed(GObject *o)
 {
 	SmtkAppWin *this = SMTK_APP_WIN(o);
@@ -267,6 +278,21 @@ static void constructed(GObject *o)
 		this->mouse_switch,
 		"active",
 		G_SETTINGS_BIND_DEFAULT
+	);
+	// We only need the color so dont start the keys emitter.
+	GtkWidget *color_source = gtk_window_new();
+	gtk_widget_add_css_class(color_source, "smtk-keys-win");
+	GdkRGBA rgba;
+	gtk_widget_get_color(color_source, &rgba);
+	gtk_color_dialog_button_set_rgba(
+		GTK_COLOR_DIALOG_BUTTON(this->color_button), &rgba
+	);
+	gtk_window_destroy(GTK_WINDOW(color_source));
+	g_signal_connect_swapped(
+		this->color_button,
+		"notify::rgba",
+		G_CALLBACK(on_color_changed),
+		this
 	);
 	g_settings_bind(
 		this->settings,
@@ -405,6 +431,7 @@ static void smtk_app_win_class_init(SmtkAppWinClass *klass)
 		w_class, SmtkAppWin, keyboard_switch
 	);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, mouse_switch);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, color_button);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, border_switch);
 	gtk_widget_class_bind_template_child(
 		w_class, SmtkAppWin, hide_visible_switch
