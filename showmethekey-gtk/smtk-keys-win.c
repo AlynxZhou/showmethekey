@@ -122,6 +122,7 @@ static void on_key(SmtkKeysWin *this, char key[])
 }
 
 #ifdef GDK_WINDOWING_X11
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 // See <https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gdk/x11/gdksurface-x11.c#L2310-2337>.
 static void gdk_x11_surface_wmspec_change_state(
 	GdkSurface *surface,
@@ -192,6 +193,7 @@ gdk_x11_surface_wmspec_change_desktop(GdkSurface *surface, long desktop)
 		(XEvent *)&xclient
 	);
 }
+G_GNUC_END_IGNORE_DEPRECATIONS
 #endif
 
 static void on_map(SmtkKeysWin *this, void *data)
