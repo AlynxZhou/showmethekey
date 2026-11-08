@@ -40,6 +40,7 @@ struct _SmtkKeysArea {
 	int padding;
 	int last_key_x;
 	bool draw_border;
+	GdkRGBA key_color;
 
 	GThread *timer_thread;
 	bool timer_running;
@@ -55,6 +56,7 @@ enum {
 	PROP_DRAW_BORDER,
 	PROP_MARGIN_RATIO,
 	PROP_TIMEOUT,
+	PROP_KEY_COLOR,
 	N_PROPS
 };
 
@@ -91,6 +93,16 @@ static void set_property(
 	case PROP_TIMEOUT:
 		this->timeout = g_value_get_int(value);
 		break;
+	case PROP_KEY_COLOR:
+		if (gdk_rgba_parse(&this->key_color, g_value_get_string(value)))
+			// Trigger re-draw because color changed.
+			gtk_widget_queue_draw(GTK_WIDGET(this));
+		else
+			g_warning(
+				"Invalid key color: %s.",
+				g_value_get_string(value)
+			);
+		break;
 	default:
 		/* We don't have any other property... */
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(o, prop, pspec);
@@ -118,6 +130,9 @@ get_property(GObject *o, unsigned int prop, GValue *value, GParamSpec *pspec)
 		break;
 	case PROP_TIMEOUT:
 		g_value_set_int(value, this->timeout);
+		break;
+	case PROP_KEY_COLOR:
+		g_value_take_string(value, gdk_rgba_to_string(&this->key_color));
 		break;
 	default:
 		/* We don't have any other property... */
@@ -175,7 +190,7 @@ draw_key(SmtkKeysArea *this, cairo_t *cr, const struct key_data *key_data)
 	else
 		g_debug("Drawing key: %s.", string);
 
-	cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+	gdk_cairo_set_source_rgba(cr, &this->key_color);
 
 	// See <https://docs.gtk.org/Pango/method.Layout.set_text.html#parameters>.
 	PangoRectangle s_ink;
@@ -447,6 +462,13 @@ static void constructed(GObject *o)
 	g_settings_bind(
 		this->settings, "timeout", this, "timeout", G_SETTINGS_BIND_GET
 	);
+	g_settings_bind(
+		this->settings,
+		"key-color",
+		this,
+		"key-color",
+		G_SETTINGS_BIND_GET
+	);
 
 	G_OBJECT_CLASS(smtk_keys_area_parent_class)->constructed(o);
 }
@@ -534,6 +556,13 @@ static void smtk_keys_area_class_init(SmtkKeysAreaClass *klass)
 		0,
 		30000,
 		1000,
+		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
+	);
+	props[PROP_KEY_COLOR] = g_param_spec_string(
+		"key-color",
+		"Key Color",
+		"Key Color",
+		"rgb(255,255,255)",
 		G_PARAM_CONSTRUCT | G_PARAM_READWRITE
 	);
 
