@@ -40,8 +40,7 @@ G_DEFINE_TYPE(SmtkAppWin, smtk_app_win, ADW_TYPE_APPLICATION_WINDOW)
 
 static int modifier_to_selector(GValue *value, GVariant *variant, void *data)
 {
-	const char *modifier = NULL;
-	g_variant_get(variant, "&s", &modifier);
+	const char *modifier = g_variant_get_string(variant, NULL);
 
 	if (g_strcmp0(modifier, "ctrl") == 0)
 		g_value_set_uint(value, SMTK_MODIFIER_CTRL);
@@ -51,7 +50,7 @@ static int modifier_to_selector(GValue *value, GVariant *variant, void *data)
 		g_value_set_uint(value, SMTK_MODIFIER_SUPER);
 	else if (g_strcmp0(modifier, "shift") == 0)
 		g_value_set_uint(value, SMTK_MODIFIER_SHIFT);
-	else if (g_strcmp0(modifier, "Esc") == 0)
+	else if (g_strcmp0(modifier, "esc") == 0)
 		g_value_set_uint(value, SMTK_MODIFIER_ESC);
 	else
 		g_value_set_uint(value, SMTK_MODIFIER_NONE);
@@ -83,8 +82,7 @@ static GVariant *selector_to_modifier(
 
 static int mode_to_selector(GValue *value, GVariant *variant, void *data)
 {
-	const char *mode = NULL;
-	g_variant_get(variant, "&s", &mode);
+	const char *mode = g_variant_get_string(variant, NULL);
 
 	if (g_strcmp0(mode, "composed") == 0)
 		g_value_set_uint(value, SMTK_KEY_MODE_COMPOSED);
@@ -118,8 +116,7 @@ static GVariant *selector_to_mode(
 
 static int alignment_to_selector(GValue *value, GVariant *variant, void *data)
 {
-	const char *alignment = NULL;
-	g_variant_get(variant, "&s", &alignment);
+	const char *alignment = g_variant_get_string(variant, NULL);
 
 	if (g_strcmp0(alignment, "end") == 0)
 		g_value_set_uint(value, SMTK_KEY_ALIGNMENT_END);
