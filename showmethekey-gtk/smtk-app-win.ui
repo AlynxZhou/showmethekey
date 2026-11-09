@@ -73,7 +73,7 @@
           <object class="AdwPreferencesPage">
             <child>
               <object class="AdwPreferencesGroup">
-                <property name="title" translatable="yes">General</property>
+                <property name="title" translatable="yes">Hotkeys</property>
                 <child>
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
@@ -143,20 +143,11 @@
                     </property>
                   </object>
                 </child>
-                <child>
-                  <object class="AdwActionRow">
-                    <property name="use-underline">true</property>
-                    <property name="title" translatable="yes">Show _Shift Separately</property>
-                    <property name="subtitle" translatable="yes">Show Ctrl+Shift+a or Ctrl+A.</property>
-                    <property name="activatable-widget">shift_switch</property>
-                    <child>
-                      <object class="GtkSwitch" id="shift_switch">
-                        <property name="valign">center</property>
-                        <property name="active">true</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Display</property>
                 <child>
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
@@ -188,27 +179,11 @@
                 <child>
                   <object class="AdwActionRow">
                     <property name="use-underline">true</property>
-                    <property name="title" translatable="yes">Key C_olor</property>
-                    <property name="subtitle" translatable="yes">Color of keys and their borders.</property>
-                    <property name="activatable-widget">color_button</property>
+                    <property name="title" translatable="yes">Show _Shift Separately</property>
+                    <property name="subtitle" translatable="yes">Show Ctrl+Shift+a or Ctrl+A.</property>
+                    <property name="activatable-widget">shift_switch</property>
                     <child>
-                      <object class="GtkColorDialogButton" id="color_button">
-                        <property name="valign">center</property>
-                        <property name="dialog">
-                          <object class="GtkColorDialog"/>
-                        </property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="AdwActionRow">
-                    <property name="use-underline">true</property>
-                    <property name="title" translatable="yes">Draw Keys _Border</property>
-                    <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
-                    <property name="activatable-widget">border_switch</property>
-                    <child>
-                      <object class="GtkSwitch" id="border_switch">
+                      <object class="GtkSwitch" id="shift_switch">
                         <property name="valign">center</property>
                         <property name="active">true</property>
                       </object>
@@ -244,6 +219,41 @@
                         </items>
                       </object>
                     </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="title" translatable="yes">Appearance</property>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Key C_olor</property>
+                    <property name="subtitle" translatable="yes">Color of keys and their borders.</property>
+                    <property name="activatable-widget">color_button</property>
+                    <child>
+                      <object class="GtkColorDialogButton" id="color_button">
+                        <property name="valign">center</property>
+                        <property name="dialog">
+                          <object class="GtkColorDialog"/>
+                        </property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwActionRow">
+                    <property name="use-underline">true</property>
+                    <property name="title" translatable="yes">Draw Keys _Border</property>
+                    <property name="subtitle" translatable="yes">In case keys and key combos are hard to distinguish.</property>
+                    <property name="activatable-widget">border_switch</property>
+                    <child>
+                      <object class="GtkSwitch" id="border_switch">
+                        <property name="valign">center</property>
+                        <property name="active">true</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
                 <child>
