@@ -952,6 +952,7 @@ static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 	// Though Xkbcommon don't handle mouse button state, we can still
 	// convert evdev key code to xkb key code.
 	xkb_keycode_t xkb_key_code = KEY_CODE_EV_TO_XKB(event->key_code);
+	xkb_keysym_t xkb_key_sym = XKB_KEY_NoSymbol;
 	// Xkbcommon only handle keyboards,
 	// so we use libinput key name for mouse button.
 	if (event->type == SMTK_EVENT_TYPE_KEYBOARD_KEY) {
@@ -962,7 +963,7 @@ static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 			state == SMTK_EVENT_STATE_PRESSED ? XKB_KEY_DOWN :
 							    XKB_KEY_UP
 		);
-		xkb_keysym_t xkb_key_sym = xkb_state_key_get_one_sym(
+		xkb_key_sym = xkb_state_key_get_one_sym(
 			this->xkb_state, xkb_key_code
 		);
 		// Always get the unshifted key if show shift.
@@ -997,6 +998,16 @@ static char *get_key(SmtkKeysMapper *this, SmtkKeyMode mode, SmtkEvent *event)
 		// Copy from the string reference in GHashTable,
 		// so we can use g_free() after append it into GString.
 		main_key = g_strdup(replace_name);
+	} else if (xkb_key_sym != XKB_KEY_NoSymbol) {
+		// Show the character itself instead of its keysym name,
+		// for example `ś` instead of `sacute`, so we don't need to
+		// add every keymap's keysyms to the tables above.
+		char utf8[8] = { 0 };
+		if (xkb_keysym_to_utf8(xkb_key_sym, utf8, sizeof(utf8)) > 0 &&
+		    g_unichar_isgraph(g_utf8_get_char_validated(utf8, -1))) {
+			g_clear_pointer(&main_key, g_free);
+			main_key = g_strdup(utf8);
+		}
 	}
 	return concat_key(this, mode, main_key, xkb_key_code);
 }
