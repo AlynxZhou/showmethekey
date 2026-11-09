@@ -149,6 +149,9 @@ You could always close the app (settings) window after keys window is shown. To 
 
 When keys win is shown, you could always toggle clickable by quickly pressing Ctrl twice (or pressing both Ctrl), and toggle paused by quickly pressing Alt twice (or pressing both Alt).
 
+To change the key color, use the color picker in the app window. The selected
+color is saved and applies immediately.
+
 # Project Structure
 
 ## CLI

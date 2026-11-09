@@ -91,6 +91,11 @@
       <default>0</default>
       <range min="0" />
     </key>
+    <key type="s" name="key-color">
+      <summary>Key Color</summary>
+      <description>Color used to draw keys and their borders.</description>
+      <default>"rgb(255,255,255)"</default>
+    </key>
     <key type="s" name="layout">
       <summary>Keyboard Layout</summary>
       <description>Keyboard layout.</description>

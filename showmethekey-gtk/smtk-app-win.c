@@ -25,6 +25,7 @@ struct _SmtkAppWin {
 	GtkWidget *shift_switch;
 	GtkWidget *keyboard_switch;
 	GtkWidget *mouse_switch;
+	GtkWidget *color_button;
 	GtkWidget *border_switch;
 	GtkWidget *hide_visible_switch;
 	GtkWidget *mode_selector;
@@ -144,6 +145,27 @@ static GVariant *selector_to_alignment(
 	default:
 		return g_variant_new_string("end");
 	}
+}
+
+static int color_to_button(GValue *value, GVariant *variant, void *data)
+{
+	GdkRGBA rgba;
+
+	if (!gdk_rgba_parse(&rgba, g_variant_get_string(variant, NULL)))
+		return false;
+	g_value_set_boxed(value, &rgba);
+
+	return true;
+}
+
+static GVariant *button_to_color(
+	const GValue *value,
+	const GVariantType *expected_type,
+	void *data
+)
+{
+	g_autofree char *color = gdk_rgba_to_string(g_value_get_boxed(value));
+	return g_variant_new_string(color);
 }
 
 static void
@@ -267,6 +289,17 @@ static void constructed(GObject *o)
 		this->mouse_switch,
 		"active",
 		G_SETTINGS_BIND_DEFAULT
+	);
+	g_settings_bind_with_mapping(
+		this->settings,
+		"key-color",
+		this->color_button,
+		"rgba",
+		G_SETTINGS_BIND_DEFAULT,
+		color_to_button,
+		button_to_color,
+		this,
+		NULL
 	);
 	g_settings_bind(
 		this->settings,
@@ -405,6 +438,7 @@ static void smtk_app_win_class_init(SmtkAppWinClass *klass)
 		w_class, SmtkAppWin, keyboard_switch
 	);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, mouse_switch);
+	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, color_button);
 	gtk_widget_class_bind_template_child(w_class, SmtkAppWin, border_switch);
 	gtk_widget_class_bind_template_child(
 		w_class, SmtkAppWin, hide_visible_switch
